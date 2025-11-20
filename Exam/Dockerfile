@@ -1,24 +1,27 @@
-FROM node:18-alpine AS build
+FROM node:18 AS frontend-build
+WORKDIR /app/client
 
-# Install required packages for Vite
-RUN apk add --no-cache libc6-compat
+COPY client/package*.json ./
+RUN npm install --include=dev
 
-WORKDIR /app
+COPY client/ ./
 
-# ---------------- FRONTEND ----------------
+# Force install vite globally (prevents PATH issues)
+RUN npm install -g vite@5
 
-COPY client/package*.json ./client/
-RUN cd client && npm install
+# Run vite build with the global binary
+RUN /usr/local/bin/vite build
 
-COPY client ./client
-RUN cd client && npx vite build
 
-# ---------------- BACKEND ----------------
+FROM node:18 AS backend
+WORKDIR /app/server
 
-COPY server ./server
-RUN cd server && npm install
+COPY server/package*.json ./
+RUN npm install
+
+COPY server/ ./
+
+COPY --from=frontend-build /app/client/dist ./public
 
 EXPOSE 5000
-
-CMD ["node", "server/index.js"]
-
+CMD ["npm", "start"]

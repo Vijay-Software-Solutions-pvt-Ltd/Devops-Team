@@ -16,8 +16,7 @@ RUN npm install
 
 COPY server/ ./
 
-RUN npm rebuild bcrypt --build-from-source
-
+# Copy Vite output to public folder
 COPY --from=frontend-build /app/client/dist ./public
 
 EXPOSE 5000

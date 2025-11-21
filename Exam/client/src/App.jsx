@@ -23,9 +23,9 @@ export default function App() {
     <div className="app">
 
       {/* Global Header */}
-      <header className="header">
+      {/* <header className="header">
         <Link to="/"><h2>Exam Portal (MVP)</h2></Link>
-      </header>
+      </header> */}
 
       <main>
         <Routes>

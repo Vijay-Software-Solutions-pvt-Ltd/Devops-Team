@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 
 html, body {
   height: 100%;
@@ -37,3 +38,38 @@ button { padding: 10px 14px; border-radius:6px; border:none; cursor:pointer; bac
 .choice { display:flex; align-items:center; gap:8px; padding:6px 0; }
 .proctor-area { display:flex; gap:12px; align-items:center; margin:12px 0; }
 .proctor-note { color:#6b7280; font-size:12px; } */
+=======
+html, body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+}
+
+/* Sidebar Hover Effects */
+a {
+  transition: all 0.2s ease;
+}
+
+a:hover {
+  background-color: rgba(37,99,235,0.85) !important;
+  color: #fff !important;
+  transform: translateX(4px);
+}
+
+/* Logout hover */
+button:hover {
+  opacity: 0.9;
+  transform: translateY(-1px);
+}
+
+/* Card hover */
+.card, 
+div[style*="boxShadow"] {
+  transition: all 0.2s ease;
+}
+.card:hover,
+div[style*="boxShadow"]:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 16px 30px rgba(0,0,0,.06);
+}
+>>>>>>> 93355c21baf72e0f7b0e68f8b5e81e70f5f65bb2

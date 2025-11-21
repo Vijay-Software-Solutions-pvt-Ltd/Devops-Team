@@ -1,12 +1,17 @@
-// client/src/pages/AdminDashboard.jsx
-import React, { useEffect, useState } from 'react';
-import api from '../services/api';
-import { Link } from 'react-router-dom';
+import React, { useEffect, useState } from "react";
+import api from "../services/api";
+import { Link } from "react-router-dom";
 import {
-  BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell,
-  PieChart, Pie
-} from 'recharts';
-import AdminLayout from '../components/AdminLayout';
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  Tooltip,
+  ResponsiveContainer,
+  Cell,
+  PieChart,
+  Pie
+} from "recharts";
 
 export default function AdminDashboard() {
   const [attempts, setAttempts] = useState([]);
@@ -17,12 +22,12 @@ export default function AdminDashboard() {
     avgScore: 0
   });
 
-  const COLORS = ['#4f46e5', '#06b6d4', '#f59e0b', '#10b981', '#ef4444'];
+  const COLORS = ["#2563eb", "#0ea5e9", "#22c55e", "#f59e0b", "#ef4444"];
 
   useEffect(() => {
     async function load() {
       try {
-        const res = await api.get('/admin/attempts');
+        const res = await api.get("/admin/reports/attempts");
         const data = res.data.attempts || [];
         setAttempts(data);
 
@@ -30,8 +35,6 @@ export default function AdminDashboard() {
         const totalScore = data.reduce((s, a) => s + Number(a.total_score || 0), 0);
         const avgScore = totalAttempts ? Math.round(totalScore / totalAttempts) : 0;
 
-        // ideally fetch from backend: /admin/summary
-        // for now use frontend-only dummy
         setSummary({
           totalUsers: 0,
           totalExams: 0,
@@ -45,83 +48,52 @@ export default function AdminDashboard() {
     load();
   }, []);
 
-  // Simple bar-agg
-  const scoreAgg = attempts.map(a => ({
-    email: a.email.split('@')[0],
+  const scoreAgg = attempts.map((a) => ({
+    email: a.email?.split("@")[0] || "user",
     score: Number(a.total_score || 0)
   }));
 
-  // Score distribution for Pie chart
   const scoreDistMap = {};
-  attempts.forEach(a => {
+  attempts.forEach((a) => {
     const bucket = Math.floor((a.total_score || 0) / 10) * 10;
     scoreDistMap[bucket] = (scoreDistMap[bucket] || 0) + 1;
   });
-  const scoreDist = Object.keys(scoreDistMap).map(k => ({
+
+  const scoreDist = Object.keys(scoreDistMap).map((k) => ({
     name: `${k}-${Number(k) + 9}`,
     value: scoreDistMap[k]
   }));
 
-  // Download CSV
-  async function downloadReport(examId) {
-    const token = localStorage.getItem('token');
-    const res = await fetch(`http://localhost:4000/admin/download/exam/${examId}`, {
-      method: 'GET',
-      headers: { Authorization: `Bearer ${token}` }
-    });
-    const blob = await res.blob();
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `exam_${examId}_report.csv`;
-    a.click();
-    URL.revokeObjectURL(url);
-  }
-
   return (
-    <AdminLayout>
-      <h2 style={{ marginBottom: '20px', fontWeight: 700 }}>Admin Dashboard</h2>
+    <div style={layoutStyle}>
+      <h2 style={pageTitle}>Admin Dashboard</h2>
 
       {/* Summary Cards */}
-      <div style={{
-        display: 'grid',
-        gridTemplateColumns: 'repeat(auto-fit, minmax(200px,1fr))',
-        gap: '16px',
-        marginBottom: '20px'
-      }}>
-        <div style={cardStyle}>
-          <div style={cardTitle}>Total Users</div>
-          <div style={cardValue}>{summary.totalUsers}</div>
-        </div>
-
-        <div style={cardStyle}>
-          <div style={cardTitle}>Total Exams</div>
-          <div style={cardValue}>{summary.totalExams}</div>
-        </div>
-
-        <div style={cardStyle}>
-          <div style={cardTitle}>Attempts</div>
-          <div style={cardValue}>{summary.totalAttempts}</div>
-        </div>
-
-        <div style={cardStyle}>
-          <div style={cardTitle}>Avg Score</div>
-          <div style={cardValue}>{summary.avgScore}</div>
-        </div>
+      <div style={cardGrid}>
+        {[
+          { title: "Total Users", value: summary.totalUsers },
+          { title: "Total Exams", value: summary.totalExams },
+          { title: "Attempts", value: summary.totalAttempts },
+          { title: "Avg Score", value: summary.avgScore }
+        ].map((card, i) => (
+          <div key={i} style={cardStyle}>
+            <div style={cardTitle}>{card.title}</div>
+            <div style={cardValue}>{card.value}</div>
+          </div>
+        ))}
       </div>
 
-      {/* Charts Row */}
-      <div style={{ display: 'flex', gap: 20, marginBottom: 20 }}>
-        {/* Bar Chart */}
-        <div style={{ flex: 2, background: '#fff', padding: 20, borderRadius: 12 }}>
-          <h4>Score per Student</h4>
-          <ResponsiveContainer width="100%" height={300}>
+      {/* Charts */}
+      <div style={chartRow}>
+        <div style={chartBox}>
+          <h4>Score Per Student</h4>
+          <ResponsiveContainer width="100%" height={260}>
             <BarChart data={scoreAgg}>
               <XAxis dataKey="email" />
               <YAxis />
               <Tooltip />
-              <Bar dataKey="score">
-                {scoreAgg.map((entry, index) => (
+              <Bar dataKey="score" radius={[6, 6, 0, 0]}>
+                {scoreAgg.map((_, index) => (
                   <Cell key={index} fill={COLORS[index % COLORS.length]} />
                 ))}
               </Bar>
@@ -129,13 +101,12 @@ export default function AdminDashboard() {
           </ResponsiveContainer>
         </div>
 
-        {/* Pie Chart */}
-        <div style={{ flex: 1, background: '#fff', padding: 20, borderRadius: 12 }}>
+        <div style={chartBox}>
           <h4>Score Distribution</h4>
-          <ResponsiveContainer width="100%" height={300}>
+          <ResponsiveContainer width="100%" height={260}>
             <PieChart>
-              <Pie data={scoreDist} dataKey="value" nameKey="name" outerRadius={100}>
-                {scoreDist.map((entry, index) => (
+              <Pie data={scoreDist} dataKey="value" nameKey="name" outerRadius={90}>
+                {scoreDist.map((_, index) => (
                   <Cell key={index} fill={COLORS[index % COLORS.length]} />
                 ))}
               </Pie>
@@ -145,62 +116,122 @@ export default function AdminDashboard() {
         </div>
       </div>
 
-      {/* Attempt Table */}
-      <h3 style={{ marginBottom: 10 }}>Recent Attempts</h3>
-
-      <table style={tableStyle}>
-        <thead>
-          <tr>
-            <th>Attempt ID</th>
-            <th>User</th>
-            <th>Score</th>
-            <th>Violations</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          {attempts.map((a, idx) => (
-            <tr key={a.id || idx} style={idx % 2 ? rowAlt : {}}>
-              <td>{a.id}</td>
-              <td>{a.email}</td>
-              <td>{a.total_score || 0}</td>
-              <td>{a.violation_count || 0}</td>
-              <td>
-                <Link to={`/admin/attempt/${a.id}`}>View</Link>
-              </td>
+      {/* Table */}
+      <div style={tableBox}>
+        <h3>Recent Attempts</h3>
+        <table style={tableStyle}>
+          <thead style={{ background: "#e2e8f0" }}>
+            <tr>
+              <th style={th}>Attempt ID</th>
+              <th style={th}>User</th>
+              <th style={th}>Score</th>
+              <th style={th}>Violations</th>
+              <th style={th}>Action</th>
             </tr>
-          ))}
-        </tbody>
-      </table>
-    </AdminLayout>
+          </thead>
+          <tbody>
+            {attempts.map((a, idx) => (
+              <tr key={a.id || idx} style={idx % 2 ? rowAlt : {}}>
+                <td style={td}>{a.id}</td>
+                <td style={td}>{a.email}</td>
+                <td style={td}>{a.total_score}</td>
+                <td style={td}>{a.violation_count}</td>
+                <td style={td}>
+                  <Link style={link} to={`/admin/attempt/${a.id}`}>
+                    View
+                  </Link>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
   );
 }
 
+/* ---------- STYLES ---------- */
+
+const layoutStyle = {
+  background: "#f1f5f9",
+  minHeight: "100vh",
+  padding: "24px"
+};
+
+const pageTitle = {
+  fontWeight: 700,
+  marginBottom: 20
+};
+
+const cardGrid = {
+  display: "grid",
+  gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
+  gap: "16px",
+  marginBottom: 24
+};
+
 const cardStyle = {
-  background: '#ffffff',
-  padding: '20px',
-  borderRadius: '12px',
-  boxShadow: '0 6px 18px rgba(0,0,0,0.06)'
+  background: "#fff",
+  padding: "18px",
+  borderRadius: "12px",
+  boxShadow: "0 4px 14px rgba(0,0,0,0.06)"
 };
 
 const cardTitle = {
-  fontSize: 12,
-  color: '#64748b'
+  fontSize: 13,
+  color: "#64748b"
 };
 
 const cardValue = {
-  fontSize: 26,
+  fontSize: 24,
   fontWeight: 700,
-  marginTop: 4
+  marginTop: 6
+};
+
+const chartRow = {
+  display: "grid",
+  gridTemplateColumns: "2fr 1fr",
+  gap: "20px",
+  marginBottom: 24
+};
+
+const chartBox = {
+  background: "#ffffff",
+  borderRadius: "12px",
+  padding: "18px",
+  boxShadow: "0 4px 14px rgba(0,0,0,0.06)"
+};
+
+const tableBox = {
+  background: "#ffffff",
+  padding: "18px",
+  borderRadius: "12px",
+  boxShadow: "0 4px 14px rgba(0,0,0,0.06)"
 };
 
 const tableStyle = {
-  width: '100%',
-  background: '#fff',
-  borderCollapse: 'collapse',
-  borderRadius: '12px'
+  width: "100%",
+  borderCollapse: "collapse"
+};
+
+const th = {
+  padding: "12px",
+  fontSize: "13px",
+  textAlign: "left"
+};
+
+const td = {
+  padding: "12px",
+  fontSize: "13px",
+  borderBottom: "1px solid #e2e8f0"
 };
 
 const rowAlt = {
-  background: '#f8fafc'
+  background: "#f9fafb"
+};
+
+const link = {
+  color: "#2563eb",
+  fontWeight: 600,
+  textDecoration: "none"
 };

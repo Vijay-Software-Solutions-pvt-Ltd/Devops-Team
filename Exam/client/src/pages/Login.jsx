@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 // // client/src/pages/Login.jsx
 // import React, { useState } from 'react';
 // import api from '../services/api';
@@ -50,6 +51,12 @@ import { useNavigate } from "react-router-dom";
 
 import bgImage from "../assets/images/img1.jpg";
 import logo from "../assets/images/logo.jpg";
+=======
+import React, { useState } from "react";
+import api from "../services/api";
+import { useNavigate } from "react-router-dom";
+import '../pages/login.css';
+>>>>>>> 93355c21baf72e0f7b0e68f8b5e81e70f5f65bb2
 
 export default function Login() {
   const [email, setEmail] = useState("");
@@ -66,6 +73,7 @@ export default function Login() {
     try {
       const res = await api.post("/auth/login", { email, password });
 
+<<<<<<< HEAD
       // Save token
       localStorage.setItem("token", res.data.token);
 
@@ -89,11 +97,24 @@ export default function Login() {
         nav("/student");   // change to your student page
       }
     } catch (err) {
+=======
+      localStorage.setItem("token", res.data.token);
+      localStorage.setItem("user", JSON.stringify(res.data.user));
+
+      if (res.data.user.role === "admin") {
+        nav("/admin");
+      } else {
+        nav("/student");
+      }
+    } catch (err) {
+      console.error(err);
+>>>>>>> 93355c21baf72e0f7b0e68f8b5e81e70f5f65bb2
       alert(err?.response?.data?.error || "Login failed");
     }
   }
 
   return (
+<<<<<<< HEAD
     <div className="min-h-screen w-full flex justify-center items-center bg-gradient-to-r from-[#5499D6] to-[#4787C1] p-4">
 
       {/* CARD CONTAINER */}
@@ -185,6 +206,53 @@ export default function Login() {
               </button>
             </div>
           </form>
+=======
+    <div className="login-page">
+      <div className="login-container">
+
+        {/* Left Side Image Section */}
+        <div className="login-left">
+          <div className="login-overlay">
+            <h2>Vijay Software Solutions Pvt Ltd</h2>
+            <p>Online Examination Portal</p>
+            <p>Start your exam with confidence.</p>
+          </div>
+        </div>
+
+        {/* Right Side Form Section */}
+        <div className="login-right">
+          <div className="login-card">
+            <h2 className="logo-text">LOGIN</h2>
+
+            <form onSubmit={handleLogin}>
+              <div className="form-group">
+                <label>Email</label>
+                <input
+                  type="email"
+                  placeholder="Enter your email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
+                />
+              </div>
+
+              <div className="form-group">
+                <label>Password</label>
+                <input
+                  type="password"
+                  placeholder="********"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                />
+              </div>
+
+              <button type="submit" className="login-btn">
+                Submit
+              </button>
+            </form>
+          </div>
+>>>>>>> 93355c21baf72e0f7b0e68f8b5e81e70f5f65bb2
         </div>
 
       </div>

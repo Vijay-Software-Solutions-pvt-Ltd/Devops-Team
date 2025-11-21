@@ -1,7 +1,6 @@
 // client/src/pages/AdminUsers.jsx
 import React, { useEffect, useState } from 'react';
 import api from '../services/api';
-import AdminLayout from '../components/AdminLayout';
 
 export default function AdminUsers() {
   const [users, setUsers] = useState([]);
@@ -26,8 +25,6 @@ export default function AdminUsers() {
   }
 
   return (
-     <AdminLayout>
-         <AdminNavbar>
 
     <div>
       <h3>Admin - Users</h3>
@@ -59,7 +56,6 @@ export default function AdminUsers() {
         </tbody>
       </table>
     </div>
-</AdminNavbar >
- </AdminLayout>
+
   );
 }

@@ -2,16 +2,11 @@ FROM node:18 AS frontend-build
 WORKDIR /app/client
 
 COPY client/package*.json ./
-RUN npm install --include=dev
+RUN npm install
 
 COPY client/ ./
-
-# Force install vite globally (prevents PATH issues)
 RUN npm install -g vite@5
-
-# Run vite build with the global binary
-RUN /usr/local/bin/vite build
-
+RUN vite build
 
 FROM node:18 AS backend
 WORKDIR /app/server
@@ -21,6 +16,7 @@ RUN npm install
 
 COPY server/ ./
 
+# Copy Vite output to public folder
 COPY --from=frontend-build /app/client/dist ./public
 
 EXPOSE 5000

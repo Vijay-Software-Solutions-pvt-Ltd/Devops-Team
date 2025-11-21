@@ -1,7 +1,9 @@
 // server/src/index.js
+const functions = require("firebase-functions");
 const express = require('express');
 const bodyParser = require('body-parser');
 const cors = require('cors');
+const path = require('path');
 require('dotenv').config();
 
 const authRoutes = require('./routes/auth/auth');
@@ -14,10 +16,7 @@ const orgRoutes = require('./routes/admin/admin_orgs');
 const app = express();
 
 /* ===== CORS CONFIG (Required for Cookies / Sessions) ===== */
-app.use(cors({
-  origin: "http://localhost:5173",
-  credentials: true
-}));
+app.use(cors({ origin: true }));
 
 app.use(bodyParser.json());
 
@@ -35,12 +34,4 @@ app.use('/admin/users', adminUsersRoutes);
 app.use('/admin/reports', adminReportsRoutes);
 app.use('/admin/orgs', orgRoutes);
 
-app.get('/', (req, res) => {
-  res.json({ status: "Server is running ✅" });
-});
-
-/* ===== START SERVER ===== */
-const PORT = process.env.PORT || 4000;
-app.listen(PORT, () => {
-  console.log(`✅ Server running at http://localhost:${PORT}`);
-});
+exports.api = functions.https.onRequest(app);

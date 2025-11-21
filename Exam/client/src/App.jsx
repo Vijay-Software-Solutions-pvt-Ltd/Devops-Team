@@ -35,14 +35,6 @@ export default function App() {
   return (
     <div className="app">
 
-<<<<<<< HEAD
-      {/* Global Header */}
-      {/* <header className="header">
-        <Link to="/"><h2>Exam Portal (MVP)</h2></Link>
-      </header> */}
-
-=======
->>>>>>> 93355c21baf72e0f7b0e68f8b5e81e70f5f65bb2
       <main>
         <Routes>
           {/* ================= PUBLIC ================= */}

@@ -1,42 +1,81 @@
-// client/src/pages/Login.jsx
-import React, { useState } from 'react';
-import api from '../services/api';
-import { useNavigate } from 'react-router-dom';
+import React, { useState } from "react";
+import api from "../services/api";
+import { useNavigate } from "react-router-dom";
+import '../pages/login.css';
 
 export default function Login() {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const nav = useNavigate();
 
   async function handleLogin(e) {
     e.preventDefault();
     try {
-      const res = await api.post('/auth/login', { email, password });
-      localStorage.setItem('token', res.data.token);
-      // store user object for client-side RBAC
-      localStorage.setItem('user', JSON.stringify(res.data.user || {}));
+      const res = await api.post("/auth/login", { email, password });
 
-      // redirect based on role
-      const role = res.data.user?.role || 'user';
-      if (role === 'admin') {
-        nav('/admin');
+      localStorage.setItem("token", res.data.token);
+      localStorage.setItem("user", JSON.stringify(res.data.user));
+
+      if (res.data.user.role === "admin") {
+        nav("/admin");
       } else {
-        nav('/');
+        nav("/student");
       }
     } catch (err) {
       console.error(err);
-      alert(err?.response?.data?.error || 'Login failed');
+      alert(err?.response?.data?.error || "Login failed");
     }
   }
 
   return (
-    <div className="card" style={{maxWidth:400, margin:'40px auto'}}>
-      <h3>Login</h3>
-      <form onSubmit={handleLogin}>
-        <input placeholder="Email" value={email} onChange={e => setEmail(e.target.value)} />
-        <input placeholder="Password" type="password" value={password} onChange={e => setPassword(e.target.value)} />
-        <button type="submit">Login</button>
-      </form>
+    <div className="login-page">
+      <div className="login-container">
+
+        {/* Left Side Image Section */}
+        <div className="login-left">
+          <div className="login-overlay">
+            <h2>Vijay Software Solutions Pvt Ltd</h2>
+            <p>Online Examination Portal</p>
+            <p>Start your exam with confidence.</p>
+          </div>
+        </div>
+
+        {/* Right Side Form Section */}
+        <div className="login-right">
+          <div className="login-card">
+            <h2 className="logo-text">LOGIN</h2>
+
+            <form onSubmit={handleLogin}>
+              <div className="form-group">
+                <label>Email</label>
+                <input
+                  type="email"
+                  placeholder="Enter your email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
+                />
+              </div>
+
+              <div className="form-group">
+                <label>Password</label>
+                <input
+                  type="password"
+                  placeholder="********"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                />
+              </div>
+
+              <button type="submit" className="login-btn">
+                Submit
+              </button>
+            </form>
+          </div>
+        </div>
+
+      </div>
     </div>
   );
 }

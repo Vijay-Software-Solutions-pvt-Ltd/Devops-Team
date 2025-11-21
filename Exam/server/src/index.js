@@ -3,25 +3,44 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const cors = require('cors');
 require('dotenv').config();
-const authRoutes = require('./routes/auth');
-const examsRoutes = require('./routes/exams');
-const attemptsRoutes = require('./routes/attempts');
-const adminRoutes = require('./routes/admin');
-const orgRoutes = require('./routes/orgs');
-const adminUsersRoutes = require('./routes/adminUsers');
+
+const authRoutes = require('./routes/auth/auth');
+const userAttemptsRoutes = require('./routes/user/user_attempts');
+const adminExamsRoutes = require('./routes/admin/admin_exams');
+const adminUsersRoutes = require('./routes/admin/admin_users');
+const adminReportsRoutes = require('./routes/admin/admin_reports');
+const orgRoutes = require('./routes/admin/admin_orgs');
 
 const app = express();
-app.use(cors());
+
+/* ===== CORS CONFIG (Required for Cookies / Sessions) ===== */
+app.use(cors({
+  origin: "http://localhost:5173",
+  credentials: true
+}));
+
 app.use(bodyParser.json());
 
-app.use('/auth', authRoutes);
-app.use('/exams', examsRoutes);
-app.use('/attempts', attemptsRoutes);
-app.use('/admin', adminRoutes);
-app.use('/orgs', orgRoutes);
-app.use('/admin/users', adminUsersRoutes);
+/* ===== ROUTES ===== */
 
+// Auth (Login / Logout / Register)
+app.use('/auth', authRoutes);
+
+// User routes
+app.use('/user/attempts', userAttemptsRoutes);
+
+// Admin routes
+app.use('/admin/exams', adminExamsRoutes);
+app.use('/admin/users', adminUsersRoutes);
+app.use('/admin/reports', adminReportsRoutes);
+app.use('/admin/orgs', orgRoutes);
+
+app.get('/', (req, res) => {
+  res.json({ status: "Server is running ✅" });
+});
+
+/* ===== START SERVER ===== */
 const PORT = process.env.PORT || 4000;
 app.listen(PORT, () => {
-  console.log(`Server listening on ${PORT}`);
+  console.log(`✅ Server running at http://localhost:${PORT}`);
 });

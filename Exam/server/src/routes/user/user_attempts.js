@@ -1,4 +1,4 @@
-// server/src/routes/attempts.js
+// server/src/routes/user_attempts.js
 const express = require('express');
 const router = express.Router();
 const db = require('../../db');
@@ -25,7 +25,7 @@ router.post('/start/:examId', auth, async (req, res) => {
     const exam = examQ.rows[0];
     const id = uuidv4();
     const token = uuidv4(); 
-    const allowedSeconds = (exam.duration_minutes || 30) * 60;
+    const allowedSeconds = (exam.duration_minutes || 45) * 60;
     await db.query(
       `INSERT INTO exam.attempts (id, user_id, exam_id, started_at_server, attempt_token, allowed_duration, status)
         VALUES ($1,$2,$3,now(),$4,$5,'in_progress')`,
@@ -140,17 +140,58 @@ router.post('/:attemptId/log', auth, async (req, res) => {
   }
 });
 
+const bucket = require("../../firebase");
+
 router.post('/:attemptId/snapshot', auth, async (req, res) => {
-  const { attemptId } = req.params;
-  const { imageBase64 } = req.body;
   try {
-    const q = await db.query('SELECT id FROM exam.attempts WHERE id=$1', [attemptId]);
-    if (!q.rows[0]) return res.status(404).json({ error: 'attempt not found' });
-    await db.query('INSERT INTO exam.snapshots (id, attempt_id, user_id, image_base64) VALUES ($1,$2,$3,$4)', [uuidv4(), attemptId, req.user.id, imageBase64]);
-    res.json({ ok: true });
+    const { attemptId } = req.params;
+    const { imageBase64 } = req.body;
+
+    const buffer = Buffer.from(imageBase64, "base64");
+
+    const fileName = `exam-monitoring/${req.user.id}/${attemptId}/${Date.now()}.png`;
+    const file = bucket.file(fileName);
+
+    await file.save(buffer, {
+      metadata: { contentType: "image/png" }
+    });
+
+    const url = `https://storage.googleapis.com/${bucket.name}/${fileName}`;
+
+    // ✅ Save URL in database instead of base64
+    await db.query(
+      `INSERT INTO exam.snapshots (id, attempt_id, user_id, image_url)
+       VALUES ($1,$2,$3,$4)`,
+      [uuidv4(), attemptId, req.user.id, url]
+    );
+
+    res.json({ ok: true, url });
+
   } catch (err) {
     console.error(err);
-    res.status(500).json({ error: 'failed to upload snapshot' });
+    res.status(500).json({ error: "upload failed" });
+  }
+});
+
+router.post('/:attemptId/snapshot-url', auth, async (req, res) => {
+  const { attemptId } = req.params;
+  const { imageUrl } = req.body;
+
+  try {
+    await db.query(`
+      INSERT INTO exam.snapshots (id, attempt_id, user_id, image_base64)
+      VALUES ($1, $2, $3, $4)
+    `, [
+      require('uuid').v4(),
+      attemptId,
+      req.user.id,
+      imageUrl   
+    ]);
+
+    res.json({ ok: true });
+  } catch (err) {
+    console.error("Snapshot URL save failed:", err);
+    res.status(500).json({ error: 'snapshot save failed' });
   }
 });
 

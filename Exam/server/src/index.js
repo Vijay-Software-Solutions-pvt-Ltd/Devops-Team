@@ -1,13 +1,12 @@
 // server/src/index.js
-const functions = require("firebase-functions");
 const express = require('express');
 const bodyParser = require('body-parser');
 const cors = require('cors');
-const path = require('path');
 require('dotenv').config();
 
 const authRoutes = require('./routes/auth/auth');
 const userAttemptsRoutes = require('./routes/user/user_attempts');
+const userExamsRoutes = require('./routes/user/user_exams');
 const adminExamsRoutes = require('./routes/admin/admin_exams');
 const adminUsersRoutes = require('./routes/admin/admin_users');
 const adminReportsRoutes = require('./routes/admin/admin_reports');
@@ -15,31 +14,36 @@ const orgRoutes = require('./routes/admin/admin_orgs');
 
 const app = express();
 
-const allowedOrigins = ['https://exam-96957713-e7f90.web.app'];
+/* ===== CORS CONFIG (Required for Cookies / Sessions) ===== */
+app.use(cors({
+  origin: "http://localhost:5173",
+  credentials: true
+}));
 
-const corsOptions = {
-  origin: function (origin, callback) {
-    if (allowedOrigins.indexOf(origin) !== -1 || !origin) {
-      callback(null, true);
-    } else {
-      callback(new Error('Not allowed by CORS'));
-    }
-  },
-  methods: 'GET,POST,PUT,DELETE,OPTIONS',
-  allowedHeaders: 'Content-Type,Authorization',
-  optionsSuccessStatus: 200
-};
-
-app.options('*', cors(corsOptions));
-app.use(cors(corsOptions));
-app.use(bodyParser.json());
+app.use(bodyParser.json({ limit: "15mb" }));
+app.use(bodyParser.urlencoded({ extended: true, limit: "15mb" }));
 
 /* ===== ROUTES ===== */
+
+// Auth (Login / Logout / Register)
 app.use('/auth', authRoutes);
+
+// User routes
+app.use('/user/exams', userExamsRoutes);
 app.use('/user/attempts', userAttemptsRoutes);
+
+// Admin routes
 app.use('/admin/exams', adminExamsRoutes);
 app.use('/admin/users', adminUsersRoutes);
 app.use('/admin/reports', adminReportsRoutes);
 app.use('/admin/orgs', orgRoutes);
 
-exports.api = functions.https.onRequest(app);
+app.get('/', (req, res) => {
+  res.json({ status: "Server is running ✅" });
+});
+
+/* ===== START SERVER ===== */
+const PORT = process.env.PORT || 4000;
+app.listen(PORT, () => {
+  console.log(`✅ Server running at http://localhost:${PORT}`);
+});

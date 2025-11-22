@@ -1,7 +1,7 @@
 // client/src/services/api.js
 import axios from 'axios';
 
-const API_BASE = 'https://api-56f65wk7xq-uc.a.run.app';
+const API_BASE = 'http://localhost:4000';
 
 function getToken() {
   return localStorage.getItem('token');

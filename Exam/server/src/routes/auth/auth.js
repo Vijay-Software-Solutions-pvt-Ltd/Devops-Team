@@ -9,14 +9,26 @@ require('dotenv').config();
 
 // Register (public) - optional org_id
 router.post('/register', async (req, res) => {
-  const { name, email, password, org_id } = req.body;
+  const { name, email, password, org_id, role } = req.body;
   if (!email || !password) return res.status(400).json({ error: 'email and password required' });
   try {
     const hashed = await hashPassword(password);
     const id = uuidv4();
-    const q = await db.query(
-      `INSERT INTO exam.users (id, name, email, password_hash, org_id, created_by) VALUES ($1,$2,$3,$4,$5,$6) RETURNING id, email, name, role, org_id`,
-      [id, name || null, email, hashed, org_id || null, null]
+   const q = await db.query(
+      `INSERT INTO exam.users 
+       (id, name, email, password_hash, role, org_id, is_active, created_at, created_by)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,now(),$8)
+       RETURNING id, email, name, role, org_id`,
+      [
+        id,
+        name ,
+        email,
+        hashed,
+        role || 'student',     // ✅ Default role
+        org_id || null,
+        true,               // ✅ Default is_active
+        null                // created_by
+      ]
     );
     res.json({ user: q.rows[0] });
   } catch (err) {

@@ -1,8 +1,9 @@
 // server/src/index.js
+console.log("Final attempt: Manually setting CORS headers.");
 const functions = require("firebase-functions");
 const express = require('express');
 const bodyParser = require('body-parser');
-const cors = require('cors');
+// const cors = require('cors'); // No longer using the cors package
 const path = require('path');
 require('dotenv').config();
 
@@ -15,8 +16,23 @@ const orgRoutes = require('./routes/admin/admin_orgs');
 
 const app = express();
 
-/* ===== CORS CONFIG (Required for Cookies / Sessions) ===== */
-app.use(cors({ origin: true }));
+// Manual CORS Middleware
+app.use((req, res, next) => {
+  const allowedOrigins = ['https://exam-96957713-e7f90.web.app'];
+  const origin = req.headers.origin;
+  if (allowedOrigins.includes(origin)) {
+    res.setHeader('Access-Control-Allow-Origin', origin);
+  }
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  
+  // Handle preflight requests
+  if (req.method === 'OPTIONS') {
+    res.sendStatus(204);
+  } else {
+    next();
+  }
+});
 
 app.use(bodyParser.json());
 

@@ -2,6 +2,7 @@
 import React, { useEffect, useState } from 'react';
 import api from '../services/api';
 import { useParams } from 'react-router-dom';
+import StudentHeader from "../components/StudentHeader";
 
 export default function AttemptView() {
   const { id } = useParams();
@@ -12,6 +13,8 @@ export default function AttemptView() {
   if (!data) return <div>Loading...</div>;
   const { attempt, answers, logs, snapshots } = data;
   return (
+    <>
+      <StudentHeader />
     <div>
       <h3>Attempt {attempt.id}</h3>
       <p>User: {attempt.user_id}</p>
@@ -23,5 +26,6 @@ export default function AttemptView() {
       <h4>Snapshots</h4>
       <ul>{snapshots.map(s => <li key={s.id}><a href={`#snapshot-${s.id}`} onClick={() => alert('Preview stored in DB - implement S3 storage for previews')}>{s.id} - {s.captured_at}</a></li>)}</ul>
     </div>
+    </>
   );
 }

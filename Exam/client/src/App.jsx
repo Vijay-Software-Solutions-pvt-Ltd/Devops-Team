@@ -3,7 +3,6 @@ import React from "react";
 import { Routes, Route, Link, Navigate, Outlet } from "react-router-dom";
 
 import Login from "./pages/Login";
-import ExamList from "./pages/ExamList";
 import ExamPage from "./pages/ExamPage";
 import ExamDetails from "./pages/ExamDetails";
 import StudentDashboard from "./pages/StudentDashboard";
@@ -13,6 +12,7 @@ import AdminUsers from "./pages/AdminUsers";
 import AdminOrgs from "./pages/AdminOrgs";
 import AdminCreateExam from "./pages/AdminCreateExam";
 import AttemptView from "./pages/AttemptView";
+import AdminAttemptDetails from "./pages/AdminAttemptDetails";
 
 import RequireAdmin from "./components/RequireAdmin";
 import AdminLayout from "./components/AdminLayout";
@@ -54,7 +54,6 @@ export default function App() {
 
           {/* ================= STUDENT ROUTES ================= */}
           <Route path="/student" element={<StudentDashboard />} />
-          <Route path="/examlist" element={<ExamList />} />
           <Route path="/exams/:id" element={<ExamPage />} />
           <Route path="/exams/:id/details" element={<ExamDetails />} />
 
@@ -65,6 +64,7 @@ export default function App() {
             <Route path="orgs" element={<AdminOrgs />} />
             <Route path="create-exam" element={<AdminCreateExam />} />
             <Route path="attempt/:id" element={<AttemptView />} />
+            <Route path="/admin/attempt/:attemptId" element={<AdminAttemptDetails />} />
           </Route>
 
         </Routes>

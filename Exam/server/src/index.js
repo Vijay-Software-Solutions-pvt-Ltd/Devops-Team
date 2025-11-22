@@ -6,6 +6,7 @@ require('dotenv').config();
 
 const authRoutes = require('./routes/auth/auth');
 const userAttemptsRoutes = require('./routes/user/user_attempts');
+const userExamsRoutes = require('./routes/user/user_exams');
 const adminExamsRoutes = require('./routes/admin/admin_exams');
 const adminUsersRoutes = require('./routes/admin/admin_users');
 const adminReportsRoutes = require('./routes/admin/admin_reports');
@@ -19,7 +20,8 @@ app.use(cors({
   credentials: true
 }));
 
-app.use(bodyParser.json());
+app.use(bodyParser.json({ limit: "15mb" }));
+app.use(bodyParser.urlencoded({ extended: true, limit: "15mb" }));
 
 /* ===== ROUTES ===== */
 
@@ -27,6 +29,7 @@ app.use(bodyParser.json());
 app.use('/auth', authRoutes);
 
 // User routes
+app.use('/user/exams', userExamsRoutes);
 app.use('/user/attempts', userAttemptsRoutes);
 
 // Admin routes

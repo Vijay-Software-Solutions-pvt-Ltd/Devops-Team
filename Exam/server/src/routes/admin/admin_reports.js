@@ -54,6 +54,25 @@ router.post('/create', auth, requireRole('admin'), async (req,res)=>{
   res.json({ exam_id });
 });
 
+// ✅ Get snapshots for an attempt
+router.get('/attempt/:attemptId/snapshots', auth, requireRole('admin'), async (req, res) => {
+  const { attemptId } = req.params;
+  try {
+    const q = await db.query(`
+      SELECT id, image_url, captured_at 
+      FROM exam.snapshots 
+      WHERE attempt_id=$1
+      ORDER BY captured_at DESC
+    `, [attemptId]);
+
+    res.json({ snapshots: q.rows });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Failed to fetch snapshots' });
+  }
+});
+
+
 const { Parser } = require('json2csv');
 router.get('/download/exam/:examId', auth, requireRole('admin'), async (req,res) => {
   const examId = req.params.examId;

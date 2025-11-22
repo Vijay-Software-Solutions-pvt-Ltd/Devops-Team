@@ -1,9 +1,8 @@
 // server/src/index.js
-console.log("Final attempt: Manually setting CORS headers.");
 const functions = require("firebase-functions");
 const express = require('express');
 const bodyParser = require('body-parser');
-// const cors = require('cors'); // No longer using the cors package
+const cors = require('cors');
 const path = require('path');
 require('dotenv').config();
 
@@ -16,35 +15,28 @@ const orgRoutes = require('./routes/admin/admin_orgs');
 
 const app = express();
 
-// Manual CORS Middleware
-app.use((req, res, next) => {
-  const allowedOrigins = ['https://exam-96957713-e7f90.web.app'];
-  const origin = req.headers.origin;
-  if (allowedOrigins.includes(origin)) {
-    res.setHeader('Access-Control-Allow-Origin', origin);
-  }
-  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-  
-  // Handle preflight requests
-  if (req.method === 'OPTIONS') {
-    res.sendStatus(204);
-  } else {
-    next();
-  }
-});
+const allowedOrigins = ['https://exam-96957713-e7f90.web.app'];
 
+const corsOptions = {
+  origin: function (origin, callback) {
+    if (allowedOrigins.indexOf(origin) !== -1 || !origin) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
+  methods: 'GET,POST,PUT,DELETE,OPTIONS',
+  allowedHeaders: 'Content-Type,Authorization',
+  optionsSuccessStatus: 200
+};
+
+app.options('*', cors(corsOptions));
+app.use(cors(corsOptions));
 app.use(bodyParser.json());
 
 /* ===== ROUTES ===== */
-
-// Auth (Login / Logout / Register)
 app.use('/auth', authRoutes);
-
-// User routes
 app.use('/user/attempts', userAttemptsRoutes);
-
-// Admin routes
 app.use('/admin/exams', adminExamsRoutes);
 app.use('/admin/users', adminUsersRoutes);
 app.use('/admin/reports', adminReportsRoutes);

@@ -51,6 +51,15 @@ app.get("/", (req, res) => {
   res.status(200).json({ status: "Backend Running" });
 });
 
+app.get("/test-db", async (req, res) => {
+  try {
+    const result = await pool.query("SELECT NOW()");
+    res.json({ db: "connected", time: result.rows[0].now });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // ------------------------------------------------------
 // HARD FIX FOR CLOUD RUN CORS (YOU MISSED THIS PART)
 // ------------------------------------------------------

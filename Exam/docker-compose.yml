@@ -1,5 +1,5 @@
-# docker-compose.yml
 version: "3.8"
+
 services:
   postgres:
     image: postgres:15
@@ -12,5 +12,21 @@ services:
       - pgdata:/var/lib/postgresql/data
     ports:
       - "5432:5432"
+
+  backend:
+    build: .
+    container_name: exam_backend
+    ports:
+      - "4000:4000"
+    depends_on:
+      - postgres
+    environment:
+      DB_HOST: postgres
+      DB_USER: postgres
+      DB_PASSWORD: MvrLv@2418
+      DB_NAME: examdb
+      DB_PORT: 5432
+      PORT: 4000
+
 volumes:
   pgdata:

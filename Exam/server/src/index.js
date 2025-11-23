@@ -1,6 +1,5 @@
 const express = require("express");
 const bodyParser = require("body-parser");
-const cors = require("cors");
 require("dotenv").config();
 const initFirebase = require("./firebase");
 const pool = require("./db");
@@ -22,50 +21,18 @@ console.log("🔥 Cloud Run ENV →");
 console.log("PORT =", PORT);
 console.log("FB_BUCKET =", process.env.FB_BUCKET);
 
-// BASE CORS
-app.use(
-  cors({
-    origin: [
-      "http://localhost:5173",
-      "https://exam-96957713-e7f90.web.app",
-      "https://exam-96957713.firebaseapp.com",
-    ],
-    methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
-    allowedHeaders: ["Content-Type", "Authorization"],
-    credentials: true,
-  })
-);
+// CORS
+const allowedOrigins = [
+  "http://localhost:5173",
+  "https://exam-96957713-e7f90.web.app",
+  "https://exam-96957713.firebaseapp.com",
+];
 
-app.options("*", cors());
-
-// BODY PARSER
-app.use(bodyParser.json({ limit: "20mb" }));
-app.use(bodyParser.urlencoded({ extended: true, limit: "20mb" }));
-
-// HEALTH CHECK
-app.get("/health", (req, res) => {
-  res.status(200).json({ status: "OK", time: new Date() });
-});
-
-// ROOT TEST
-app.get("/", (req, res) => {
-  res.status(200).json({ status: "Backend Running" });
-});
-
-app.get("/test-db", async (req, res) => {
-  try {
-    const result = await pool.query("SELECT NOW()");
-    res.json({ db: "connected", time: result.rows[0].now });
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});
-
-// ------------------------------------------------------
-// HARD FIX FOR CLOUD RUN CORS (YOU MISSED THIS PART)
-// ------------------------------------------------------
 app.use((req, res, next) => {
-  res.header("Access-Control-Allow-Origin", "https://exam-96957713-e7f90.web.app");
+  const origin = req.headers.origin;
+  if (allowedOrigins.includes(origin)) {
+    res.header("Access-Control-Allow-Origin", origin);
+  }
   res.header("Access-Control-Allow-Methods", "GET, POST, PUT, PATCH, DELETE, OPTIONS");
   res.header("Access-Control-Allow-Headers", "Content-Type, Authorization");
   res.header("Access-Control-Allow-Credentials", "true");
@@ -76,7 +43,31 @@ app.use((req, res, next) => {
   next();
 });
 
-// API ROUTES
+// BODY
+app.use(bodyParser.json({ limit: "20mb" }));
+app.use(bodyParser.urlencoded({ extended: true, limit: "20mb" }));
+
+// HEALTH CHECK
+app.get("/health", (req, res) => {
+  res.status(200).json({ status: "OK", time: new Date() });
+});
+
+// ROOT
+app.get("/", (req, res) => {
+  res.status(200).json({ status: "Backend Running" });
+});
+
+// DB TEST
+app.get("/test-db", async (req, res) => {
+  try {
+    const result = await pool.query("SELECT * from exam.exams;");
+    res.json({ db: "connected", time: result.rows[0].now });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ROUTES
 app.use("/auth", authRoutes);
 app.use("/user/exams", userExamsRoutes);
 app.use("/user/attempts", userAttemptsRoutes);
@@ -85,7 +76,7 @@ app.use("/admin/users", adminUsersRoutes);
 app.use("/admin/reports", adminReportsRoutes);
 app.use("/admin/orgs", orgRoutes);
 
-// START SERVER
+// START
 (async () => {
   try {
     await initFirebase();

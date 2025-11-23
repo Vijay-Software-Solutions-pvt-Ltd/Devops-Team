@@ -1,24 +1,19 @@
 const admin = require("firebase-admin");
-const { Storage } = require("@google-cloud/storage");
-const storage = new Storage();
-
-const bucketName = process.env.FB_CREDS_BUCKET; 
-const keyFileName = "firebase-service-account.json";
 
 async function initFirebase() {
-  const [file] = await storage
-    .bucket(bucketName)
-    .file(keyFileName)
-    .download();
+  try {
+    if (!admin.apps.length) {
+      admin.initializeApp({
+        credential: admin.credential.applicationDefault(),
+        storageBucket: process.env.FB_BUCKET,
+      });
 
-  const serviceAccount = JSON.parse(file.toString());
-
-  admin.initializeApp({
-    credential: admin.credential.cert(serviceAccount),
-    storageBucket: process.env.FB_BUCKET
-  });
-
-  console.log("✅ Firebase Admin initialized");
+      console.log("🔥 Firebase Admin initialized with Cloud Run IAM");
+    }
+  } catch (error) {
+    console.error("❌ Firebase initialization failed:", error);
+    throw error; // Important: fail early if Firebase fails
+  }
 }
 
 module.exports = initFirebase;

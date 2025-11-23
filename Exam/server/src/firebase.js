@@ -1,11 +1,11 @@
 const admin = require("firebase-admin");
 
 async function initFirebase() {
+   console.log("FB_BUCKET =", process.env.FB_BUCKET);
   try {
     if (!admin.apps.length) {
-      console.log("FB_BUCKET =", process.env.FB_BUCKET);
+     
       admin.initializeApp({
-        
         credential: admin.credential.applicationDefault(),
         storageBucket: process.env.FB_BUCKET,
       });

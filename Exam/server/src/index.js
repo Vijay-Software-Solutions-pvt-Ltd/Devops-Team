@@ -12,29 +12,34 @@ const adminReportsRoutes = require('./routes/admin/admin_reports');
 const orgRoutes = require('./routes/admin/admin_orgs');
 
 const app = express();
+const PORT = process.env.PORT || 8080;
 
+// middleware
+app.use(bodyParser.json({ limit: "15mb" }));
+app.use(bodyParser.urlencoded({ extended: true, limit: "15mb" }));
+
+// routes
+app.use('/auth', authRoutes);
+app.use('/user/exams', userExamsRoutes);
+app.use('/user/attempts', userAttemptsRoutes);
+app.use('/admin/exams', adminExamsRoutes);
+app.use('/admin/users', adminUsersRoutes);
+app.use('/admin/reports', adminReportsRoutes);
+app.use('/admin/orgs', orgRoutes);
+
+// health check endpoint
+app.get('/', (req, res) => {
+  res.json({ status: "Server is running ✅" });
+});
+
+// START SERVER ONLY AFTER FIREBASE INIT
 (async () => {
-  await initFirebase();
-
-  app.use(bodyParser.json({ limit: "15mb" }));
-  app.use(bodyParser.urlencoded({ extended: true, limit: "15mb" }));
-
-  // Routes
-  app.use('/auth', authRoutes);
-  app.use('/user/exams', userExamsRoutes);
-  app.use('/user/attempts', userAttemptsRoutes);
-  app.use('/admin/exams', adminExamsRoutes);
-  app.use('/admin/users', adminUsersRoutes);
-  app.use('/admin/reports', adminReportsRoutes);
-  app.use('/admin/orgs', orgRoutes);
-
-  app.get('/', (req, res) => {
-    res.json({ status: "Server is running" });
-  });
-
-  const PORT = process.env.PORT || 8080;
-
-  app.listen(PORT, () => {
-    console.log(`Server running on port ${PORT}`);
-  });
+  try {
+    await initFirebase();
+    app.listen(PORT, () => {
+      console.log(`🚀 Server running on port ${PORT}`);
+    });
+  } catch (err) {
+    console.error("🔥 Failed to start server:", err);
+  }
 })();

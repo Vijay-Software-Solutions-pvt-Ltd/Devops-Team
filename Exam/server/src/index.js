@@ -57,6 +57,7 @@ app.get('/', (req, res) => {
 
     // MUST LISTEN ON 0.0.0.0 FOR CLOUD RUN
     app.listen(PORT, "0.0.0.0", () => {
+      console.log("Health check hit");
       console.log(`🚀 Server running & listening on 0.0.0.0:${PORT}`);
     });
 

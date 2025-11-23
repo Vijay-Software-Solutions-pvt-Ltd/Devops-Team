@@ -15,7 +15,7 @@ services:
 
   backend:
     build: .
-    container_name: exam_backend
+    container_name: exam-backend
     ports:
       - "4000:4000"
     depends_on:

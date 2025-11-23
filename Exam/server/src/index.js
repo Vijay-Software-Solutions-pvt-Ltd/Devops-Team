@@ -1,4 +1,3 @@
-// server/src/index.js
 const express = require('express');
 const bodyParser = require('body-parser');
 require('dotenv').config();
@@ -30,13 +29,12 @@ const app = express();
   app.use('/admin/orgs', orgRoutes);
 
   app.get('/', (req, res) => {
-    res.json({ status: "Server is running ✅" });
+    res.json({ status: "Server is running" });
   });
 
-  // Cloud Run required PORT
   const PORT = process.env.PORT || 8080;
 
   app.listen(PORT, () => {
-    console.log(`🚀 Server running on port ${PORT}`);
+    console.log(`Server running on port ${PORT}`);
   });
 })();

@@ -12,7 +12,7 @@ export default function StudentHeader() {
 
   localStorage.removeItem("token");
   localStorage.removeItem("user");
-  nav("/login");
+  nav("/#/login");
 }
 
 

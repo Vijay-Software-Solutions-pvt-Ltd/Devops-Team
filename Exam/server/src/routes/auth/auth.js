@@ -60,7 +60,7 @@ router.post('/login', async (req, res) => {
   }
 });
 
-router.post('/logout', (req, res) => {
+router.post('/#/logout', (req, res) => {
   res.clearCookie("token");
   res.json({ ok: true });
 });

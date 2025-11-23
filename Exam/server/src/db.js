@@ -6,3 +6,5 @@ const pool = new Pool({
   database: process.env.DB_NAME,
   socketPath: `/cloudsql/${process.env.INSTANCE_CONNECTION_NAME}`,
 });
+
+module.exports = pool ;

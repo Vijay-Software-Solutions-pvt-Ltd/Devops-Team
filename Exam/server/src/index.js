@@ -2,7 +2,7 @@ const express = require("express");
 const bodyParser = require("body-parser");
 require("dotenv").config();
 const initFirebase = require("./firebase");
-const pool = require("./db");
+const pool = require("../src/db");
 
 // ROUTES
 const authRoutes = require("./routes/auth/auth");
@@ -60,7 +60,7 @@ app.get("/", (req, res) => {
 // DB TEST
 app.get("/test-db", async (req, res) => {
   try {
-    const result = await pool.query("SELECT * from exam.exams;");
+    const result = await pool.query("SELECT NOW()");
     res.json({ db: "connected", time: result.rows[0].now });
   } catch (err) {
     res.status(500).json({ error: err.message });

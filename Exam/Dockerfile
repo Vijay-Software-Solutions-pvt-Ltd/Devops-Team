@@ -19,7 +19,7 @@ RUN npm install --omit=dev
 COPY server/ ./
 
 # Copy frontend build to backend public folder
-COPY --from=frontend-build /app/client/dist ./public
+COPY --from=frontend-build /app/client/dist ./src/public
 
 # Cloud Run requires exposing port
 EXPOSE 8080

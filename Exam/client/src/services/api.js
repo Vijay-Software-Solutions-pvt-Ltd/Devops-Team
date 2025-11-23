@@ -8,7 +8,7 @@ function getToken() {
 }
 
 const api = axios.create({
-  baseURL: API_BASE,
+  baseURL: "https://exam-backend-982394596304.asia-south1.run.app",
   timeout: 15000,               
   withCredentials: true         
 });

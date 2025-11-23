@@ -3,6 +3,7 @@ const bodyParser = require("body-parser");
 const cors = require("cors");
 require("dotenv").config();
 const initFirebase = require("./firebase");
+const pool = require("./db");
 
 // ROUTES
 const authRoutes = require("./routes/auth/auth");

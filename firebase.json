@@ -9,15 +9,15 @@
     "rewrites": [
       {
         "source": "/api/**",
-        "function": "api"
+        "run": {
+          "serviceId": "exam-backend",
+          "region": "asia-south1"
+        }
       },
       {
         "source": "**",
         "destination": "/index.html"
       }
     ]
-  },
-  "functions": {
-    "source": "Exam/server"
   }
 }

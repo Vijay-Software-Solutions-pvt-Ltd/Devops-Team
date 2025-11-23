@@ -17,55 +17,59 @@ const orgRoutes = require("./routes/admin/admin_orgs");
 const app = express();
 const PORT = process.env.PORT || 8080;
 
-// -------------------------------------------------------------
-// LOG CLOUD RUN ENVIRONMENT
-// -------------------------------------------------------------
+// ------------------------------------------------------------------
+// LOG CLOUD RUN VARIABLES
+// ------------------------------------------------------------------
 console.log("🔥 Cloud Run ENV →");
 console.log("PORT =", PORT);
 console.log("FB_BUCKET =", process.env.FB_BUCKET);
 
-// -------------------------------------------------------------
-// CORS MUST BE HERE (FIRST MIDDLEWARE)
-// -------------------------------------------------------------
-app.use(cors({
-  origin: ["https://exam-96957713-e7f90.web.app"],
-  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-  allowedHeaders: ["Content-Type", "Authorization"],
-  credentials: false
-}));
+// ------------------------------------------------------------------
+// CORS FIX – REQUIRED FOR FIREBASE HOSTING
+// ------------------------------------------------------------------
+app.use(
+  cors({
+    origin: [
+      "http://localhost:5173",
+      "https://exam-96957713-e7f90.web.app",
+      "https://exam-96957713.firebaseapp.com",
+    ],
+    methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"],
+    credentials: true,
+  })
+);
 
-// Allow OPTIONS preflight globally
+// Handle preflight
 app.options("*", cors());
 
-// -------------------------------------------------------------
-// JSON BODY PARSERS
-// -------------------------------------------------------------
+// ------------------------------------------------------------------
+// BODY PARSER
+// ------------------------------------------------------------------
 app.use(bodyParser.json({ limit: "20mb" }));
 app.use(bodyParser.urlencoded({ extended: true, limit: "20mb" }));
 
-// -------------------------------------------------------------
-// SERVE STATIC FRONTEND FROM /public
-// -------------------------------------------------------------
+// ------------------------------------------------------------------
+// STATIC FRONTEND FROM /public (for Cloud Run root access)
+// ------------------------------------------------------------------
 const publicPath = path.join(__dirname, "public");
 console.log("Serving frontend from:", publicPath);
 
 app.use(express.static(publicPath));
 
-// -------------------------------------------------------------
-// HEALTH CHECKS (Cloud Run REQUIRED)
-// -------------------------------------------------------------
+// Cloud Run health checks
 app.get("/health", (req, res) => {
   res.status(200).json({ status: "OK", time: new Date() });
 });
 
-// Root → serve SPA index.html
+// Root route → serve index.html
 app.get("/", (req, res) => {
   res.sendFile(path.join(publicPath, "index.html"));
 });
 
-// -------------------------------------------------------------
+// ------------------------------------------------------------------
 // API ROUTES
-// -------------------------------------------------------------
+// ------------------------------------------------------------------
 app.use("/auth", authRoutes);
 app.use("/user/exams", userExamsRoutes);
 app.use("/user/attempts", userAttemptsRoutes);
@@ -74,9 +78,9 @@ app.use("/admin/users", adminUsersRoutes);
 app.use("/admin/reports", adminReportsRoutes);
 app.use("/admin/orgs", orgRoutes);
 
-// -------------------------------------------------------------
-// START SERVER AFTER FIREBASE INIT
-// -------------------------------------------------------------
+// ------------------------------------------------------------------
+// START SERVER
+// ------------------------------------------------------------------
 (async () => {
   try {
     await initFirebase();
@@ -85,7 +89,6 @@ app.use("/admin/orgs", orgRoutes);
     app.listen(PORT, "0.0.0.0", () => {
       console.log(`🚀 Server running on http://0.0.0.0:${PORT}`);
     });
-
   } catch (err) {
     console.error("❌ Failed to start server:", err);
   }

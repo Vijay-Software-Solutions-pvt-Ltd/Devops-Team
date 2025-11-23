@@ -2,7 +2,6 @@ const express = require("express");
 const bodyParser = require("body-parser");
 const cors = require("cors");
 require("dotenv").config();
-const path = require("path");
 const initFirebase = require("./firebase");
 
 // ROUTES
@@ -40,7 +39,7 @@ app.use(
   })
 );
 
-// Handle preflight
+// Preflight
 app.options("*", cors());
 
 // ------------------------------------------------------------------
@@ -50,21 +49,17 @@ app.use(bodyParser.json({ limit: "20mb" }));
 app.use(bodyParser.urlencoded({ extended: true, limit: "20mb" }));
 
 // ------------------------------------------------------------------
-// STATIC FRONTEND FROM /public (for Cloud Run root access)
+// HEALTH CHECK
 // ------------------------------------------------------------------
-const publicPath = path.join(__dirname, "public");
-console.log("Serving frontend from:", publicPath);
-
-app.use(express.static(publicPath));
-
-// Cloud Run health checks
 app.get("/health", (req, res) => {
   res.status(200).json({ status: "OK", time: new Date() });
 });
 
-// Root route → serve index.html
+// ------------------------------------------------------------------
+// ROOT RESPONSE FOR CLOUD RUN
+// ------------------------------------------------------------------
 app.get("/", (req, res) => {
-  res.sendFile(path.join(publicPath, "index.html"));
+  res.status(200).json({ status: "Backend Running" });
 });
 
 // ------------------------------------------------------------------

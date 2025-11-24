@@ -2,7 +2,6 @@ import React, { useState } from "react";
 import api from "../services/api";
 import { useNavigate } from "react-router-dom";
 import '../pages/login.css';
-import logo from "../resources/img1.png";
 
 export default function Login() {
   const [email, setEmail] = useState("");
@@ -41,8 +40,6 @@ export default function Login() {
         </div>
 
         {/* Right Side Form Section */}
-       <img src={logo} alt="Logo" className="login-logo" />
-
         <div className="login-right">
           <div className="login-card">
             <h2 className="logo-text">LOGIN</h2>

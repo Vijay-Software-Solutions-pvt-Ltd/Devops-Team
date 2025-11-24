@@ -2,6 +2,7 @@
 import React from "react";
 import { Routes, Route, Link, Navigate, Outlet } from "react-router-dom";
 
+import Signup from "./pages/Signup";
 import Login from "./pages/Login";
 import ExamPage from "./pages/ExamPage";
 import ExamDetails from "./pages/ExamDetails";
@@ -39,6 +40,7 @@ export default function App() {
         <Routes>
           {/* ================= PUBLIC ================= */}
           <Route path="/login" element={<Login />} />
+           <Route path="/signup" element={<Signup />} />
 
           {/* ================= ROOT REDIRECT ================= */}
           <Route

@@ -21,6 +21,7 @@ export default function ExamPage() {
   const canvasRef = useRef(null);
   const snapshotIntervalRef = useRef(null);
   const autosaveIntervalRef = useRef(null);
+  const mediaStreamRef = useRef(null);
 
   // on mount: fetch exam meta and check for active attempt (resume)
   useEffect(() => {
@@ -129,22 +130,46 @@ export default function ExamPage() {
 
   // webcam
   async function startWebcamCapture(attemptId) {
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
-      if (videoRef.current) videoRef.current.srcObject = stream;
-      snapshotIntervalRef.current = setInterval(async () => {
-        if (!canvasRef.current || !videoRef.current) return;
-        const ctx = canvasRef.current.getContext('2d');
-        canvasRef.current.width = videoRef.current.videoWidth || 320;
-        canvasRef.current.height = videoRef.current.videoHeight || 240;
-        ctx.drawImage(videoRef.current, 0, 0, canvasRef.current.width, canvasRef.current.height);
-        const base64 = stripDataUrl(canvasRef.current.toDataURL('image/png'));
-        await api.post(`/attempts/${attemptId}/snapshot`, { imageBase64: base64 }).catch(()=>{});
-      }, 30000);
-    } catch (err) {
-      console.warn('webcam not allowed', err);
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
+    window.stream = stream;
+    mediaStreamRef.current = stream;   
+
+    if (videoRef.current) {
+      videoRef.current.srcObject = stream;
     }
+
+    snapshotIntervalRef.current = setInterval(async () => {
+      if (!canvasRef.current || !videoRef.current) return;
+
+      const ctx = canvasRef.current.getContext('2d');
+      canvasRef.current.width = videoRef.current.videoWidth || 320;
+      canvasRef.current.height = videoRef.current.videoHeight || 240;
+      ctx.drawImage(videoRef.current, 0, 0, canvasRef.current.width, canvasRef.current.height);
+      const base64 = stripDataUrl(canvasRef.current.toDataURL('image/png'));
+      await api.post(`/attempts/${attemptId}/snapshot`, { imageBase64: base64 }).catch(() => {});
+    }, 30000);
+
+  } catch (err) {
+    console.warn('webcam not allowed', err);
   }
+}
+
+function stopWebcam() {
+  if (mediaStreamRef.current) {
+    mediaStreamRef.current.getTracks().forEach(track => track.stop());
+    mediaStreamRef.current = null;
+  }
+
+  if (window.stream) {
+    window.stream.getTracks().forEach(track => track.stop());
+    window.stream = null;
+  }
+
+  if (videoRef.current) {
+    videoRef.current.srcObject = null;
+  }
+}
 
   // heuristic devtools detection + block common keys
 function installAdvancedAntiCheat(attemptId) {
@@ -187,6 +212,7 @@ function installAdvancedAntiCheat(attemptId) {
     if (timerRef.current.interval) clearInterval(timerRef.current.interval);
     if (snapshotIntervalRef.current) clearInterval(snapshotIntervalRef.current);
     if (autosaveIntervalRef.current) clearInterval(autosaveIntervalRef.current);
+     stopWebcam();
   }
 
   // handle answer change

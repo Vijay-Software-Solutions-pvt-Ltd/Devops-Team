@@ -49,30 +49,22 @@ router.post('/:attemptId/answer', auth, async (req, res) => {
       return res.status(404).json({ error: 'Question not found' });
     }
 
-    // CODING QUESTION → send to grader_jobs
-    if (q.rows[0].type === 'coding' && answerPayload.code) {
+    const type = q.rows[0].type;
 
-      const testcases = [
-        { input: "1 2", expected: "3" },
-        { input: "5 7", expected: "12" }
-      ];
-
+    // ✅ Coding questions now just save — no grader_jobs
+    if (type === 'coding') {
       await db.query(
-        `INSERT INTO exam.grader_jobs (attempt_id, question_id, code, language_id, testcases)
-         VALUES ($1,$2,$3,$4,$5)`,
-        [
-          attemptId,
-          questionId,
-          answerPayload.code,
-          52, // JS Node Judge0 language
-          JSON.stringify(testcases)
-        ]
+        `INSERT INTO exam.answers (attempt_id, question_id, answer_payload)
+         VALUES ($1,$2,$3)
+         ON CONFLICT (attempt_id, question_id)
+         DO UPDATE SET answer_payload = EXCLUDED.answer_payload`,
+        [attemptId, questionId, JSON.stringify(answerPayload)]
       );
-
-      return res.json({ ok: true, message: "Coding answer queued for evaluation." });
+      return res.json({ ok: true, message: "Coding answer saved (grading disabled)" });
     }
 
-     await db.query(
+    // ✅ Normal save for other questions
+    await db.query(
       `INSERT INTO exam.answers (attempt_id, question_id, answer_payload)
        VALUES ($1,$2,$3)
        ON CONFLICT (attempt_id, question_id)
@@ -192,36 +184,6 @@ router.post('/:attemptId/snapshot-url', auth, async (req, res) => {
   } catch (err) {
     console.error("Snapshot URL save failed:", err);
     res.status(500).json({ error: 'snapshot save failed' });
-  }
-});
-
-
-router.post('/:attemptId/grade-coding', auth, async (req, res) => {
-  const { attemptId } = req.params;
-  const { language_id, source_code, stdin, testcases } = req.body; 
-  try {
-    const judgeUrl = process.env.JUDGE0_URL || 'https://judge0-extra.p.rapidapi.com'; 
-    const body = {
-      source_code,
-      language_id,
-      stdin: stdin || '',
-      
-    };
-    const headers = {
-      'Content-Type': 'application/json',
-    };
-    if (process.env.JUDGE0_KEY) headers['X-Auth-Token'] = process.env.JUDGE0_KEY;
-
-    const r = await fetch(`${judgeUrl}/submissions?base64_encoded=false&wait=false`, {
-      method: 'POST',
-      headers,
-      body: JSON.stringify(body)
-    });
-    const data = await r.json();
-    res.json({ ok: true, token: data.token || data.token_id || data });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: 'failed to submit to grader', details: (err.message||err) });
   }
 });
 

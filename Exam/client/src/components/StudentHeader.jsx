@@ -1,26 +1,28 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
+  import logoImg from "../resources/logo.jpg";
+
 export default function StudentHeader() {
   const nav = useNavigate();
-
   function logout() {
-  if (navigator.mediaDevices) {
-    navigator.mediaDevices.getUserMedia({ video: true })
-      .then(stream => stream.getTracks().forEach(t => t.stop()))
-      .catch(() => {});
+  if (window.stream) {
+    window.stream.getTracks().forEach(track => track.stop());
+    window.stream = null;
   }
 
   localStorage.removeItem("token");
   localStorage.removeItem("user");
+
   nav("/#/login");
 }
+
 
 
   return (
     <header style={headerStyle}>
       <div style={left}>
-        <img src="client\src\resources\Screenshot 2025-11-21 000701.jpg" alt="logo" style={logo} />
-        <h3 style={{ marginLeft: 10 }}>VS Solutions Online Examination</h3>
+        <img src={logoImg} alt="logo" style={logo} />
+        <h3 style={{ marginLeft: 10 }}>VIJAY SOFTWARE SOLUTIONS</h3>
       </div>
 
       <button onClick={logout} style={logoutBtn}>Logout</button>

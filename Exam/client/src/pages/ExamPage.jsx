@@ -2,530 +2,575 @@ import React, { useEffect, useState, useRef } from "react";
 import api from "../services/api";
 import { useParams, useNavigate } from "react-router-dom";
 import {
-  FiClock,
-  FiVideo,
-  FiAlertCircle,
-  FiChevronLeft,
-  FiChevronRight,
-  FiSend,
+    FiClock,
+    FiVideo,
+    FiAlertCircle,
+    FiChevronLeft,
+    FiChevronRight,
+    FiSend,
+    FiCamera,
 } from "react-icons/fi";
 import { storage, ref, uploadString, getDownloadURL } from "../firebaseClient";
 
 export default function ExamPage() {
-  const { id } = useParams();
-  const nav = useNavigate();
+    const { id } = useParams();
+    const nav = useNavigate();
 
-  const [exam, setExam] = useState(null);
-  const [questions, setQuestions] = useState(null);
-  const [attempt, setAttempt] = useState(null);
-  const [started, setStarted] = useState(false);
-  const [violationModal, setViolationModal] = useState({
-    show: false,
-    message: "",
-  });
-  const [currentIndex, setCurrentIndex] = useState(0);
-  const [remainingTime, setRemainingTime] = useState(0);
+    const [exam, setExam] = useState(null);
+    const [questions, setQuestions] = useState(null);
+    const [attempt, setAttempt] = useState(null);
+    const [started, setStarted] = useState(false);
+    const [violationModal, setViolationModal] = useState({
+        show: false,
+        message: "",
+    });
+    const [currentIndex, setCurrentIndex] = useState(0);
+    const [remainingTime, setRemainingTime] = useState(0);
 
-  const user = JSON.parse(localStorage.getItem("user") || "{}");
+    // ✅ NEW: Camera status tracking
+    const [cameraStatus, setCameraStatus] = useState({
+        loading: true,
+        error: null,
+        active: false,
+    });
 
-  const answersRef = useRef({});
-  const timerRef = useRef(null);
-  const videoRef = useRef(null);
-  const canvasRef = useRef(null);
-  const snapshotRef = useRef(null);
+    const user = JSON.parse(localStorage.getItem("user") || "{}");
 
-  // ✅ Force Fullscreen Helper
-  async function forceFullscreen() {
-    try {
-      if (!document.fullscreenElement) {
-        await document.documentElement.requestFullscreen();
-      }
-    } catch (err) {
-      console.warn("Fullscreen request blocked:", err);
+    const answersRef = useRef({});
+    const timerRef = useRef(null);
+    const videoRef = useRef(null);
+    const canvasRef = useRef(null);
+    const snapshotRef = useRef(null);
+
+    // ✅ Force Fullscreen Helper
+    async function forceFullscreen() {
+        try {
+            if (!document.fullscreenElement) {
+                await document.documentElement.requestFullscreen();
+            }
+        } catch (err) {
+            console.warn("Fullscreen request blocked:", err);
+        }
     }
-  }
 
-  useEffect(() => {
-    init();
-    return clearAll;
-  }, [id]);
-
-  async function init() {
-    try {
-      const completedCheck = await api
-        .get(`/user/attempts/check-completed/${id}`)
-        .catch(() => ({ data: { completed: false } }));
-
-      if (completedCheck.data.completed) {
-        alert("You have already completed this exam!");
-        nav("/student");
-        return;
-      }
-
-      const examRes = await api.get(`/user/exams/${id}`);
-      setExam(examRes.data.exam);
-
-      const resume = await api.get(`/user/attempts/my-active/${id}`);
-      if (resume.data.attempt) {
-        const att = resume.data.attempt;
-        setAttempt(att);
-        setStarted(true);
-
-        const startedAt = new Date(att.started_at_server);
-        const elapsed = Math.floor((Date.now() - startedAt) / 1000);
-        const remaining = Math.max(
-          att.allowed_duration - elapsed,
-          0
-        );
-        setRemainingTime(remaining);
-
-        const qRes = await api.get(`/user/exams/${id}`);
-        setQuestions(qRes.data.questions);
-
-        startTimer(remaining);
+    // ✅ IMPROVED: Camera initialization with proper error handling
+    async function initializeCamera(attemptId = null) {
+        setCameraStatus({ loading: true, error: null, active: false });
 
         try {
-          const stream = await navigator.mediaDevices.getUserMedia({
-            video: true,
-          });
-          if (videoRef.current) {
+            // Request camera with specific constraints
+            const stream = await navigator.mediaDevices.getUserMedia({
+                video: {
+                    width: { ideal: 1280 },
+                    height: { ideal: 720 },
+                    facingMode: "user"
+                },
+                audio: false,
+            });
+
+            if (!videoRef.current) {
+                throw new Error("Video element not found");
+            }
+
+            // Set the stream
             videoRef.current.srcObject = stream;
-            await videoRef.current.play();
-          }
-          startSnapshots(att.id);
-        } catch { }
-      }
-    } catch {
-      nav("/login");
-    }
-  }
 
-  async function startAttempt() {
-    try {
-      await forceFullscreen();
+            // ✅ CRITICAL FIX: Wait for metadata to load before playing
+            await new Promise((resolve, reject) => {
+                videoRef.current.onloadedmetadata = () => {
+                    videoRef.current.play()
+                        .then(resolve)
+                        .catch(reject);
+                };
 
-      const stream = await navigator.mediaDevices.getUserMedia({
-        video: true,
-        audio: false,
-      });
+                // Timeout after 5 seconds
+                setTimeout(() => reject(new Error("Camera timeout")), 5000);
+            });
 
-      if (videoRef.current) {
-        videoRef.current.srcObject = stream;
-        await videoRef.current.play();
-      }
+            setCameraStatus({ loading: false, error: null, active: true });
 
-      const res = await api.post(`/user/attempts/start/${id}`);
-      const att = res.data.attempt;
+            // Start snapshots if attempt is active
+            if (attemptId) {
+                startSnapshots(attemptId);
+            }
 
-      setAttempt(att);
-      setStarted(true);
+            return true;
+        } catch (err) {
+            console.error("Camera initialization error:", err);
 
-      const qRes = await api.get(`/user/exams/${id}`);
-      setQuestions(qRes.data.questions);
+            let errorMessage = "Failed to access camera. ";
 
-      const duration =
-        att.allowed_duration || exam.duration_minutes * 60;
-      setRemainingTime(duration);
-      startTimer(duration);
-      startSnapshots(att.id);
-    } catch (err) {
-      console.error(err);
-      alert("Failed to start exam");
-    }
-  }
+            if (err.name === "NotAllowedError") {
+                errorMessage += "Please grant camera permission and refresh the page.";
+            } else if (err.name === "NotFoundError") {
+                errorMessage += "No camera detected on your device.";
+            } else if (err.name === "NotReadableError") {
+                errorMessage += "Camera is already in use by another application.";
+            } else {
+                errorMessage += err.message || "Unknown error occurred.";
+            }
 
-  function startTimer(duration) {
-    let remaining = duration;
-    if (timerRef.current) clearInterval(timerRef.current);
-
-    timerRef.current = setInterval(() => {
-      remaining--;
-      setRemainingTime(remaining);
-
-      if (remaining <= 0) {
-        submitAttempt(true);
-      }
-    }, 1000);
-  }
-
-  function startSnapshots(attemptId) {
-    snapshotRef.current = setInterval(async () => {
-      if (
-        !canvasRef.current ||
-        !videoRef.current ||
-        videoRef.current.videoWidth === 0
-      )
-        return;
-
-      try {
-        const ctx = canvasRef.current.getContext("2d");
-        canvasRef.current.width = videoRef.current.videoWidth;
-        canvasRef.current.height = videoRef.current.videoHeight;
-        ctx.drawImage(videoRef.current, 0, 0);
-
-        const dataUrl = canvasRef.current.toDataURL(
-          "image/jpeg",
-          0.7
-        );
-
-        const filePath = `exam-monitoring/${user.id}/${attemptId}/${Date.now()}.jpg`;
-        const fileRef = ref(storage, filePath);
-
-        await uploadString(fileRef, dataUrl, "data_url");
-        const downloadURL = await getDownloadURL(fileRef);
-
-        await api
-          .post(`/user/attempts/${attemptId}/snapshot-url`, {
-            imageUrl: downloadURL,
-          })
-          .catch(() => { });
-      } catch (err) {
-        console.error(err);
-      }
-    }, 30000);
-  }
-
-  // ✅ FULLSCREEN EXIT LOGGING
-  useEffect(() => {
-    if (!started) return;
-
-    function handleFullscreenChange() {
-      if (!document.fullscreenElement) {
-        forceFullscreen();
-
-        if (attempt?.id) {
-          api
-            .post(
-              `/user/attempts/${attempt.id}/violation`,
-              {
-                type: "fullscreen_exit",
-                severity: "high",
-                timestamp: new Date().toISOString(),
-              }
-            )
-            .catch(() => { });
+            setCameraStatus({ loading: false, error: errorMessage, active: false });
+            return false;
         }
-      }
     }
 
-    document.addEventListener(
-      "fullscreenchange",
-      handleFullscreenChange
-    );
+    useEffect(() => {
+        init();
+        return clearAll;
+    }, [id]);
 
-    return () =>
-      document.removeEventListener(
-        "fullscreenchange",
-        handleFullscreenChange
-      );
-  }, [started, attempt]);
+    async function init() {
+        try {
+            const completedCheck = await api
+                .get(`/user/attempts/check-completed/${id}`)
+                .catch(() => ({ data: { completed: false } }));
 
-  // ✅ TAB SWITCH / MINIMIZE LOGGING
-  useEffect(() => {
-    if (!started) return;
-
-    function handleVisibility() {
-      if (document.hidden && attempt?.id) {
-        api
-          .post(
-            `/user/attempts/${attempt.id}/violation`,
-            {
-              type: "tab_switch_or_minimize",
-              severity: "medium",
-              timestamp: new Date().toISOString(),
+            if (completedCheck.data.completed) {
+                alert("You have already completed this exam!");
+                nav("/student");
+                return;
             }
-          )
-          .catch(() => { });
-      }
-    }
 
-    document.addEventListener(
-      "visibilitychange",
-      handleVisibility
-    );
-    return () =>
-      document.removeEventListener(
-        "visibilitychange",
-        handleVisibility
-      );
-  }, [started, attempt]);
+            const examRes = await api.get(`/user/exams/${id}`);
+            setExam(examRes.data.exam);
 
-  function clearAll() {
-    if (timerRef.current)
-      clearInterval(timerRef.current);
-    if (snapshotRef.current)
-      clearInterval(snapshotRef.current);
+            const resume = await api.get(`/user/attempts/my-active/${id}`);
+            if (resume.data.attempt) {
+                const att = resume.data.attempt;
+                setAttempt(att);
+                setStarted(true);
 
-    if (videoRef.current?.srcObject) {
-      videoRef.current.srcObject
-        .getTracks()
-        .forEach((t) => t.stop());
-    }
-  }
+                const startedAt = new Date(att.started_at_server);
+                const elapsed = Math.floor((Date.now() - startedAt) / 1000);
+                const remaining = Math.max(att.allowed_duration - elapsed, 0);
+                setRemainingTime(remaining);
 
-  async function submitAttempt(auto = false) {
-    if (!attempt) return;
+                const qRes = await api.get(`/user/exams/${id}`);
+                setQuestions(qRes.data.questions);
 
-    try {
-      const entries = Object.entries(answersRef.current);
+                startTimer(remaining);
 
-      for (const [qid, payload] of entries) {
-        await api
-          .post(
-            `/user/attempts/${attempt.id}/answer`,
-            {
-              questionId: qid,
-              answerPayload: payload,
+                // ✅ FIXED: Proper camera initialization with error handling
+                await initializeCamera(att.id);
             }
-          )
-          .catch(() => { });
-      }
-
-      await api.post(
-        `/user/attempts/${attempt.id}/submit`
-      );
-
-      clearAll();
-      if (document.fullscreenElement)
-        await document.exitFullscreen();
-
-      alert(
-        auto
-          ? "Time up. Submitted."
-          : "Exam Submitted"
-      );
-
-      nav("/student");
-    } catch (err) {
-      alert("Submit failed");
+        } catch {
+            nav("/login");
+        }
     }
-  }
 
-  function handleAnswerChange(questionId, answer) {
-    answersRef.current[questionId] = answer;
-  }
+    async function startAttempt() {
+        try {
+            await forceFullscreen();
 
-  if (!exam) return <div>Loading...</div>;
+            // ✅ FIXED: Initialize camera BEFORE starting the attempt
+            const cameraReady = await initializeCamera();
 
-  if (!started) {
+            if (!cameraReady) {
+                alert("Camera access is required to start the exam. Please grant permission and try again.");
+                return;
+            }
+
+            const res = await api.post(`/user/attempts/start/${id}`);
+            const att = res.data.attempt;
+
+            setAttempt(att);
+            setStarted(true);
+
+            const qRes = await api.get(`/user/exams/${id}`);
+            setQuestions(qRes.data.questions);
+
+            const duration = att.allowed_duration || exam.duration_minutes * 60;
+            setRemainingTime(duration);
+            startTimer(duration);
+
+            // Start snapshots now that we have an attempt ID
+            startSnapshots(att.id);
+        } catch (err) {
+            console.error(err);
+            alert("Failed to start exam: " + (err.message || "Unknown error"));
+        }
+    }
+
+    function startTimer(duration) {
+        let remaining = duration;
+        if (timerRef.current) clearInterval(timerRef.current);
+
+        timerRef.current = setInterval(() => {
+            remaining--;
+            setRemainingTime(remaining);
+
+            if (remaining <= 0) {
+                submitAttempt(true);
+            }
+        }, 1000);
+    }
+
+    function startSnapshots(attemptId) {
+        snapshotRef.current = setInterval(async () => {
+            if (
+                !canvasRef.current ||
+                !videoRef.current ||
+                videoRef.current.videoWidth === 0
+            )
+                return;
+
+            try {
+                const ctx = canvasRef.current.getContext("2d");
+                canvasRef.current.width = videoRef.current.videoWidth;
+                canvasRef.current.height = videoRef.current.videoHeight;
+                ctx.drawImage(videoRef.current, 0, 0);
+
+                const dataUrl = canvasRef.current.toDataURL("image/jpeg", 0.7);
+
+                const filePath = `exam-monitoring/${user.id}/${attemptId}/${Date.now()}.jpg`;
+                const fileRef = ref(storage, filePath);
+
+                await uploadString(fileRef, dataUrl, "data_url");
+                const downloadURL = await getDownloadURL(fileRef);
+
+                await api
+                    .post(`/user/attempts/${attemptId}/snapshot-url`, {
+                        imageUrl: downloadURL,
+                    })
+                    .catch(() => { });
+            } catch (err) {
+                console.error(err);
+            }
+        }, 30000);
+    }
+
+    const [securityMessage, setSecurityMessage] = useState("");
+    // ✅ FULLSCREEN EXIT LOGGING
+    useEffect(() => {
+        if (!started) return;
+
+        function handleFullscreenChange() {
+            if (!document.fullscreenElement) {
+      setSecurityMessage("⚠️ Not allowed! Returning to fullscreen…");
+
+      // Force it back
+      forceFullscreen();
+                if (attempt?.id) {
+                    api
+                        .post(`/user/attempts/${attempt.id}/violation`, {
+                            type: "fullscreen_exit",
+                            severity: "high",
+                            timestamp: new Date().toISOString(),
+                        })
+                        .catch(() => { });
+                }
+                 setTimeout(() => setSecurityMessage(""), 3000);
+            }
+        }
+
+        document.addEventListener("fullscreenchange", handleFullscreenChange);
+
+        return () =>
+            document.removeEventListener("fullscreenchange", handleFullscreenChange);
+    }, [started, attempt]);
+
+    // ✅ TAB SWITCH / MINIMIZE LOGGING
+    useEffect(() => {
+        if (!started) return;
+
+        function handleVisibility() {
+            if (document.hidden && attempt?.id) {
+                api
+                    .post(`/user/attempts/${attempt.id}/violation`, {
+                        type: "tab_switch_or_minimize",
+                        severity: "medium",
+                        timestamp: new Date().toISOString(),
+                    })
+                    .catch(() => { });
+            }
+        }
+
+        document.addEventListener("visibilitychange", handleVisibility);
+        return () =>
+            document.removeEventListener("visibilitychange", handleVisibility);
+    }, [started, attempt]);
+
+    function clearAll() {
+        if (timerRef.current) clearInterval(timerRef.current);
+        if (snapshotRef.current) clearInterval(snapshotRef.current);
+
+        if (videoRef.current?.srcObject) {
+            videoRef.current.srcObject.getTracks().forEach((t) => t.stop());
+        }
+    }
+
+    async function submitAttempt(auto = false) {
+        if (!attempt) return;
+
+        try {
+            const entries = Object.entries(answersRef.current);
+
+            for (const [qid, payload] of entries) {
+                await api
+                    .post(`/user/attempts/${attempt.id}/answer`, {
+                        questionId: qid,
+                        answerPayload: payload,
+                    })
+                    .catch(() => { });
+            }
+
+            await api.post(`/user/attempts/${attempt.id}/submit`);
+
+            clearAll();
+            if (document.fullscreenElement) await document.exitFullscreen();
+
+            alert(auto ? "Time up. Submitted." : "Exam Submitted");
+
+            nav("/student");
+        } catch (err) {
+            alert("Submit failed");
+        }
+    }
+
+    function handleAnswerChange(questionId, answer) {
+        answersRef.current[questionId] = answer;
+    }
+
+    if (!exam) return <div>Loading...</div>;
+
+    if (!started) {
+        return (
+            <div style={pageWrapper}>
+                <div style={startCard}>
+                    <h1>{exam.title}</h1>
+                    <button onClick={startAttempt} style={startButton}>
+                        Begin Exam
+                    </button>
+                </div>
+                <canvas ref={canvasRef} hidden />
+                <video ref={videoRef} hidden /> {/* ✅ Hidden video for pre-initialization */}
+            </div>
+        );
+    }
+
+    if (!questions) return <div>Loading...</div>;
+
+    const currentQuestion = questions[currentIndex];
+    const mins = Math.floor(remainingTime / 60);
+    const secs = remainingTime % 60;
+    const progress = ((currentIndex + 1) / questions.length) * 100;
+
     return (
-      <div style={pageWrapper}>
-        <div style={startCard}>
-          <h1>{exam.title}</h1>
-          <button onClick={startAttempt} style={startButton}>
-            Begin Exam
-          </button>
-        </div>
-        <canvas ref={canvasRef} hidden />
-      </div>
-    );
-  }
-
-  if (!questions) return <div>Loading...</div>;
-
-  const currentQuestion = questions[currentIndex];
-  const mins = Math.floor(remainingTime / 60);
-  const secs = remainingTime % 60;
-  const progress =
-    ((currentIndex + 1) / questions.length) * 100;
-
-  return (
-    <>
-      <div style={examContainer}>
-        <div style={examHeader}>
-          <div style={examHeaderLeft}>
-            <h2 style={examHeaderTitle}>{exam.title}</h2>
-            <div style={questionProgress}>
-              Question {currentIndex + 1} of {questions.length}
-            </div>
-          </div>
-
-          <div style={examHeaderRight}>
-            <div style={timerBox}>
-              <FiClock size={20} />
-              <span style={timerText}>
-                {String(mins).padStart(2, "0")}:
-                {String(secs).padStart(2, "0")}
-              </span>
-            </div>
-
-            <button
-              onClick={() => submitAttempt(false)}
-              style={submitButton}
-            >
-              <FiSend size={18} /> Submit Exam
-            </button>
-          </div>
-        </div>
-
-        <div style={progressBar}>
-          <div
-            style={{
-              ...progressFill,
-              width: `${progress}%`,
-            }}
-          ></div>
-        </div>
-
-        <div style={examBody}>
-          {/* LEFT SIDE: QUESTIONS */}
-          <div style={mainContent}>
-            <div style={questionCard}>
-              <div style={questionHeader}>
-                <span style={questionNumber}>
-                  Q{currentIndex + 1}
-                </span>
-                <span style={questionType}>
-                  {currentQuestion.question_type?.toUpperCase() ||
-                    "MCQ"}
-                </span>
-                <span style={questionPoints}>
-                  {currentQuestion.marks ||
-                    currentQuestion.points ||
-                    1}{" "}
-                  points
-                </span>
-              </div>
-
-              <p style={questionText}>
-                {currentQuestion.question_text ||
-                  currentQuestion.content?.prompt ||
-                  currentQuestion.content}
-              </p>
-
-              <div style={answerSection}>
-                {(currentQuestion.question_type === "mcq" ||
-                  currentQuestion.type === "mcq") && (
-                    <div style={mcqOptions}>
-                      {(currentQuestion.options ||
-                        currentQuestion.choices ||
-                        []).map((choice, i) => (
-                          <label key={i} style={mcqOption}>
-                            <input
-                              type="radio"
-                              name={currentQuestion.id}
-                              onChange={() =>
-                                handleAnswerChange(
-                                  currentQuestion.id,
-                                  { choice: i }
-                                )
-                              }
-                              style={mcqRadio}
-                            />
-                            <span style={mcqLabel}>{choice}</span>
-                          </label>
-                        ))}
+        <>
+            <div style={examContainer}>
+                <div style={examHeader}>
+                    <div style={examHeaderLeft}>
+                        <h2 style={examHeaderTitle}>{exam.title}</h2>
+                        <div style={questionProgress}>
+                            Question {currentIndex + 1} of {questions.length}
+                        </div>
                     </div>
-                  )}
 
-                {(currentQuestion.question_type !== "mcq" &&
-                  currentQuestion.type !== "mcq") && (
-                    <textarea
-                      rows={12}
-                      placeholder="Write your code here..."
-                      onChange={(e) =>
-                        handleAnswerChange(
-                          currentQuestion.id,
-                          { code: e.target.value }
-                        )
-                      }
-                      style={codeTextarea}
-                    />
-                  )}
-              </div>
-            </div>
+                    <div style={examHeaderRight}>
+                        <div style={timerBox}>
+                            <FiClock size={20} />
+                            <span style={timerText}>
+                                {String(mins).padStart(2, "0")}:{String(secs).padStart(2, "0")}
+                            </span>
+                        </div>
 
-            <div style={navigationButtons}>
-              <button
-                disabled={currentIndex === 0}
-                onClick={() =>
-                  setCurrentIndex((i) => i - 1)
-                }
-                style={
-                  currentIndex === 0
-                    ? navButtonDisabled
-                    : navButton
-                }
-              >
-                <FiChevronLeft size={20} />
-                Previous
-              </button>
-
-              <button
-                disabled={
-                  currentIndex === questions.length - 1
-                }
-                onClick={() =>
-                  setCurrentIndex((i) => i + 1)
-                }
-                style={
-                  currentIndex === questions.length - 1
-                    ? navButtonDisabled
-                    : navButton
-                }
-              >
-                Next
-                <FiChevronRight size={20} />
-              </button>
-            </div>
-          </div>
-
-          {/* RIGHT SIDE: CAMERA + NAVIGATOR */}
-          <div style={sidebar}>
-            <div style={cameraBox}>
-              <div style={cameraHeader}>
-                <FiVideo size={16} />
-                <span>Camera Feed</span>
-              </div>
-
-              <video
-                ref={videoRef}
-                autoPlay
-                playsInline
-                muted
-                style={videoElement}
-              />
-
-              <canvas ref={canvasRef} hidden />
-
-              <p style={cameraNote}>
-                Your session is being monitored
-              </p>
-            </div>
-
-            <div style={questionsGrid}>
-              <h4 style={gridTitle}>
-                Question Navigator
-              </h4>
-
-              <div style={gridContainer}>
-                {questions.map((q, idx) => (
-                  <button
-                    key={q.id}
-                    onClick={() =>
-                      setCurrentIndex(idx)
-                    }
-                    style={{
-                      ...gridItem,
-                      ...(idx === currentIndex
-                        ? gridItemActive
-                        : {}),
-                      ...(answersRef.current[q.id]
-                        ? gridItemAnswered
-                        : {}),
-                    }}
-                  >
-                    {idx + 1}
-                  </button>
-                ))}
-              </div>
-            </div>
-          </div>
+                        <button onClick={() => submitAttempt(false)} style={submitButton}>
+                            <FiSend size={18} /> Submit Exam
+                        </button>
+                    </div>
+                </div>
+                {securityMessage && (
+        <div style={{
+            background: '#fee2e2',
+            color: '#991b1b',
+            padding: '10px 16px',
+            borderRadius: 8,
+            fontWeight: 600,
+            textAlign: 'center',
+            margin: '10px 20px'
+        }}>
+            {securityMessage}
         </div>
-      </div>
-    </>
-  );
+    )}
+                <div style={progressBar}>
+                    <div
+                        style={{
+                            ...progressFill,
+                            width: `${progress}%`,
+                        }}
+                    ></div>
+                </div>
+
+                <div style={examBody}>
+                    {/* LEFT SIDE: QUESTIONS */}
+                    <div style={mainContent}>
+                        <div style={questionCard}>
+                            <div style={questionHeader}>
+                                <span style={questionNumber}>Q{currentIndex + 1}</span>
+                                <span style={questionType}>
+                                    {currentQuestion.question_type?.toUpperCase() || "MCQ"}
+                                </span>
+                                <span style={questionPoints}>
+                                    {currentQuestion.marks ||
+                                        currentQuestion.points ||
+                                        1}{" "}
+                                    points
+                                </span>
+                            </div>
+
+                            <p style={questionText}>
+                                {currentQuestion.question_text ||
+                                    currentQuestion.content?.prompt ||
+                                    currentQuestion.content}
+                            </p>
+
+                            <div style={answerSection}>
+                                {(currentQuestion.question_type === "mcq" ||
+                                    currentQuestion.type === "mcq") && (
+                                        <div style={mcqOptions}>
+                                            {(currentQuestion.options ||
+                                                currentQuestion.choices ||
+                                                []).map((choice, i) => (
+                                                    <label key={i} style={mcqOption}>
+                                                        <input
+                                                            type="radio"
+                                                            name={currentQuestion.id}
+                                                            onChange={() =>
+                                                                handleAnswerChange(currentQuestion.id, {
+                                                                    choice: i,
+                                                                })
+                                                            }
+                                                            style={mcqRadio}
+                                                        />
+                                                        <span style={mcqLabel}>{choice}</span>
+                                                    </label>
+                                                ))}
+                                        </div>
+                                    )}
+
+                                {currentQuestion.question_type !== "mcq" &&
+                                    currentQuestion.type !== "mcq" && (
+                                        <textarea
+                                            rows={12}
+                                            placeholder="Write your code here..."
+                                            onChange={(e) =>
+                                                handleAnswerChange(currentQuestion.id, {
+                                                    code: e.target.value,
+                                                })
+                                            }
+                                            style={codeTextarea}
+                                        />
+                                    )}
+                            </div>
+                        </div>
+
+                        <div style={navigationButtons}>
+                            <button
+                                disabled={currentIndex === 0}
+                                onClick={() => setCurrentIndex((i) => i - 1)}
+                                style={currentIndex === 0 ? navButtonDisabled : navButton}
+                            >
+                                <FiChevronLeft size={20} />
+                                Previous
+                            </button>
+
+                            <button
+                                disabled={currentIndex === questions.length - 1}
+                                onClick={() => setCurrentIndex((i) => i + 1)}
+                                style={
+                                    currentIndex === questions.length - 1
+                                        ? navButtonDisabled
+                                        : navButton
+                                }
+                            >
+                                Next
+                                <FiChevronRight size={20} />
+                            </button>
+                        </div>
+                    </div>
+
+                    {/* RIGHT SIDE: CAMERA + NAVIGATOR */}
+                    <div style={sidebar}>
+                        <div style={cameraBox}>
+                            <div style={cameraHeader}>
+                                <FiVideo size={16} />
+                                <span>Camera Feed</span>
+                                {/* ✅ NEW: Status indicator */}
+                                {cameraStatus.active && (
+                                    <span style={liveIndicator}>
+                                        <span style={liveDot}></span> LIVE
+                                    </span>
+                                )}
+                            </div>
+
+                            {/* ✅ NEW: Loading state */}
+                            {cameraStatus.loading && (
+                                <div style={cameraPlaceholder}>
+                                    <FiCamera size={48} color="#94a3b8" />
+                                    <p style={cameraPlaceholderText}>Initializing camera...</p>
+                                </div>
+                            )}
+
+                            {/* ✅ NEW: Error state */}
+                            {cameraStatus.error && (
+                                <div style={cameraError}>
+                                    <FiAlertCircle size={48} color="#ef4444" />
+                                    <p style={cameraErrorText}>{cameraStatus.error}</p>
+                                    <button
+                                        onClick={() => initializeCamera(attempt?.id)}
+                                        style={retryButton}
+                                    >
+                                        Retry Camera
+                                    </button>
+                                </div>
+                            )}
+
+                            {/* ✅ IMPROVED: Video element with mirror effect */}
+                            <video
+                                ref={videoRef}
+                                autoPlay
+                                playsInline
+                                muted
+                                style={{
+                                    ...videoElement,
+                                    display: cameraStatus.active ? 'block' : 'none',
+                                    transform: 'scaleX(-1)', // Mirror the video
+                                }}
+                            />
+
+                            <canvas ref={canvasRef} hidden />
+
+                            <p style={cameraNote}>Your session is being monitored</p>
+                        </div>
+
+                        <div style={questionsGrid}>
+                            <h4 style={gridTitle}>Question Navigator</h4>
+
+                            <div style={gridContainer}>
+                                {questions.map((q, idx) => (
+                                    <button
+                                        key={q.id}
+                                        onClick={() => setCurrentIndex(idx)}
+                                        style={{
+                                            ...gridItem,
+                                            ...(idx === currentIndex ? gridItemActive : {}),
+                                            ...(answersRef.current[q.id] ? gridItemAnswered : {}),
+                                        }}
+                                    >
+                                        {idx + 1}
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </>
+    );
 }
+
+// ... (keeping all your existing styles)
 
 const pageWrapper = { minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', padding: '40px' };
 const loadingContainer = { minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: '#f8fafc' };
@@ -575,7 +620,7 @@ const navButtonDisabled = { flex: 1, padding: '14px 24px', display: 'flex', alig
 const sidebar = { width: 320, display: 'flex', flexDirection: 'column', gap: 24 };
 const cameraBox = { background: '#ffffff', borderRadius: 20, padding: 20, boxShadow: '0 4px 20px rgba(0,0,0,0.06)' };
 const cameraHeader = { display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12, fontSize: 14, fontWeight: 600, color: '#0f172a' };
-const videoElement = { width: '100%', borderRadius: 12, background: '#000', aspectRatio: '4/3' };
+const videoElement = { width: '100%', borderRadius: 12, background: '#1e293b', aspectRatio: '4/3', objectFit: 'cover' };
 const cameraNote = { fontSize: 11, color: '#94a3b8', textAlign: 'center', marginTop: 8 };
 const questionsGrid = { background: '#ffffff', borderRadius: 20, padding: 20, boxShadow: '0 4px 20px rgba(0,0,0,0.06)' };
 const gridTitle = { fontSize: 14, fontWeight: 600, color: '#0f172a', marginBottom: 16 };
@@ -584,9 +629,75 @@ const gridItem = { width: '100%', aspectRatio: '1', display: 'flex', alignItems:
 const gridItemActive = { background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', color: '#fff', borderColor: '#667eea' };
 const gridItemAnswered = { background: '#d1fae5', borderColor: '#10b981', color: '#15803d' };
 
-// Camera Notice Styles
-const cameraNoticeBox = { background: '#f0f9ff', borderRadius: 16, padding: 20, marginBottom: 24, display: 'flex', gap: 16, alignItems: 'flex-start', border: '2px solid #3b82f6' };
-const cameraNoticeIcon = { width: 48, height: 48, background: '#3b82f6', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', flexShrink: 0 };
-const cameraNoticeContent = { flex: 1 };
-const cameraNoticeTitle = { fontSize: 16, fontWeight: 600, color: '#1e40af', marginTop: 0, marginBottom: 8 };
-const cameraNoticeText = { fontSize: 14, color: '#1e3a8a', lineHeight: 1.6, margin: 0 };
+// ✅ NEW STYLES for camera states
+const liveIndicator = {
+    marginLeft: 'auto',
+    display: 'flex',
+    alignItems: 'center',
+    gap: 6,
+    fontSize: 11,
+    fontWeight: 700,
+    color: '#ef4444',
+    padding: '4px 8px',
+    background: '#fee2e2',
+    borderRadius: 6
+};
+
+const liveDot = {
+    width: 6,
+    height: 6,
+    borderRadius: '50%',
+    background: '#ef4444',
+    animation: 'pulse 2s infinite'
+};
+
+const cameraPlaceholder = {
+    width: '100%',
+    aspectRatio: '4/3',
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    justifyContent: 'center',
+    background: '#f1f5f9',
+    borderRadius: 12,
+    gap: 12
+};
+
+const cameraPlaceholderText = {
+    fontSize: 13,
+    color: '#64748b',
+    margin: 0
+};
+
+const cameraError = {
+    width: '100%',
+    aspectRatio: '4/3',
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    justifyContent: 'center',
+    background: '#fef2f2',
+    borderRadius: 12,
+    gap: 12,
+    padding: 20
+};
+
+const cameraErrorText = {
+    fontSize: 12,
+    color: '#991b1b',
+    margin: 0,
+    textAlign: 'center',
+    lineHeight: 1.5
+};
+
+const retryButton = {
+    padding: '8px 16px',
+    background: '#ef4444',
+    color: '#fff',
+    border: 'none',
+    borderRadius: 8,
+    fontSize: 13,
+    fontWeight: 600,
+    cursor: 'pointer',
+    marginTop: 8
+};

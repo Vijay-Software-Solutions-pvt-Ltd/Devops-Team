@@ -12,11 +12,22 @@ export default function ExamDetails() {
   const user = JSON.parse(localStorage.getItem('user') || '{}');
 
   useEffect(() => {
-    // API path assumed to already be correct and working in your setup:
-    api
-      .get(`/user/exams/${id}`)
-      .then((r) => setExam(r.data.exam))
-      .catch(() => nav('/#/login'));
+    async function loadExam() {
+      try {
+        const res = await api.get(`/user/exams/${id}`);
+        // ✅ safe data access
+        const examData = res.data.exam || res.data.exams?.[0];
+        setExam(examData);
+      } catch (err) {
+        console.error("Exam fetch failed:", err);
+        // ✅ logout ONLY on auth errors
+        if (err.response?.status === 401) {
+          nav('/#/login');
+        }
+      }
+    }
+
+    loadExam();
   }, [id, nav]);
 
   function formatDate(dt) {
@@ -25,105 +36,106 @@ export default function ExamDetails() {
   }
 
   function handleStart() {
-    if (!agree) return alert('Please accept T&C');
+    if (!agree) {
+      alert('Please accept Terms & Conditions');
+      return;
+    }
     nav(`/exams/${id}`);
   }
 
-  if (!exam) return <div>Loading...</div>;
+  if (!exam) {
+    return <div>Loading exam...</div>;
+  }
 
   return (
     <>
-  <StudentHeader />
-    <div style={pageWrapper}>
-      <div style={layout}>
-        {/* Left: Exam Info + T&C */}
-        <section style={examCard}>
-          <h2 style={examTitle}>{exam.title}</h2>
-          <p style={examDesc}>{exam.description}</p>
+      <StudentHeader />
 
-          <div style={infoGrid}>
-            <div style={infoBox}>
-              <div style={infoLabel}>Duration</div>
-              <div style={infoValue}>{exam.duration_minutes} minutes</div>
+      <div style={pageWrapper}>
+        <div style={layout}>
+
+          {/* LEFT SIDE */}
+          <section style={examCard}>
+            <h2 style={examTitle}>{exam.title}</h2>
+            <p style={examDesc}>{exam.description}</p>
+
+            <div style={infoGrid}>
+              <div style={infoBox}>
+                <div style={infoLabel}>Duration</div>
+                <div style={infoValue}>{exam.duration_minutes} minutes</div>
+              </div>
+              <div style={infoBox}>
+                <div style={infoLabel}>Start</div>
+                <div style={infoValue}>{formatDate(exam.start_date)}</div>
+              </div>
+              <div style={infoBox}>
+                <div style={infoLabel}>End</div>
+                <div style={infoValue}>{formatDate(exam.end_date)}</div>
+              </div>
             </div>
-            <div style={infoBox}>
-              <div style={infoLabel}>Start</div>
-              <div style={infoValue}>{formatDate(exam.start_date)}</div>
+
+            <h3 style={subheading}>Instructions</h3>
+            <ol style={instList}>
+              <li>Questions appear after you click <b>Start Exam</b>.</li>
+              <li>Do not switch tabs or windows.</li>
+              <li>Webcam snapshots are enabled.</li>
+              <li>You cannot retake after submit.</li>
+            </ol>
+
+            <label style={checkboxRow}>
+              <input
+                type="checkbox"
+                checked={agree}
+                onChange={(e) => setAgree(e.target.checked)}
+                style={{ marginRight: 8 }}
+              />
+              I agree to the Terms & Conditions
+            </label>
+
+            <button
+              onClick={handleStart}
+              disabled={!agree}
+              style={{
+                ...startBtn,
+                opacity: agree ? 1 : 0.5,
+                cursor: agree ? 'pointer' : 'not-allowed'
+              }}
+            >
+              Start Exam
+            </button>
+          </section>
+
+          {/* RIGHT SIDE */}
+          <aside style={sideColumn}>
+            <div style={sideCard}>
+              <h4 style={sideTitle}>Candidate</h4>
+              <div style={{ fontWeight: 600 }}>{user.name}</div>
+              <div style={sideText}>ID: {user.id}</div>
+              <div style={sideText}>Email: {user.email}</div>
             </div>
-            <div style={infoBox}>
-              <div style={infoLabel}>End</div>
-              <div style={infoValue}>{formatDate(exam.end_date)}</div>
+
+            <div style={sideCard}>
+              <h4 style={sideTitle}>Exam Type</h4>
+              <p style={sideText}>
+                Mix of MCQ and Coding questions.
+              </p>
             </div>
-            <div style={infoBox}>
-              <div style={infoLabel}>Assigned Org</div>
-              <div style={infoValue}>{exam.org_id || '-'}</div>
+
+            <div style={sideCard}>
+              <h4 style={sideTitle}>Proctoring</h4>
+              <p style={sideText}>
+                Webcam + Activity Logs enabled.
+              </p>
             </div>
-          </div>
+          </aside>
 
-          <h3 style={subheading}>Instructions</h3>
-          <ol style={instList}>
-            <li>Questions will appear only after you press <strong>Start Exam</strong>.</li>
-            <li>Do not switch tabs or windows during the exam; all actions are monitored.</li>
-            <li>Webcam snapshots will be captured periodically for proctoring.</li>
-            <li>Once submitted or timed out, the exam cannot be retaken.</li>
-          </ol>
-
-          <label style={checkboxRow}>
-            <input
-              type="checkbox"
-              checked={agree}
-              onChange={(e) => setAgree(e.target.checked)}
-              style={{ marginRight: 8 }}
-            />
-            I have read the instructions and agree to the Terms & Conditions.
-          </label>
-
-          <button
-            onClick={handleStart}
-            disabled={!agree}
-            style={{
-              ...startBtn,
-              opacity: agree ? 1 : 0.6,
-              cursor: agree ? 'pointer' : 'not-allowed',
-            }}
-          >
-            Start Exam (Enter Fullscreen)
-          </button>
-        </section>
-
-        {/* Right: Candidate + Exam Model */}
-        <aside style={sideColumn}>
-          <div style={sideCard}>
-            <h4 style={sideTitle}>Candidate</h4>
-            <div style={{ fontWeight: 600 }}>{user.name}</div>
-            <div style={sideText}>ID: {user.id}</div>
-            <div style={sideText}>Email: {user.email}</div>
-          </div>
-
-          <div style={sideCard}>
-            <h4 style={sideTitle}>Exam Model</h4>
-            <p style={sideText}>
-              This exam consists of multiple-choice questions and coding questions.
-              MCQs are auto-graded while coding questions are evaluated later by the
-              invigilator or automated judge.
-            </p>
-          </div>
-
-          <div style={sideCard}>
-            <h4 style={sideTitle}>Proctoring</h4>
-            <p style={sideText}>
-              The session is monitored with webcam snapshots, focus tracking, and
-              screen activity logs to ensure exam integrity.
-            </p>
-          </div>
-        </aside>
+        </div>
       </div>
-    </div>
     </>
   );
 }
 
-/* ============ STYLES ============ */
+/* STYLES */
 
 const pageWrapper = {
   minHeight: '100vh',
@@ -134,74 +146,67 @@ const pageWrapper = {
 
 const layout = {
   display: 'grid',
-  gridTemplateColumns: 'minmax(0, 2fr) minmax(0, 1fr)',
-  gap: 24,
-  alignItems: 'flex-start',
+  gridTemplateColumns: '2fr 1fr',
+  gap: 24
 };
 
 const examCard = {
-  background: '#ffffff',
+  background: '#fff',
   borderRadius: 18,
   padding: 24,
   boxShadow: '0 16px 40px rgba(15,23,42,0.08)',
 };
 
 const examTitle = {
-  margin: 0,
   fontSize: 22,
-  fontWeight: 700,
-  color: '#0f172a',
+  fontWeight: 700
 };
 
 const examDesc = {
-  marginTop: 6,
   fontSize: 14,
-  color: '#64748b',
+  color: '#64748b'
 };
 
 const infoGrid = {
   display: 'grid',
   gridTemplateColumns: 'repeat(auto-fit, minmax(160px,1fr))',
-  gap: 10,
-  marginTop: 16,
+  gap: 12,
+  marginTop: 16
 };
 
 const infoBox = {
   background: '#f1f5f9',
   borderRadius: 10,
-  padding: 10,
+  padding: 12
 };
 
 const infoLabel = {
   fontSize: 11,
-  color: '#6b7280',
+  color: '#6b7280'
 };
 
 const infoValue = {
   fontSize: 14,
-  fontWeight: 600,
-  color: '#0f172a',
+  fontWeight: 600
 };
 
 const subheading = {
   marginTop: 20,
-  marginBottom: 8,
   fontSize: 16,
-  fontWeight: 600,
+  fontWeight: 600
 };
 
 const instList = {
   paddingLeft: 20,
   fontSize: 14,
-  color: '#475569',
+  color: '#475569'
 };
 
 const checkboxRow = {
   marginTop: 16,
   fontSize: 13,
-  color: '#334155',
   display: 'flex',
-  alignItems: 'center',
+  alignItems: 'center'
 };
 
 const startBtn = {
@@ -211,33 +216,28 @@ const startBtn = {
   background: '#2563eb',
   color: '#fff',
   border: 'none',
-  fontWeight: 600,
-  fontSize: 14,
-  boxShadow: '0 10px 25px rgba(37,99,235,0.5)',
+  fontWeight: 600
 };
 
 const sideColumn = {
   display: 'flex',
   flexDirection: 'column',
-  gap: 14,
+  gap: 14
 };
 
 const sideCard = {
-  background: '#ffffff',
+  background: '#fff',
   borderRadius: 16,
   padding: 16,
-  boxShadow: '0 10px 30px rgba(15,23,42,0.06)',
+  boxShadow: '0 10px 30px rgba(15,23,42,0.06)'
 };
 
 const sideTitle = {
-  margin: 0,
-  marginBottom: 6,
   fontSize: 15,
-  fontWeight: 600,
+  fontWeight: 600
 };
 
 const sideText = {
   fontSize: 13,
-  color: '#64748b',
-  marginTop: 4,
+  color: '#64748b'
 };

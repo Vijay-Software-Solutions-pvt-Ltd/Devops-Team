@@ -4,14 +4,12 @@ const router = express.Router();
 const db = require('../../db');
 const auth = require('../../middleware/authMiddleware');
 
-// ✅ Student Assigned Exams
+// ✅ Get assigned exams
 router.get('/assigned', auth, async (req, res) => {
   try {
-    // Admin safety
     if (req.user.role === 'admin') {
       const q = await db.query(`
-        SELECT 
-          id, title, description, start_date, end_date, duration_minutes
+        SELECT id, title, description, start_date, end_date, duration_minutes
         FROM exam.exams
         ORDER BY start_date DESC
       `);
@@ -27,24 +25,23 @@ router.get('/assigned', auth, async (req, res) => {
         e.end_date,
         e.duration_minutes
       FROM exam.exams e
-      JOIN exam.exam_assignments ea 
-        ON ea.exam_id = e.id
+      JOIN exam.exam_assignments ea ON ea.exam_id = e.id
       LEFT JOIN exam.attempts a 
         ON a.exam_id = e.id 
         AND a.user_id = $1
-     WHERE ea.org_id = $2
-AND (a.status IS NULL OR a.status <> 'submitted')
-ORDER BY e.start_date ASC
+      WHERE ea.org_id = $2
+        AND (a.status IS NULL OR a.status <> 'submitted')
+      ORDER BY e.start_date ASC
     `, [req.user.id, req.user.org_id]);
 
     res.json({ exams: q.rows });
   } catch (err) {
-    console.error('User exams error:', err);
+    console.error('Assigned exams error:', err);
     res.status(500).json({ error: 'failed to fetch exams' });
   }
 });
 
-// ✅ Exam Details
+// ✅ Get single exam by ID
 router.get('/:examId', auth, async (req, res) => {
   const { examId } = req.params;
 
@@ -73,8 +70,8 @@ router.get('/:examId', auth, async (req, res) => {
       questions: questionsQ.rows
     });
   } catch (err) {
-    console.error('Exam details error:', err);
-    res.status(500).json({ error: 'failed to fetch exam details' });
+    console.error('Single exam fetch error:', err);
+    res.status(500).json({ error: 'failed to fetch exam' });
   }
 });
 

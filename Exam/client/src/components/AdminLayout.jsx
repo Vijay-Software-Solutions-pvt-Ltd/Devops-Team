@@ -4,7 +4,6 @@ import { Link, useLocation } from 'react-router-dom';
 import {
   FiHome, FiUsers, FiBookOpen, FiLayers, FiLogOut
 } from "react-icons/fi";
-import logo from "../resources/img2.png";
 
 export default function AdminLayout({ children }) {
   const location = useLocation();
@@ -21,11 +20,11 @@ export default function AdminLayout({ children }) {
       {/* ===== TOP HEADER ===== */}
       <header style={header}>
         <img
-          src={logo}
-          alt="Logo"
-          className="login-logo"
-          style={{ height: "40px" }}
-        />
+  src="/img2.png"
+  alt="Logo"
+  className="login-logo"
+  style={{ height: "40px" }}
+/>
         <button style={logoutBtn} onClick={handleLogout}>
           <FiLogOut style={{ marginRight: 6 }} />
           Logout

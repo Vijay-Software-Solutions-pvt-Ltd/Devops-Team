@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import api from "../services/api";
 import { useNavigate } from "react-router-dom";
 import '../pages/login.css';
 
@@ -8,35 +9,23 @@ export default function Login() {
   const nav = useNavigate();
 
   async function handleLogin(e) {
-  e.preventDefault();
-  try {
-    const res = await fetch("/auth/login", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({ email, password })
-    });
+    e.preventDefault();
+    try {
+      const res = await api.post("/auth/login", { email, password });
 
-    const data = await res.json();
+      localStorage.setItem("token", res.data.token);
+      localStorage.setItem("user", JSON.stringify(res.data.user));
 
-    if (!res.ok) {
-      throw new Error(data.error || "Login failed");
+      if (res.data.user.role === "admin") {
+        nav("/admin");
+      } else {
+        nav("/student");
+      }
+    } catch (err) {
+      console.error(err);
+      alert(err?.response?.data?.error || "Login failed");
     }
-
-    localStorage.setItem("token", data.token);
-    localStorage.setItem("user", JSON.stringify(data.user));
-
-    if (data.user.role === "admin") {
-      nav("/admin");
-    } else {
-      nav("/student");
-    }
-  } catch (err) {
-    console.error(err);
-    alert(err.message || "Login failed");
   }
-}
 
   return (
     <div className="login-page">

@@ -40,6 +40,7 @@ export default function Login() {
         </div>
 
         {/* Right Side Form Section */}
+        <img src={require("../resources/img2.png")} alt="Logo" className="login-logo" />
         <div className="login-right">
           <div className="login-card">
             <h2 className="logo-text">LOGIN</h2>

@@ -36,14 +36,14 @@ export default function ExamPage() {
 
   // ✅ Force Fullscreen Helper
   async function forceFullscreen() {
-  try {
-    if (!document.fullscreenElement) {
-      await document.documentElement.requestFullscreen();
+    try {
+      if (!document.fullscreenElement) {
+        await document.documentElement.requestFullscreen();
+      }
+    } catch (err) {
+      console.warn("Fullscreen request blocked:", err);
     }
-  } catch (err) {
-    console.warn("Fullscreen request blocked:", err);
   }
-}
 
   useEffect(() => {
     init();
@@ -93,7 +93,7 @@ export default function ExamPage() {
             await videoRef.current.play();
           }
           startSnapshots(att.id);
-        } catch {}
+        } catch { }
       }
     } catch {
       nav("/login");
@@ -178,7 +178,7 @@ export default function ExamPage() {
           .post(`/user/attempts/${attemptId}/snapshot-url`, {
             imageUrl: downloadURL,
           })
-          .catch(() => {});
+          .catch(() => { });
       } catch (err) {
         console.error(err);
       }
@@ -203,7 +203,7 @@ export default function ExamPage() {
                 timestamp: new Date().toISOString(),
               }
             )
-            .catch(() => {});
+            .catch(() => { });
         }
       }
     }
@@ -235,7 +235,7 @@ export default function ExamPage() {
               timestamp: new Date().toISOString(),
             }
           )
-          .catch(() => {});
+          .catch(() => { });
       }
     }
 
@@ -278,7 +278,7 @@ export default function ExamPage() {
               answerPayload: payload,
             }
           )
-          .catch(() => {});
+          .catch(() => { });
       }
 
       await api.post(
@@ -333,94 +333,260 @@ export default function ExamPage() {
     <>
       <div style={examContainer}>
         <div style={examHeader}>
-          <h2>{exam.title}</h2>
-
-          <div style={timerBox}>
-            <FiClock />
-            {String(mins).padStart(2, "0")}:
-            {String(secs).padStart(2, "0")}
+          <div style={examHeaderLeft}>
+            <h2 style={examHeaderTitle}>{exam.title}</h2>
+            <div style={questionProgress}>
+              Question {currentIndex + 1} of {questions.length}
+            </div>
           </div>
 
-          <button
-            onClick={() => submitAttempt(false)}
-            style={submitButton}
-          >
-            <FiSend /> Submit
-          </button>
+          <div style={examHeaderRight}>
+            <div style={timerBox}>
+              <FiClock size={20} />
+              <span style={timerText}>
+                {String(mins).padStart(2, "0")}:
+                {String(secs).padStart(2, "0")}
+              </span>
+            </div>
+
+            <button
+              onClick={() => submitAttempt(false)}
+              style={submitButton}
+            >
+              <FiSend size={18} /> Submit Exam
+            </button>
+          </div>
         </div>
 
-        <video
-          ref={videoRef}
-          autoPlay
-          muted
-          style={{ width: 200 }}
-        />
-        <canvas ref={canvasRef} hidden />
+        <div style={progressBar}>
+          <div
+            style={{
+              ...progressFill,
+              width: `${progress}%`,
+            }}
+          ></div>
+        </div>
+
+        <div style={examBody}>
+          {/* LEFT SIDE: QUESTIONS */}
+          <div style={mainContent}>
+            <div style={questionCard}>
+              <div style={questionHeader}>
+                <span style={questionNumber}>
+                  Q{currentIndex + 1}
+                </span>
+                <span style={questionType}>
+                  {currentQuestion.question_type?.toUpperCase() ||
+                    "MCQ"}
+                </span>
+                <span style={questionPoints}>
+                  {currentQuestion.marks ||
+                    currentQuestion.points ||
+                    1}{" "}
+                  points
+                </span>
+              </div>
+
+              <p style={questionText}>
+                {currentQuestion.question_text ||
+                  currentQuestion.content?.prompt ||
+                  currentQuestion.content}
+              </p>
+
+              <div style={answerSection}>
+                {(currentQuestion.question_type === "mcq" ||
+                  currentQuestion.type === "mcq") && (
+                    <div style={mcqOptions}>
+                      {(currentQuestion.options ||
+                        currentQuestion.choices ||
+                        []).map((choice, i) => (
+                          <label key={i} style={mcqOption}>
+                            <input
+                              type="radio"
+                              name={currentQuestion.id}
+                              onChange={() =>
+                                handleAnswerChange(
+                                  currentQuestion.id,
+                                  { choice: i }
+                                )
+                              }
+                              style={mcqRadio}
+                            />
+                            <span style={mcqLabel}>{choice}</span>
+                          </label>
+                        ))}
+                    </div>
+                  )}
+
+                {(currentQuestion.question_type !== "mcq" &&
+                  currentQuestion.type !== "mcq") && (
+                    <textarea
+                      rows={12}
+                      placeholder="Write your code here..."
+                      onChange={(e) =>
+                        handleAnswerChange(
+                          currentQuestion.id,
+                          { code: e.target.value }
+                        )
+                      }
+                      style={codeTextarea}
+                    />
+                  )}
+              </div>
+            </div>
+
+            <div style={navigationButtons}>
+              <button
+                disabled={currentIndex === 0}
+                onClick={() =>
+                  setCurrentIndex((i) => i - 1)
+                }
+                style={
+                  currentIndex === 0
+                    ? navButtonDisabled
+                    : navButton
+                }
+              >
+                <FiChevronLeft size={20} />
+                Previous
+              </button>
+
+              <button
+                disabled={
+                  currentIndex === questions.length - 1
+                }
+                onClick={() =>
+                  setCurrentIndex((i) => i + 1)
+                }
+                style={
+                  currentIndex === questions.length - 1
+                    ? navButtonDisabled
+                    : navButton
+                }
+              >
+                Next
+                <FiChevronRight size={20} />
+              </button>
+            </div>
+          </div>
+
+          {/* RIGHT SIDE: CAMERA + NAVIGATOR */}
+          <div style={sidebar}>
+            <div style={cameraBox}>
+              <div style={cameraHeader}>
+                <FiVideo size={16} />
+                <span>Camera Feed</span>
+              </div>
+
+              <video
+                ref={videoRef}
+                autoPlay
+                playsInline
+                muted
+                style={videoElement}
+              />
+
+              <canvas ref={canvasRef} hidden />
+
+              <p style={cameraNote}>
+                Your session is being monitored
+              </p>
+            </div>
+
+            <div style={questionsGrid}>
+              <h4 style={gridTitle}>
+                Question Navigator
+              </h4>
+
+              <div style={gridContainer}>
+                {questions.map((q, idx) => (
+                  <button
+                    key={q.id}
+                    onClick={() =>
+                      setCurrentIndex(idx)
+                    }
+                    style={{
+                      ...gridItem,
+                      ...(idx === currentIndex
+                        ? gridItemActive
+                        : {}),
+                      ...(answersRef.current[q.id]
+                        ? gridItemAnswered
+                        : {}),
+                    }}
+                  >
+                    {idx + 1}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     </>
   );
 }
 
-const pageWrapper = {minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', padding: '40px'};
-const loadingContainer = {minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: '#f8fafc'};
-const spinner = {width: 48, height: 48, border: '4px solid #e2e8f0', borderTop: '4px solid #667eea', borderRadius: '50%', animation: 'spin 1s linear infinite'};
-const loadingText = {marginTop: 20, fontSize: 16, color: '#64748b'};
-const startCard = {background: '#ffffff', borderRadius: 24, padding: 48, maxWidth: 600, boxShadow: '0 20px 60px rgba(0,0,0,0.3)', textAlign: 'center'};
-const startHeader = {marginBottom: 32};
-const startIcon = {width: 80, height: 80, margin: '0 auto 20px', background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff'};
-const startTitle = {fontSize: 28, fontWeight: 700, color: '#0f172a', marginBottom: 8};
-const startSubtitle = {fontSize: 16, color: '#64748b'};
-const instructionsBox = {background: '#f8fafc', borderRadius: 16, padding: 24, marginBottom: 24, textAlign: 'left'};
-const instructionsTitle = {fontSize: 18, fontWeight: 600, color: '#0f172a', marginBottom: 16};
-const instructionsList = {listStyle: 'none', padding: 0, margin: 0, fontSize: 14, color: '#64748b', lineHeight: 2};
-const candidateInfo = {background: '#f1f5f9', borderRadius: 12, padding: 16, marginBottom: 24};
-const candidateLabel = {fontSize: 12, color: '#64748b', marginBottom: 4};
-const candidateName = {fontSize: 18, fontWeight: 600, color: '#0f172a', marginBottom: 2};
-const candidateEmail = {fontSize: 14, color: '#64748b'};
-const startButton = {width: '100%', padding: '16px 32px', background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', color: '#fff', border: 'none', borderRadius: 12, fontSize: 16, fontWeight: 600, cursor: 'pointer', boxShadow: '0 4px 15px rgba(102, 126, 234, 0.4)', transition: 'all 0.3s'};
-const examContainer = {minHeight: '100vh', background: '#f8fafc', display: 'flex', flexDirection: 'column'};
-const examHeader = {background: '#ffffff', padding: '20px 40px', boxShadow: '0 2px 8px rgba(0,0,0,0.08)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', position: 'sticky', top: 0, zIndex: 100};
-const examHeaderLeft = {display: 'flex', alignItems: 'center', gap: 24};
-const examHeaderTitle = {fontSize: 20, fontWeight: 700, color: '#0f172a', margin: 0};
-const questionProgress = {fontSize: 14, color: '#64748b', padding: '6px 12px', background: '#f1f5f9', borderRadius: 8};
-const examHeaderRight = {display: 'flex', alignItems: 'center', gap: 16};
-const timerBox = {display: 'flex', alignItems: 'center', gap: 10, padding: '10px 20px', background: '#fef3c7', borderRadius: 12, color: '#92400e', fontSize: 18, fontWeight: 600};
-const timerText = {fontFamily: 'monospace'};
-const submitButton = {display: 'flex', alignItems: 'center', gap: 8, padding: '12px 24px', background: '#10b981', color: '#fff', border: 'none', borderRadius: 12, fontSize: 15, fontWeight: 600, cursor: 'pointer', transition: 'all 0.3s'};
-const progressBar = {height: 4, background: '#e2e8f0', position: 'relative'};
-const progressFill = {height: '100%', background: 'linear-gradient(90deg, #667eea 0%, #764ba2 100%)', transition: 'width 0.3s'};
-const examBody = {flex: 1, display: 'flex', gap: 24, padding: 40, maxWidth: 1600, margin: '0 auto', width: '100%'};
-const mainContent = {flex: 1, display: 'flex', flexDirection: 'column', gap: 24};
-const questionCard = {background: '#ffffff', borderRadius: 20, padding: 32, boxShadow: '0 4px 20px rgba(0,0,0,0.06)', flex: 1};
-const questionHeader = {display: 'flex', alignItems: 'center', gap: 12, marginBottom: 24, paddingBottom: 16, borderBottom: '2px solid #f1f5f9'};
-const questionNumber = {fontSize: 16, fontWeight: 700, color: '#fff', background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', padding: '6px 14px', borderRadius: 8};
-const questionType = {fontSize: 12, fontWeight: 600, color: '#64748b', padding: '6px 12px', background: '#f1f5f9', borderRadius: 6};
-const questionPoints = {fontSize: 12, fontWeight: 600, color: '#10b981', padding: '6px 12px', background: '#d1fae5', borderRadius: 6, marginLeft: 'auto'};
-const questionText = {fontSize: 16, color: '#0f172a', lineHeight: 1.8, marginBottom: 24};
-const answerSection = {marginTop: 24};
-const mcqOptions = {display: 'flex', flexDirection: 'column', gap: 12};
-const mcqOption = {display: 'flex', alignItems: 'center', gap: 12, padding: 16, background: '#f8fafc', borderRadius: 12, cursor: 'pointer', border: '2px solid transparent', transition: 'all 0.3s'};
-const mcqRadio = {width: 20, height: 20, accentColor: '#667eea'};
-const mcqLabel = {fontSize: 15, color: '#0f172a', flex: 1};
-const codeTextarea = {width: '100%', padding: 16, fontSize: 14, fontFamily: 'monospace', border: '2px solid #e2e8f0', borderRadius: 12, resize: 'vertical', outline: 'none'};
-const navigationButtons = {display: 'flex', gap: 16, justifyContent: 'space-between'};
-const navButton = {flex: 1, padding: '14px 24px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, background: '#667eea', color: '#fff', border: 'none', borderRadius: 12, fontSize: 15, fontWeight: 600, cursor: 'pointer', transition: 'all 0.3s'};
-const navButtonDisabled = {flex: 1, padding: '14px 24px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, background: '#e2e8f0', color: '#94a3b8', border: 'none', borderRadius: 12, fontSize: 15, fontWeight: 600, cursor: 'not-allowed'};
-const sidebar = {width: 320, display: 'flex', flexDirection: 'column', gap: 24};
-const cameraBox = {background: '#ffffff', borderRadius: 20, padding: 20, boxShadow: '0 4px 20px rgba(0,0,0,0.06)'};
-const cameraHeader = {display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12, fontSize: 14, fontWeight: 600, color: '#0f172a'};
-const videoElement = {width: '100%', borderRadius: 12, background: '#000', aspectRatio: '4/3'};
-const cameraNote = {fontSize: 11, color: '#94a3b8', textAlign: 'center', marginTop: 8};
-const questionsGrid = {background: '#ffffff', borderRadius: 20, padding: 20, boxShadow: '0 4px 20px rgba(0,0,0,0.06)'};
-const gridTitle = {fontSize: 14, fontWeight: 600, color: '#0f172a', marginBottom: 16};
-const gridContainer = {display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 8};
-const gridItem = {width: '100%', aspectRatio: '1', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#f8fafc', border: '2px solid #e2e8f0', borderRadius: 8, fontSize: 13, fontWeight: 600, color: '#64748b', cursor: 'pointer', transition: 'all 0.3s'};
-const gridItemActive = {background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', color: '#fff', borderColor: '#667eea'};
-const gridItemAnswered = {background: '#d1fae5', borderColor: '#10b981', color: '#15803d'};
+const pageWrapper = { minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', padding: '40px' };
+const loadingContainer = { minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: '#f8fafc' };
+const spinner = { width: 48, height: 48, border: '4px solid #e2e8f0', borderTop: '4px solid #667eea', borderRadius: '50%', animation: 'spin 1s linear infinite' };
+const loadingText = { marginTop: 20, fontSize: 16, color: '#64748b' };
+const startCard = { background: '#ffffff', borderRadius: 24, padding: 48, maxWidth: 600, boxShadow: '0 20px 60px rgba(0,0,0,0.3)', textAlign: 'center' };
+const startHeader = { marginBottom: 32 };
+const startIcon = { width: 80, height: 80, margin: '0 auto 20px', background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff' };
+const startTitle = { fontSize: 28, fontWeight: 700, color: '#0f172a', marginBottom: 8 };
+const startSubtitle = { fontSize: 16, color: '#64748b' };
+const instructionsBox = { background: '#f8fafc', borderRadius: 16, padding: 24, marginBottom: 24, textAlign: 'left' };
+const instructionsTitle = { fontSize: 18, fontWeight: 600, color: '#0f172a', marginBottom: 16 };
+const instructionsList = { listStyle: 'none', padding: 0, margin: 0, fontSize: 14, color: '#64748b', lineHeight: 2 };
+const candidateInfo = { background: '#f1f5f9', borderRadius: 12, padding: 16, marginBottom: 24 };
+const candidateLabel = { fontSize: 12, color: '#64748b', marginBottom: 4 };
+const candidateName = { fontSize: 18, fontWeight: 600, color: '#0f172a', marginBottom: 2 };
+const candidateEmail = { fontSize: 14, color: '#64748b' };
+const startButton = { width: '100%', padding: '16px 32px', background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', color: '#fff', border: 'none', borderRadius: 12, fontSize: 16, fontWeight: 600, cursor: 'pointer', boxShadow: '0 4px 15px rgba(102, 126, 234, 0.4)', transition: 'all 0.3s' };
+const examContainer = { minHeight: '100vh', background: '#f8fafc', display: 'flex', flexDirection: 'column' };
+const examHeader = { background: '#ffffff', padding: '20px 40px', boxShadow: '0 2px 8px rgba(0,0,0,0.08)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', position: 'sticky', top: 0, zIndex: 100 };
+const examHeaderLeft = { display: 'flex', alignItems: 'center', gap: 24 };
+const examHeaderTitle = { fontSize: 20, fontWeight: 700, color: '#0f172a', margin: 0 };
+const questionProgress = { fontSize: 14, color: '#64748b', padding: '6px 12px', background: '#f1f5f9', borderRadius: 8 };
+const examHeaderRight = { display: 'flex', alignItems: 'center', gap: 16 };
+const timerBox = { display: 'flex', alignItems: 'center', gap: 10, padding: '10px 20px', background: '#fef3c7', borderRadius: 12, color: '#92400e', fontSize: 18, fontWeight: 600 };
+const timerText = { fontFamily: 'monospace' };
+const submitButton = { display: 'flex', alignItems: 'center', gap: 8, padding: '12px 24px', background: '#10b981', color: '#fff', border: 'none', borderRadius: 12, fontSize: 15, fontWeight: 600, cursor: 'pointer', transition: 'all 0.3s' };
+const progressBar = { height: 4, background: '#e2e8f0', position: 'relative' };
+const progressFill = { height: '100%', background: 'linear-gradient(90deg, #667eea 0%, #764ba2 100%)', transition: 'width 0.3s' };
+const examBody = { flex: 1, display: 'flex', gap: 24, padding: 40, maxWidth: 1600, margin: '0 auto', width: '100%' };
+const mainContent = { flex: 1, display: 'flex', flexDirection: 'column', gap: 24 };
+const questionCard = { background: '#ffffff', borderRadius: 20, padding: 32, boxShadow: '0 4px 20px rgba(0,0,0,0.06)', flex: 1 };
+const questionHeader = { display: 'flex', alignItems: 'center', gap: 12, marginBottom: 24, paddingBottom: 16, borderBottom: '2px solid #f1f5f9' };
+const questionNumber = { fontSize: 16, fontWeight: 700, color: '#fff', background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', padding: '6px 14px', borderRadius: 8 };
+const questionType = { fontSize: 12, fontWeight: 600, color: '#64748b', padding: '6px 12px', background: '#f1f5f9', borderRadius: 6 };
+const questionPoints = { fontSize: 12, fontWeight: 600, color: '#10b981', padding: '6px 12px', background: '#d1fae5', borderRadius: 6, marginLeft: 'auto' };
+const questionText = { fontSize: 16, color: '#0f172a', lineHeight: 1.8, marginBottom: 24 };
+const answerSection = { marginTop: 24 };
+const mcqOptions = { display: 'flex', flexDirection: 'column', gap: 12 };
+const mcqOption = { display: 'flex', alignItems: 'center', gap: 12, padding: 16, background: '#f8fafc', borderRadius: 12, cursor: 'pointer', border: '2px solid transparent', transition: 'all 0.3s' };
+const mcqRadio = { width: 20, height: 20, accentColor: '#667eea' };
+const mcqLabel = { fontSize: 15, color: '#0f172a', flex: 1 };
+const codeTextarea = { width: '100%', padding: 16, fontSize: 14, fontFamily: 'monospace', border: '2px solid #e2e8f0', borderRadius: 12, resize: 'vertical', outline: 'none' };
+const navigationButtons = { display: 'flex', gap: 16, justifyContent: 'space-between' };
+const navButton = { flex: 1, padding: '14px 24px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, background: '#667eea', color: '#fff', border: 'none', borderRadius: 12, fontSize: 15, fontWeight: 600, cursor: 'pointer', transition: 'all 0.3s' };
+const navButtonDisabled = { flex: 1, padding: '14px 24px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, background: '#e2e8f0', color: '#94a3b8', border: 'none', borderRadius: 12, fontSize: 15, fontWeight: 600, cursor: 'not-allowed' };
+const sidebar = { width: 320, display: 'flex', flexDirection: 'column', gap: 24 };
+const cameraBox = { background: '#ffffff', borderRadius: 20, padding: 20, boxShadow: '0 4px 20px rgba(0,0,0,0.06)' };
+const cameraHeader = { display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12, fontSize: 14, fontWeight: 600, color: '#0f172a' };
+const videoElement = { width: '100%', borderRadius: 12, background: '#000', aspectRatio: '4/3' };
+const cameraNote = { fontSize: 11, color: '#94a3b8', textAlign: 'center', marginTop: 8 };
+const questionsGrid = { background: '#ffffff', borderRadius: 20, padding: 20, boxShadow: '0 4px 20px rgba(0,0,0,0.06)' };
+const gridTitle = { fontSize: 14, fontWeight: 600, color: '#0f172a', marginBottom: 16 };
+const gridContainer = { display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 8 };
+const gridItem = { width: '100%', aspectRatio: '1', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#f8fafc', border: '2px solid #e2e8f0', borderRadius: 8, fontSize: 13, fontWeight: 600, color: '#64748b', cursor: 'pointer', transition: 'all 0.3s' };
+const gridItemActive = { background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', color: '#fff', borderColor: '#667eea' };
+const gridItemAnswered = { background: '#d1fae5', borderColor: '#10b981', color: '#15803d' };
 
 // Camera Notice Styles
-const cameraNoticeBox = {background: '#f0f9ff', borderRadius: 16, padding: 20, marginBottom: 24, display: 'flex', gap: 16, alignItems: 'flex-start', border: '2px solid #3b82f6'};
-const cameraNoticeIcon = {width: 48, height: 48, background: '#3b82f6', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', flexShrink: 0};
-const cameraNoticeContent = {flex: 1};
-const cameraNoticeTitle = {fontSize: 16, fontWeight: 600, color: '#1e40af', marginTop: 0, marginBottom: 8};
-const cameraNoticeText = {fontSize: 14, color: '#1e3a8a', lineHeight: 1.6, margin: 0};
+const cameraNoticeBox = { background: '#f0f9ff', borderRadius: 16, padding: 20, marginBottom: 24, display: 'flex', gap: 16, alignItems: 'flex-start', border: '2px solid #3b82f6' };
+const cameraNoticeIcon = { width: 48, height: 48, background: '#3b82f6', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', flexShrink: 0 };
+const cameraNoticeContent = { flex: 1 };
+const cameraNoticeTitle = { fontSize: 16, fontWeight: 600, color: '#1e40af', marginTop: 0, marginBottom: 8 };
+const cameraNoticeText = { fontSize: 14, color: '#1e3a8a', lineHeight: 1.6, margin: 0 };

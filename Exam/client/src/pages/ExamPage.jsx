@@ -27,7 +27,7 @@ export default function ExamPage() {
     async function init() {
       try {
         const token = localStorage.getItem('token');
-        if (!token) { nav('/login'); return; }
+        if (!token) { nav('/#/login'); return; }
 
         const examRes = await api.get(`/exams/${id}`);
         setExam(examRes.data.exam);
@@ -52,9 +52,15 @@ export default function ExamPage() {
           autosaveIntervalRef.current = setInterval(() => autoSaveAll(att.id), 10000);
         }
       } catch (err) {
-        console.error(err);
-        nav('/login');
-      }
+  console.error('Init failed:', err);
+
+  const token = localStorage.getItem('token');
+  if (!token) {
+    nav('/#/login');
+  } else {
+    alert('Failed to load exam. Please refresh.');
+  }
+}
     }
     init();
 
@@ -205,7 +211,7 @@ function installAdvancedAntiCheat(attemptId) {
   setTimeout(() => {
   localStorage.removeItem('token');
   localStorage.removeItem('user');
-  nav('/login');
+  nav('/#/login');
 }, 30000);
 
 }

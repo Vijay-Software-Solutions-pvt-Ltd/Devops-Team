@@ -16,7 +16,7 @@ export default function ExamDetails() {
     api
       .get(`/user/exams/${id}`)
       .then((r) => setExam(r.data.exam))
-      .catch(() => nav('/login'));
+      .catch(() => nav('/#/login'));
   }, [id, nav]);
 
   function formatDate(dt) {

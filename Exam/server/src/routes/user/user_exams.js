@@ -32,9 +32,9 @@ router.get('/assigned', auth, async (req, res) => {
       LEFT JOIN exam.attempts a 
         ON a.exam_id = e.id 
         AND a.user_id = $1
-      WHERE ea.org_id = $2
-      AND (a.status IS NULL OR a.status != 'submitted')
-      ORDER BY e.start_date ASC
+     WHERE ea.org_id = $2
+AND (a.status IS NULL OR a.status <> 'submitted')
+ORDER BY e.start_date ASC
     `, [req.user.id, req.user.org_id]);
 
     res.json({ exams: q.rows });

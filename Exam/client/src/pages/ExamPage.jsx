@@ -1,21 +1,20 @@
-// client/src/pages/ExamPage.jsx
 import React, { useEffect, useState, useRef } from 'react';
 import api from '../services/api';
 import { useParams, useNavigate } from 'react-router-dom';
 import ProgressTimer from '../components/ProgressTimer';
 
-function stripDataUrl(dataUrl) { return dataUrl.split(',')[1]; }
+function stripDataUrl(dataUrl) {
+  return dataUrl.split(',')[1];
+}
 
 export default function ExamPage() {
-  const { id } = useParams(); // exam id
+  const { id } = useParams();
   const [exam, setExam] = useState(null);
-  const [questions, setQuestions] = useState(null); // initially null -> not loaded until start
+  const [questions, setQuestions] = useState(null);
   const [attempt, setAttempt] = useState(null);
   const [started, setStarted] = useState(false);
-  const answersRef = useRef({});
-  const nav = useNavigate();
-  const user = JSON.parse(localStorage.getItem('user') || '{}');
 
+  const answersRef = useRef({});
   const timerRef = useRef({ remaining: 0, interval: null });
   const videoRef = useRef(null);
   const canvasRef = useRef(null);
@@ -23,281 +22,332 @@ export default function ExamPage() {
   const autosaveIntervalRef = useRef(null);
   const mediaStreamRef = useRef(null);
 
-  // on mount: fetch exam meta and check for active attempt (resume)
+  const nav = useNavigate();
+  const user = JSON.parse(localStorage.getItem('user') || '{}');
+
   useEffect(() => {
     async function init() {
       try {
         const token = localStorage.getItem('token');
-        if (!token) { nav('/#/login'); return; }
+        if (!token) {
+          nav('/#/login');
+          return;
+        }
 
-        const examRes = await api.get(`/exams/${id}`);
+        const examRes = await api.get(`/user/exams/${id}`);
         setExam(examRes.data.exam);
 
-        // check for active attempt
-        const resumeRes = await api.get(`/attempts/my-active/${id}`);
+        const resumeRes = await api.get(`/user/attempts/my-active/${id}`);
         if (resumeRes.data.attempt) {
           const att = resumeRes.data.attempt;
           setAttempt(att);
           setStarted(true);
-          // compute remaining and restart timer
+
           const startedAt = new Date(att.started_at_server);
           const elapsed = Math.floor((Date.now() - startedAt.getTime()) / 1000);
-          timerRef.current.remaining = att.allowed_duration - elapsed;
-          if (timerRef.current.remaining < 0) timerRef.current.remaining = 0;
+          timerRef.current.remaining = Math.max(
+            att.allowed_duration - elapsed,
+            0
+          );
 
-          // load questions now (only after resume)
-          const qres = await api.get(`/exams/${id}`);
+          const qres = await api.get(`/user/exams/${id}`);
           setQuestions(qres.data.questions);
+
           startTimer();
           startWebcamCapture(att.id);
-          autosaveIntervalRef.current = setInterval(() => autoSaveAll(att.id), 10000);
+          installAdvancedAntiCheat(att.id);
+
+          autosaveIntervalRef.current = setInterval(
+            () => autoSaveAll(att.id),
+            10000
+          );
         }
       } catch (err) {
-  console.error('Init failed:', err);
-
-  const token = localStorage.getItem('token');
-  if (!token) {
-    nav('/#/login');
-  } else {
-    alert('Failed to load exam. Please refresh.');
-  }
-}
+        console.error('Init failed:', err);
+        alert('Failed to load exam. Refresh page.');
+      }
     }
-    init();
 
-    return () => { clearIntervals(); };
+    init();
+    return () => clearIntervals();
   }, [id]);
 
-  // helper: request fullscreen
   async function requestKioskMode() {
-    try { await document.documentElement.requestFullscreen?.(); } catch (e) { console.warn(e); }
+    try {
+      await document.documentElement.requestFullscreen?.();
+    } catch {}
   }
 
-  // Start attempt (user presses Start)
   async function startAttempt() {
     try {
-      const r = await api.post(`/attempts/start/${id}`);
+      const r = await api.post(`/user/attempts/start/${id}`);
       const att = r.data.attempt;
+
       setAttempt(att);
       await requestKioskMode();
 
-      // load questions only after start
-      const qres = await api.get(`/exams/${id}`);
+      const qres = await api.get(`/user/exams/${id}`);
       setQuestions(qres.data.questions);
       setStarted(true);
 
-      timerRef.current.remaining = att.allowedDuration || att.allowed_duration || (exam.duration_minutes * 60);
+      timerRef.current.remaining =
+        att.allowedDuration ||
+        att.allowed_duration ||
+        exam.duration_minutes * 60;
+
       startTimer();
       startWebcamCapture(att.id);
-      autosaveIntervalRef.current = setInterval(() => autoSaveAll(att.id), 10000);
+      installAdvancedAntiCheat(att.id);
+
+      autosaveIntervalRef.current = setInterval(
+        () => autoSaveAll(att.id),
+        10000
+      );
     } catch (err) {
       console.error('start failed', err);
       alert('Failed to start attempt');
     }
   }
 
-  // Timer & auto-submit
   function startTimer() {
     if (timerRef.current.interval) clearInterval(timerRef.current.interval);
+
     timerRef.current.interval = setInterval(async () => {
-      timerRef.current.remaining -= 1;
+      timerRef.current.remaining--;
+
       if (timerRef.current.remaining <= 0) {
         clearInterval(timerRef.current.interval);
+
         if (attempt) {
           await autoSaveAll(attempt.id);
-          await api.post(`/attempts/${attempt.id}/submit`).catch(()=>{});
-          alert('Time is up. Exam auto-submitted.');
+          await api.post(`/user/attempts/${attempt.id}/submit`).catch(() => {});
+          alert('Time up! Exam submitted.');
           nav('/');
         }
       } else {
-        // force re-render
-        setExam(e => ({ ...e }));
+        setExam((e) => ({ ...e }));
       }
     }, 1000);
   }
 
-  // Autosave all answers
   async function autoSaveAll(attemptId) {
     const entries = Object.entries(answersRef.current);
     for (const [qid, payload] of entries) {
       try {
-        await api.post(`/attempts/${attemptId}/answer`, { questionId: qid, answerPayload: payload });
+        await api.post(`/user/attempts/${attemptId}/answer`, {
+          questionId: qid,
+          answerPayload: payload
+        });
       } catch (err) {
-        console.error('autosave failed', err);
+        console.error('Autosave failed', err);
       }
     }
   }
 
-  // webcam
   async function startWebcamCapture(attemptId) {
-  try {
-    const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
-    window.stream = stream;
-    mediaStreamRef.current = stream;   
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: true,
+        audio: false
+      });
+
+      window.stream = stream;
+      mediaStreamRef.current = stream;
+
+      if (videoRef.current) {
+        videoRef.current.srcObject = stream;
+      }
+
+      snapshotIntervalRef.current = setInterval(async () => {
+        if (!canvasRef.current || !videoRef.current) return;
+
+        const ctx = canvasRef.current.getContext('2d');
+        canvasRef.current.width = videoRef.current.videoWidth || 320;
+        canvasRef.current.height = videoRef.current.videoHeight || 240;
+
+        ctx.drawImage(
+          videoRef.current,
+          0,
+          0,
+          canvasRef.current.width,
+          canvasRef.current.height
+        );
+
+        const base64 = stripDataUrl(
+          canvasRef.current.toDataURL('image/png')
+        );
+
+        await api
+          .post(`/user/attempts/${attemptId}/snapshot`, {
+            imageBase64: base64
+          })
+          .catch(() => {});
+      }, 30000);
+    } catch (err) {
+      console.warn('Webcam not allowed');
+    }
+  }
+
+  function stopWebcam() {
+    if (mediaStreamRef.current) {
+      mediaStreamRef.current.getTracks().forEach((t) => t.stop());
+      mediaStreamRef.current = null;
+    }
 
     if (videoRef.current) {
-      videoRef.current.srcObject = stream;
+      videoRef.current.srcObject = null;
     }
 
-    snapshotIntervalRef.current = setInterval(async () => {
-      if (!canvasRef.current || !videoRef.current) return;
-
-      const ctx = canvasRef.current.getContext('2d');
-      canvasRef.current.width = videoRef.current.videoWidth || 320;
-      canvasRef.current.height = videoRef.current.videoHeight || 240;
-      ctx.drawImage(videoRef.current, 0, 0, canvasRef.current.width, canvasRef.current.height);
-      const base64 = stripDataUrl(canvasRef.current.toDataURL('image/png'));
-      await api.post(`/attempts/${attemptId}/snapshot`, { imageBase64: base64 }).catch(() => {});
-    }, 30000);
-
-  } catch (err) {
-    console.warn('webcam not allowed', err);
-  }
-}
-
-function stopWebcam() {
-  if (mediaStreamRef.current) {
-    mediaStreamRef.current.getTracks().forEach(track => track.stop());
-    mediaStreamRef.current = null;
-  }
-
-  if (window.stream) {
-    window.stream.getTracks().forEach(track => track.stop());
-    window.stream = null;
-  }
-
-  if (videoRef.current) {
-    videoRef.current.srcObject = null;
-  }
-}
-
-  // heuristic devtools detection + block common keys
-function installAdvancedAntiCheat(attemptId) {
-  // 1) detect devtools by measuring execution time of debugger
-  let devtoolsOpen = false;
-  setInterval(()=> {
-    const start = performance.now();
-    // eslint-disable-next-line no-debugger
-    debugger;
-    const t = performance.now() - start;
-    if (t > 200 && !devtoolsOpen) {
-      devtoolsOpen = true;
-      api.post(`/attempts/${attemptId}/log`, { eventType:'devtools_open', meta: { delta: t } }).catch(()=>{});
-      // option: show overlay warning
-      alert('Developer tools detected — this will be recorded.');
+    if (window.stream) {
+      window.stream.getTracks().forEach((t) => t.stop());
+      window.stream = null;
     }
-  }, 1500);
+  }
 
-  // 2) block keys: F12, Ctrl+Shift+I, Ctrl+Shift+C, Ctrl+W, Ctrl+Tab
-  window.addEventListener('keydown', (e)=>{
-    if (e.key === 'F12' || (e.ctrlKey && e.shiftKey && (e.key === 'I' || e.key === 'C')) || (e.ctrlKey && e.key === 'w')) {
-      e.preventDefault();
-      api.post(`/attempts/${attemptId}/log`, { eventType:'shortcut_blocked', meta:{ key: e.key } }).catch(()=>{});
-    }
-  }, true);
+  function installAdvancedAntiCheat(attemptId) {
+    setInterval(() => {
+      const start = performance.now();
+      debugger; // eslint-disable-line
+      const delta = performance.now() - start;
 
-  // 3) detect resize to strange sizes (indicating devtools docking)
-  let lastWidth = window.innerWidth;
-  setInterval(()=> {
-    const w = window.innerWidth;
-    if (Math.abs(w - lastWidth) > 200) {
-      api.post(`/attempts/${attemptId}/log`, { eventType:'window_resize', meta:{ width:w } }).catch(()=>{});
-      lastWidth = w;
-    }
-  }, 1000);
-}
+      if (delta > 200) {
+        api.post(`/user/attempts/${attemptId}/log`, {
+          eventType: 'devtools_open',
+          meta: { delta }
+        }).catch(() => {});
+        alert('Devtools detected. Logged.');
+      }
+    }, 1500);
 
+    window.addEventListener(
+      'keydown',
+      (e) => {
+        if (
+          e.key === 'F12' ||
+          (e.ctrlKey && e.shiftKey && ['I', 'C'].includes(e.key)) ||
+          (e.ctrlKey && e.key === 'w')
+        ) {
+          e.preventDefault();
+          api.post(`/user/attempts/${attemptId}/log`, {
+            eventType: 'shortcut_blocked',
+            meta: { key: e.key }
+          }).catch(() => {});
+        }
+      },
+      true
+    );
+  }
 
   function clearIntervals() {
     if (timerRef.current.interval) clearInterval(timerRef.current.interval);
     if (snapshotIntervalRef.current) clearInterval(snapshotIntervalRef.current);
     if (autosaveIntervalRef.current) clearInterval(autosaveIntervalRef.current);
-     stopWebcam();
+    stopWebcam();
   }
 
-  // handle answer change
   function handleAnswerChange(qId, payload) {
     answersRef.current[qId] = payload;
   }
 
-  // manual submit
   async function submitAttempt() {
-  if (!attempt) return;
+    if (!attempt) return;
 
-  await autoSaveAll(attempt.id);
-  await api.post(`/attempts/${attempt.id}/submit`).catch(()=>{});
+    await autoSaveAll(attempt.id);
+    await api.post(`/user/attempts/${attempt.id}/submit`).catch(() => {});
 
-  alert('Time is up! Auto-submitting. Logging out in 30 seconds.');
+    clearIntervals();
 
-  await autoSaveAll(attempt.id);
-  await api.post(`/attempts/${attempt.id}/submit`).catch(()=>{});
+    alert('Exam submitted successfully.');
 
-  clearIntervals();
+    setTimeout(() => {
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
+      nav('/#/login');
+    }, 3000);
+  }
 
-  setTimeout(() => {
-  localStorage.removeItem('token');
-  localStorage.removeItem('user');
-  nav('/#/login');
-}, 30000);
-
-}
-
-  // Render:
   if (!exam) return <div>Loading exam...</div>;
 
-  // If not started yet -> show Start overlay with instructions; show name/id
   if (!started) {
     return (
       <div className="card">
         <h2>{exam.title}</h2>
         <p><strong>Name:</strong> {user.name}</p>
         <p><strong>User ID:</strong> {user.id}</p>
-        <h3>Instructions</h3>
+
         <ul>
-          <li>Exam duration: {exam.duration_minutes} minutes</li>
-          <li>Do not switch tabs; violations will be logged.</li>
-          <li>Webcam snapshots will be captured.</li>
+          <li>Duration: {exam.duration_minutes} mins</li>
+          <li>No tab switching</li>
+          <li>Webcam monitoring active</li>
         </ul>
-        <button onClick={startAttempt}>I Agree & Start Exam (Enter Fullscreen)</button>
+
+        <button onClick={startAttempt}>
+          I Agree & Start Exam
+        </button>
       </div>
     );
   }
 
-  // After started: questions are loaded into `questions`
-  if (!questions) return <div>Starting exam...</div>;
+  if (!questions) return <div>Loading questions...</div>;
 
-  const minutes = Math.floor((timerRef.current.remaining || 0) / 60);
-  const seconds = (timerRef.current.remaining || 0) % 60;
+  const minutes = Math.floor(timerRef.current.remaining / 60);
+  const seconds = timerRef.current.remaining % 60;
 
   return (
     <div className="exam-page">
       <div className="exam-header">
         <h3>{exam.title}</h3>
-        <ProgressTimer remaining={timerRef.current.remaining} total={(exam.duration_minutes||0)*60} />
-        <div>Timer: {String(minutes).padStart(2,'0')}:{String(seconds).padStart(2,'0')}</div>
+        <ProgressTimer
+          remaining={timerRef.current.remaining}
+          total={(exam.duration_minutes || 0) * 60}
+        />
+        <div>
+          Timer: {String(minutes).padStart(2, '0')}:
+          {String(seconds).padStart(2, '0')}
+        </div>
         <button onClick={submitAttempt}>Submit</button>
       </div>
 
       <div className="proctor-area">
-        <video ref={videoRef} autoPlay muted playsInline width="160" height="120" style={{border:'1px solid #ddd'}} />
-        <canvas ref={canvasRef} style={{display:'none'}} />
+        <video ref={videoRef} autoPlay muted playsInline
+          width="160" height="120" style={{ border: '1px solid #ddd' }}
+        />
+        <canvas ref={canvasRef} style={{ display: 'none' }} />
       </div>
 
       <div className="questions">
         {questions.map((q, idx) => (
           <div className="question-card" key={q.id}>
-            <div><strong>Q{idx+1}</strong> - {q.type}</div>
-            <div><p>{q.content.prompt || JSON.stringify(q.content)}</p></div>
+            <div>
+              <strong>Q{idx + 1}</strong> - {q.type}
+            </div>
 
-            {q.type === 'mcq' && q.choices && q.choices.map((c, i) => (
-              <label key={i}>
-                <input type="radio" name={q.id} onChange={() => handleAnswerChange(q.id, { choice: i })} />
-                {c}
-              </label>
-            ))}
+            <div>
+              <p>{q.content.prompt || JSON.stringify(q.content)}</p>
+            </div>
+
+            {q.type === 'mcq' &&
+              q.choices?.map((c, i) => (
+                <label key={i}>
+                  <input
+                    type="radio"
+                    name={q.id}
+                    onChange={() =>
+                      handleAnswerChange(q.id, { choice: i })
+                    }
+                  />
+                  {c}
+                </label>
+              ))}
 
             {q.type === 'coding' && (
-              <textarea rows={10} placeholder="Write your code here..." onChange={(e) => handleAnswerChange(q.id, { code: e.target.value })} />
+              <textarea
+                rows={10}
+                placeholder="Write code here"
+                onChange={(e) =>
+                  handleAnswerChange(q.id, { code: e.target.value })
+                }
+              />
             )}
           </div>
         ))}

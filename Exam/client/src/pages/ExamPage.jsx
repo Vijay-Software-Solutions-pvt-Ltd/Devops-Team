@@ -236,7 +236,7 @@ export default function ExamPage() {
           .post(`/user/attempts/${attemptId}/snapshot-url`, {
             imageUrl: downloadURL,
           })
-          .catch(() => {});
+          .catch(() => { });
       } catch (err) {
         console.error(err);
       }
@@ -261,7 +261,7 @@ export default function ExamPage() {
               severity: "high",
               timestamp: new Date().toISOString(),
             })
-            .catch(() => {});
+            .catch(() => { });
         }
         setTimeout(() => setSecurityMessage(""), 3000);
       }
@@ -285,7 +285,7 @@ export default function ExamPage() {
             severity: "medium",
             timestamp: new Date().toISOString(),
           })
-          .catch(() => {});
+          .catch(() => { });
       }
     }
 
@@ -315,7 +315,7 @@ export default function ExamPage() {
             questionId: qid,
             answerPayload: payload,
           })
-          .catch(() => {});
+          .catch(() => { });
       }
 
       await api.post(`/user/attempts/${attempt.id}/submit`);
@@ -435,36 +435,37 @@ export default function ExamPage() {
               <div style={answerSection}>
                 {(currentQuestion.question_type === "mcq" ||
                   currentQuestion.type === "mcq") && (
-                  <div style={mcqOptions}>
-                    {(currentQuestion.options ||
-                      currentQuestion.choices ||
-                      []).map((choice, i) => (
-                      <label key={i} style={mcqOption}>
-                        <input
-                          type="radio"
-                          name={`question-${currentQuestion.id}`} // ✅ separate group per question
-                          checked={
-                            answersRef.current[currentQuestion.id]?.choice ===
-                            i
-                          }
-                          onChange={() =>
-                            handleAnswerChange(currentQuestion.id, {
-                              choice: i,
-                            })
-                          }
-                          style={mcqRadio}
-                        />
-                        <span style={mcqLabel}>{choice}</span>
-                      </label>
-                    ))}
-                  </div>
-                )}
+                    <div style={mcqOptions}>
+                      {(currentQuestion.options ||
+                        currentQuestion.choices ||
+                        []).map((choice, i) => (
+                          <label key={i} style={mcqOption}>
+                            <input
+                              type="radio"
+                              name={`question-${currentQuestion.id}`} // ✅ separate group per question
+                              checked={
+                                answersRef.current[currentQuestion.id]?.choice ===
+                                i
+                              }
+                              onChange={() =>
+                                handleAnswerChange(currentQuestion.id, {
+                                  choice: i,
+                                })
+                              }
+                              style={mcqRadio}
+                            />
+                            <span style={mcqLabel}>{choice}</span>
+                          </label>
+                        ))}
+                    </div>
+                  )}
 
                 {currentQuestion.question_type !== "mcq" &&
                   currentQuestion.type !== "mcq" && (
                     <textarea
                       rows={12}
                       placeholder="Write your code here..."
+                      value={answersRef.current[currentQuestion.id]?.code || ""}
                       onChange={(e) =>
                         handleAnswerChange(currentQuestion.id, {
                           code: e.target.value,

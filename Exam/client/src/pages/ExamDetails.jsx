@@ -76,10 +76,11 @@ export default function ExamDetails() {
 
             <h3 style={subheading}>Instructions</h3>
             <ol style={instList}>
-              <li>Questions appear after you click <b>Start Exam</b>.</li>
-              <li>Do not switch tabs or windows.</li>
-              <li>Webcam snapshots are enabled.</li>
-              <li>You cannot retake after submit.</li>
+              <li><strong style="color:#c62828;">Any attempt to minimize, resize, or leave the exam screen will lead to disqualification.</strong></li>
+              <li>Questions will be shown only after you click <strong>Start Exam</strong>.</li>
+              <li>Do not switch tabs or windows during the exam; monitoring is active.</li>
+              <li>Webcam snapshots will be taken regularly for proctoring.</li>
+              <li>Once submitted or time expires, the exam cannot be retaken.</li>
             </ol>
 
             <label style={checkboxRow}>

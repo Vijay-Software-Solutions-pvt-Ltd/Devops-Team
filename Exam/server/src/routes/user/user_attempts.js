@@ -82,17 +82,17 @@ router.post('/:attemptId/answer', auth, async (req, res) => {
       return res.status(404).json({ error: 'Question not found' });
     }
 
-    const id = uuidv4();
+    const userId = req.user.id;
 
     await db.query(
       `
       INSERT INTO exam.answers
-        (id, attempt_id, question_id, answer_payload)
+        (user_id, attempt_id, question_id, answer_payload)
       VALUES ($1, $2, $3, $4)
       ON CONFLICT (attempt_id, question_id)
       DO UPDATE SET answer_payload = EXCLUDED.answer_payload
       `,
-      [id, attemptId, questionId, answerPayload]
+      [userId, attemptId, questionId, answerPayload]
     );
 
     return res.json({ ok: true });
@@ -278,41 +278,6 @@ router.post('/:attemptId/violation', auth, async (req, res) => {
 
 // If you still use server-side snapshot upload (base64 -> bucket)
 const bucket = require('../../firebase');
-
-/**
- * (Optional / legacy) Receive base64 from frontend and upload to bucket
- * Note: Your new flow uses Firebase from frontend + snapshot-url instead.
- */
-router.post('/:attemptId/snapshot', auth, async (req, res) => {
-  try {
-    const { attemptId } = req.params;
-    const { imageBase64 } = req.body;
-
-    const buffer = Buffer.from(imageBase64, 'base64');
-
-    const fileName = `exam-monitoring/${req.user.id}/${attemptId}/${Date.now()}.png`;
-    const file = bucket.file(fileName);
-
-    await file.save(buffer, {
-      metadata: { contentType: 'image/png' },
-    });
-
-    const url = `https://storage.googleapis.com/${bucket.name}/${fileName}`;
-
-    await db.query(
-      `
-      INSERT INTO exam.snapshots (id, attempt_id, user_id, image_url)
-      VALUES ($1,$2,$3,$4)
-      `,
-      [uuidv4(), attemptId, req.user.id, url]
-    );
-
-    res.json({ ok: true, url });
-  } catch (err) {
-    console.error('Snapshot upload failed:', err);
-    res.status(500).json({ error: 'upload failed' });
-  }
-});
 
 /**
  * Snapshot URL: used by your CURRENT frontend

@@ -27,7 +27,7 @@ export default function ExamPage() {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [remainingTime, setRemainingTime] = useState(0);
 
-  // ✅ NEW: Camera status tracking
+  // ✅ Camera status tracking
   const [cameraStatus, setCameraStatus] = useState({
     loading: true,
     error: null,
@@ -41,6 +41,7 @@ export default function ExamPage() {
   const videoRef = useRef(null);
   const canvasRef = useRef(null);
   const snapshotRef = useRef(null);
+  const cameraStartedRef = useRef(false); // ✅ to avoid re-initializing camera
 
   // ✅ Force Fullscreen Helper
   async function forceFullscreen() {
@@ -53,45 +54,42 @@ export default function ExamPage() {
     }
   }
 
-  // ✅ IMPROVED: Camera initialization with proper error handling
+  // ✅ Camera initialization with proper error handling
   async function initializeCamera(attemptId = null) {
     setCameraStatus({ loading: true, error: null, active: false });
 
     try {
-      // Request camera with specific constraints
       const stream = await navigator.mediaDevices.getUserMedia({
         video: {
           width: { ideal: 1280 },
           height: { ideal: 720 },
-          facingMode: "user"
+          facingMode: "user",
         },
         audio: false,
       });
 
       if (!videoRef.current) {
-        await new Promise(r => setTimeout(r, 300));
-        return initializeCamera(attemptId);
+        // If somehow not mounted yet, just stop stream and exit gracefully
+        stream.getTracks().forEach((t) => t.stop());
+        setCameraStatus({ loading: false, error: "Camera not ready", active: false });
+        return false;
       }
 
-
-      // Set the stream
       videoRef.current.srcObject = stream;
 
-      // ✅ CRITICAL FIX: Wait for metadata to load before playing
       await new Promise((resolve, reject) => {
         videoRef.current.onloadedmetadata = () => {
-          videoRef.current.play()
+          videoRef.current
+            .play()
             .then(resolve)
             .catch(reject);
         };
 
-        // Timeout after 5 seconds
         setTimeout(() => reject(new Error("Camera timeout")), 5000);
       });
 
       setCameraStatus({ loading: false, error: null, active: true });
 
-      // Start snapshots if attempt is active
       if (attemptId) {
         startSnapshots(attemptId);
       }
@@ -117,9 +115,11 @@ export default function ExamPage() {
     }
   }
 
+  // ✅ Initial load / resume
   useEffect(() => {
     init();
     return clearAll;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
 
   async function init() {
@@ -152,26 +152,18 @@ export default function ExamPage() {
         setQuestions(qRes.data.questions);
 
         startTimer(remaining);
-
-        // ✅ FIXED: Proper camera initialization with error handling
-        await initializeCamera(att.id);
+        // ✅ Camera will be started by separate effect below
       }
-    } catch {
+    } catch (err) {
+      console.error("Init failed:", err);
       nav("/login");
     }
   }
 
+  // ✅ Start attempt
   async function startAttempt() {
     try {
       await forceFullscreen();
-
-      // ✅ FIXED: Initialize camera BEFORE starting the attempt
-      const cameraReady = await initializeCamera();
-
-      if (!cameraReady) {
-        alert("Camera access is required to start the exam. Please grant permission and try again.");
-        return;
-      }
 
       const res = await api.post(`/user/attempts/start/${id}`);
       const att = res.data.attempt;
@@ -182,17 +174,26 @@ export default function ExamPage() {
       const qRes = await api.get(`/user/exams/${id}`);
       setQuestions(qRes.data.questions);
 
-      const duration = att.allowed_duration || exam.duration_minutes * 60;
+      const duration = att.allowedDuration || exam.duration_minutes * 60;
       setRemainingTime(duration);
       startTimer(duration);
 
-      // Start snapshots now that we have an attempt ID
-      startSnapshots(att.id);
+      // ✅ Camera + snapshots will start from the effect below
     } catch (err) {
       console.error(err);
       alert("Failed to start exam: " + (err.message || "Unknown error"));
     }
   }
+
+  // ✅ Start camera ONCE when exam started and attempt exists
+  useEffect(() => {
+    if (!started || !attempt?.id) return;
+    if (cameraStartedRef.current) return;
+
+    cameraStartedRef.current = true;
+    initializeCamera(attempt.id);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [started, attempt]);
 
   function startTimer(duration) {
     let remaining = duration;
@@ -235,7 +236,7 @@ export default function ExamPage() {
           .post(`/user/attempts/${attemptId}/snapshot-url`, {
             imageUrl: downloadURL,
           })
-          .catch(() => { });
+          .catch(() => {});
       } catch (err) {
         console.error(err);
       }
@@ -243,6 +244,7 @@ export default function ExamPage() {
   }
 
   const [securityMessage, setSecurityMessage] = useState("");
+
   // ✅ FULLSCREEN EXIT LOGGING
   useEffect(() => {
     if (!started) return;
@@ -251,7 +253,6 @@ export default function ExamPage() {
       if (!document.fullscreenElement) {
         setSecurityMessage("⚠️ Not allowed! Returning to fullscreen…");
 
-        // Force it back
         forceFullscreen();
         if (attempt?.id) {
           api
@@ -260,7 +261,7 @@ export default function ExamPage() {
               severity: "high",
               timestamp: new Date().toISOString(),
             })
-            .catch(() => { });
+            .catch(() => {});
         }
         setTimeout(() => setSecurityMessage(""), 3000);
       }
@@ -284,7 +285,7 @@ export default function ExamPage() {
             severity: "medium",
             timestamp: new Date().toISOString(),
           })
-          .catch(() => { });
+          .catch(() => {});
       }
     }
 
@@ -314,7 +315,7 @@ export default function ExamPage() {
             questionId: qid,
             answerPayload: payload,
           })
-          .catch(() => { });
+          .catch(() => {});
       }
 
       await api.post(`/user/attempts/${attempt.id}/submit`);
@@ -326,6 +327,7 @@ export default function ExamPage() {
 
       nav("/student");
     } catch (err) {
+      console.error("Submit failed:", err);
       alert("Submit failed");
     }
   }
@@ -335,13 +337,10 @@ export default function ExamPage() {
   }
 
   if (!exam) return <div>Loading...</div>;
-  <div style={{ display: "none" }}>
-    <video ref={videoRef} autoPlay playsInline muted />
-    <canvas ref={canvasRef} />
-  </div>
+
+  // ✅ START SCREEN
   if (!started) {
     return (
-
       <div style={pageWrapper}>
         <div style={startCard}>
           <h1>{exam.title}</h1>
@@ -384,19 +383,23 @@ export default function ExamPage() {
             </button>
           </div>
         </div>
+
         {securityMessage && (
-          <div style={{
-            background: '#fee2e2',
-            color: '#991b1b',
-            padding: '10px 16px',
-            borderRadius: 8,
-            fontWeight: 600,
-            textAlign: 'center',
-            margin: '10px 20px'
-          }}>
+          <div
+            style={{
+              background: "#fee2e2",
+              color: "#991b1b",
+              padding: "10px 16px",
+              borderRadius: 8,
+              fontWeight: 600,
+              textAlign: "center",
+              margin: "10px 20px",
+            }}
+          >
             {securityMessage}
           </div>
         )}
+
         <div style={progressBar}>
           <div
             style={{
@@ -432,29 +435,30 @@ export default function ExamPage() {
               <div style={answerSection}>
                 {(currentQuestion.question_type === "mcq" ||
                   currentQuestion.type === "mcq") && (
-                    <div style={mcqOptions}>
-                      {(currentQuestion.options ||
-                        currentQuestion.choices ||
-                        []).map((choice, i) => (
-                          <label key={i} style={mcqOption}>
-                            <input
-                              type="radio"
-                              name={`question-${currentQuestion.id}`}
-                              checked={
-                                answersRef.current[currentQuestion.id]?.choice === i
-                              }
-                              onChange={() =>
-                                handleAnswerChange(currentQuestion.id, {
-                                  choice: i,
-                                })
-                              }
-                              style={mcqRadio}
-                            />
-                            <span style={mcqLabel}>{choice}</span>
-                          </label>
-                        ))}
-                    </div>
-                  )}
+                  <div style={mcqOptions}>
+                    {(currentQuestion.options ||
+                      currentQuestion.choices ||
+                      []).map((choice, i) => (
+                      <label key={i} style={mcqOption}>
+                        <input
+                          type="radio"
+                          name={`question-${currentQuestion.id}`} // ✅ separate group per question
+                          checked={
+                            answersRef.current[currentQuestion.id]?.choice ===
+                            i
+                          }
+                          onChange={() =>
+                            handleAnswerChange(currentQuestion.id, {
+                              choice: i,
+                            })
+                          }
+                          style={mcqRadio}
+                        />
+                        <span style={mcqLabel}>{choice}</span>
+                      </label>
+                    ))}
+                  </div>
+                )}
 
                 {currentQuestion.question_type !== "mcq" &&
                   currentQuestion.type !== "mcq" && (
@@ -503,7 +507,6 @@ export default function ExamPage() {
               <div style={cameraHeader}>
                 <FiVideo size={16} />
                 <span>Camera Feed</span>
-                {/* ✅ NEW: Status indicator */}
                 {cameraStatus.active && (
                   <span style={liveIndicator}>
                     <span style={liveDot}></span> LIVE
@@ -511,7 +514,6 @@ export default function ExamPage() {
                 )}
               </div>
 
-              {/* ✅ NEW: Loading state */}
               {cameraStatus.loading && (
                 <div style={cameraPlaceholder}>
                   <FiCamera size={48} color="#94a3b8" />
@@ -519,8 +521,7 @@ export default function ExamPage() {
                 </div>
               )}
 
-              {/* ✅ NEW: Error state */}
-              {cameraStatus.error && (
+              {cameraStatus.error && !cameraStatus.loading && (
                 <div style={cameraError}>
                   <FiAlertCircle size={48} color="#ef4444" />
                   <p style={cameraErrorText}>{cameraStatus.error}</p>
@@ -533,18 +534,18 @@ export default function ExamPage() {
                 </div>
               )}
 
-              {/* ✅ IMPROVED: Video element with mirror effect */}
+              {/* ✅ Single video ref used everywhere */}
               <video
+                ref={videoRef}
                 autoPlay
                 playsInline
                 muted
                 style={{
                   ...videoElement,
-                  display: cameraStatus.active ? 'block' : 'none',
-                  transform: 'scaleX(-1)',
+                  display: cameraStatus.active ? "block" : "none",
+                  transform: "scaleX(-1)",
                 }}
               />
-
 
               <canvas ref={canvasRef} hidden />
 
@@ -577,7 +578,7 @@ export default function ExamPage() {
   );
 }
 
-// ... (keeping all your existing styles)
+// ---------- STYLES (unchanged from your version) ----------
 
 const pageWrapper = { minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', padding: '40px' };
 const loadingContainer = { minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: '#f8fafc' };
@@ -636,7 +637,6 @@ const gridItem = { width: '100%', aspectRatio: '1', display: 'flex', alignItems:
 const gridItemActive = { background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', color: '#fff', borderColor: '#667eea' };
 const gridItemAnswered = { background: '#d1fae5', borderColor: '#10b981', color: '#15803d' };
 
-// ✅ NEW STYLES for camera states
 const liveIndicator = {
   marginLeft: 'auto',
   display: 'flex',

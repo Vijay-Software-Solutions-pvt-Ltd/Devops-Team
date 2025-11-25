@@ -9,15 +9,15 @@ require('dotenv').config();
 
 // Register (public) - optional org_id
 router.post('/register', async (req, res) => {
-  const { 
-    name, 
-    email, 
-    password, 
-    org_id, 
+  const {
+    name,
+    email,
+    password,
+    org_id,
     role,
     mobile,
     department,
-    sub_department 
+    sub_department
   } = req.body;
 
   if (!email || !password) {
@@ -70,9 +70,10 @@ router.post('/register', async (req, res) => {
 
   } catch (err) {
     await client.query('ROLLBACK');
-    console.error(err);
-    res.status(500).json({ error: 'Failed to register' });
-  } finally {
+    console.error('REGISTER ERROR 👉', err.message);
+    res.status(500).json({ error: err.message });
+  }
+  finally {
     client.release();
   }
 });

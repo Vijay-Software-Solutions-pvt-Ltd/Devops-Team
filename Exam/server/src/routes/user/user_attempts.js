@@ -71,8 +71,10 @@ router.post('/:attemptId/answer', auth, async (req, res) => {
   const { questionId, answerPayload } = req.body;
 
   try {
+    await ensureAttemptOwnership(attemptId, req.user.id);
+
     const q = await db.query(
-      `SELECT type FROM exam.questions WHERE id=$1`,
+      'SELECT type FROM exam.questions WHERE id=$1',
       [questionId]
     );
 
@@ -80,37 +82,20 @@ router.post('/:attemptId/answer', auth, async (req, res) => {
       return res.status(404).json({ error: 'Question not found' });
     }
 
-    const type = q.rows[0].type;
+    const id = uuidv4();
 
-    // Coding type: just save payload (no grader job)
-    if (type === 'coding') {
-      await db.query(
-        `
-        INSERT INTO exam.answers (attempt_id, question_id, answer_payload)
-        VALUES ($1,$2,$3)
-        ON CONFLICT (attempt_id, question_id)
-        DO UPDATE SET answer_payload = EXCLUDED.answer_payload
-        `,
-        [attemptId, questionId, JSON.stringify(answerPayload)]
-      );
-      return res.json({
-        ok: true,
-        message: 'Coding answer saved (grading disabled)',
-      });
-    }
-
-    // Normal save for other question types
     await db.query(
       `
-      INSERT INTO exam.answers (attempt_id, question_id, answer_payload)
-      VALUES ($1,$2,$3)
+      INSERT INTO exam.answers
+        (id, attempt_id, question_id, answer_payload)
+      VALUES ($1, $2, $3, $4)
       ON CONFLICT (attempt_id, question_id)
       DO UPDATE SET answer_payload = EXCLUDED.answer_payload
       `,
-      [attemptId, questionId, JSON.stringify(answerPayload)]
+      [id, attemptId, questionId, answerPayload]
     );
 
-    return res.json({ ok: true, message: 'Answer saved.' });
+    return res.json({ ok: true });
   } catch (err) {
     console.error('Save answer failed:', err);
     return res.status(500).json({ error: 'failed to save answer' });
@@ -150,10 +135,22 @@ router.post('/:attemptId/submit', auth, async (req, res) => {
     let totalScore = 0;
     for (const row of answersQ.rows) {
       if (row.type === 'mcq') {
-        const correct =
-          row.correct_answer && row.correct_answer.correct;
-        const chosen =
-          row.answer_payload && row.answer_payload.choice;
+        let correct = null;
+if (typeof row.correct_answer === 'string') {
+  const parsed = JSON.parse(row.correct_answer);
+  correct = parsed.correct;
+} else {
+  correct = row.correct_answer?.correct;
+}
+
+        let chosen = null;
+if (typeof row.answer_payload === 'string') {
+  const parsed = JSON.parse(row.answer_payload);
+  chosen = parsed.choice;
+} else {
+  chosen = row.answer_payload?.choice;
+}
+
         const isCorrect = chosen === correct;
         const score = isCorrect ? row.points || 1 : 0;
 
@@ -233,12 +230,7 @@ router.post('/:attemptId/log', auth, async (req, res) => {
   }
 });
 
-/**
- * NEW: /violation endpoint that your frontend uses
- * This is for security violations like:
- * - fullscreen_exit
- * - tab_switch_or_minimize
- */
+
 router.post('/:attemptId/violation', auth, async (req, res) => {
   const { attemptId } = req.params;
   const { type, severity, timestamp } = req.body;

@@ -42,14 +42,22 @@ router.post('/create', auth, requireRole('admin'), async (req,res)=>{
   `, [exam_id, org_id]);
 
   // Insert questions
-  for (const q of questions) {
-    await db.query(`
-      INSERT INTO exam.questions (id,exam_id,type,difficulty,content,choices,correct_answer,points)
-      VALUES ($1,$2,$3,$4,$5,$6,$7,$8)
-    `,
-    [uuidv4(), exam_id, q.type, q.difficulty, q.content, q.choices||null, q.correct_answer||null, q.points||1]
-    );
-  }
+for (const q of questions) {
+  await db.query(`
+    INSERT INTO exam.questions 
+    (id, exam_id, type, difficulty, content, choices, correct_answer, points)
+    VALUES ($1, $2, $3, $4, $5::jsonb, $6::jsonb, $7::jsonb, $8)
+  `, [
+    uuidv4(),
+    exam_id,
+    q.type,
+    q.difficulty || 'easy',
+    JSON.stringify(q.content || {}),
+    q.choices ? JSON.stringify(q.choices) : null,
+    q.correct_answer ? JSON.stringify(q.correct_answer) : null,
+    q.points || 1
+  ]);
+}
 
   res.json({ exam_id });
 });

@@ -52,7 +52,7 @@ router.post('/register', async (req, res) => {
 
     // 2️⃣ Insert into user_details table
     await client.query(
-      `INSERT INTO user_details
+      `INSERT INTO exam.user_details
        (user_id, email, mobile, department, sub_department)
        VALUES ($1, $2, $3, $4, $5)`,
       [

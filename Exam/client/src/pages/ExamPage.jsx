@@ -36,7 +36,7 @@ export default function ExamPage() {
 
   const user = JSON.parse(localStorage.getItem("user") || "{}");
 
-  const answersRef = useRef({});
+  const [answers, setAnswers] = useState({});
   const timerRef = useRef(null);
   const videoRef = useRef(null);
   const canvasRef = useRef(null);
@@ -307,8 +307,7 @@ export default function ExamPage() {
     if (!attempt) return;
 
     try {
-      const entries = Object.entries(answersRef.current);
-
+     const entries = Object.entries(answers);
       for (const [qid, payload] of entries) {
         await api
           .post(`/user/attempts/${attempt.id}/answer`, {
@@ -333,7 +332,13 @@ export default function ExamPage() {
   }
 
   function handleAnswerChange(questionId, answer) {
-    answersRef.current[questionId] = answer;
+    setAnswers((prev) => ({
+      ...prev,
+      [questionId]: {
+        ...prev[questionId],
+        ...answer,
+      },
+    }));
   }
 
   if (!exam) return <div>Loading...</div>;
@@ -444,8 +449,7 @@ export default function ExamPage() {
                               type="radio"
                               name={`question-${currentQuestion.id}`} // ✅ separate group per question
                               checked={
-                                answersRef.current[currentQuestion.id]?.choice ===
-                                i
+                                answers[currentQuestion.id]?.choice === i
                               }
                               onChange={() =>
                                 handleAnswerChange(currentQuestion.id, {
@@ -465,7 +469,7 @@ export default function ExamPage() {
                     <textarea
                       rows={12}
                       placeholder="Write your code here..."
-                      value={answersRef.current[currentQuestion.id]?.code || ""}
+                      value={answers[currentQuestion.id]?.code || ""}
                       onChange={(e) =>
                         handleAnswerChange(currentQuestion.id, {
                           code: e.target.value,
@@ -564,7 +568,7 @@ export default function ExamPage() {
                     style={{
                       ...gridItem,
                       ...(idx === currentIndex ? gridItemActive : {}),
-                      ...(answersRef.current[q.id] ? gridItemAnswered : {}),
+                      ...(answers[q.id] ? gridItemAnswered : {}),
                     }}
                   >
                     {idx + 1}

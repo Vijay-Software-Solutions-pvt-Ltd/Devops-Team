@@ -76,7 +76,11 @@ export default function ExamDetails() {
 
             <h3 style={subheading}>Instructions</h3>
             <ol style={instList}>
-              <li><strong style="color:#c62828;">Any attempt to minimize, resize, or leave the exam screen will lead to disqualification.</strong></li>
+              <li>
+                <strong style={{ color: "#c62828" }}>
+                  Any attempt to minimize, resize, or leave the exam screen will lead to disqualification.
+                </strong>
+              </li>
               <li>Questions will be shown only after you click <strong>Start Exam</strong>.</li>
               <li>Do not switch tabs or windows during the exam; monitoring is active.</li>
               <li>Webcam snapshots will be taken regularly for proctoring.</li>

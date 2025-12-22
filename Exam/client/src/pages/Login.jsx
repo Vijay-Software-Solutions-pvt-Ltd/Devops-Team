@@ -15,7 +15,7 @@ export default function Login() {
 
       localStorage.setItem("token", res.data.token);
       localStorage.setItem("user", JSON.stringify(res.data.user));
-        if (res.data.user.role === "admin") {
+      if (res.data.user.role === "admin") {
         nav("/admin");
       } else {
         nav("/student");
@@ -70,10 +70,12 @@ export default function Login() {
               <button type="submit" className="login-btn">
                 Submit
               </button>
+              <Signup onClick={() => nav("/signup")}>
+                Don’t have an account? Sign Up
+              </Signup>
             </form>
           </div>
         </div>
-
       </div>
     </div>
   );

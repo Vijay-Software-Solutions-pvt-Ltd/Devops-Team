@@ -196,18 +196,27 @@ export default function ExamPage() {
   }, [started, attempt]);
 
   function startTimer(duration) {
-    let remaining = duration;
-    if (timerRef.current) clearInterval(timerRef.current);
+  if (timerRef.current) clearInterval(timerRef.current);
 
-    timerRef.current = setInterval(() => {
-      remaining--;
-      setRemainingTime(remaining);
+  let remaining = Math.max(duration, 0);
 
-      if (remaining <= 0) {
-        submitAttempt(true);
-      }
-    }, 1000);
-  }
+  setRemainingTime(remaining);
+
+  timerRef.current = setInterval(() => {
+    remaining = remaining - 1;
+
+    if (remaining <= 0) {
+      clearInterval(timerRef.current);   
+      remaining = 0;                     
+      setRemainingTime(0);
+
+      submitAttempt(true);              
+      return;
+    }
+
+    setRemainingTime(remaining);
+  }, 1000);
+}
 
   function startSnapshots(attemptId) {
     snapshotRef.current = setInterval(async () => {

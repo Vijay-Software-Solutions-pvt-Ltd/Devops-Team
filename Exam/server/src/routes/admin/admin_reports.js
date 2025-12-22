@@ -6,12 +6,31 @@ const auth = require('../../middleware/authMiddleware');
 const requireRole = require('../../middleware/roleCheck');
 const { v4: uuidv4 } = require('uuid');
 
+router.get('/users', auth, requireRole('admin'), async (req, res) => {
+  const q = await db.query(`
+    SELECT id, email, name, role, org_id
+    FROM exam.users
+    ORDER BY created_at DESC
+  `);
+
+  res.json({ users: q.rows });
+});
+
+router.get('/exams', auth, requireRole('admin'), async (req, res) => {
+  const q = await db.query(`
+    SELECT id, title, description, duration_minutes, start_date, end_date 
+    FROM exam.exams
+    ORDER BY created_at DESC
+  `);
+  res.json({ exams: q.rows });
+});
+
 router.get('/attempts', auth, requireRole('admin'), async (req, res) => {
   const q = await db.query(`SELECT a.id,a.user_id,u.email,a.exam_id,a.status,a.started_at_server,a.finished_at,a.total_score,a.violation_count FROM exam.attempts a JOIN exam.users u ON a.user_id=u.id ORDER BY a.started_at_server DESC LIMIT 500`);
   res.json({ attempts: q.rows });
 });
 
-router.get('/attempts/:id', auth, requireRole('admin'), async (req, res) => {
+router.get('/attempt/:id', auth, requireRole('admin'), async (req, res) => {
   const id = req.params.id;
   const attemptQ = await db.query('SELECT * FROM exam.attempts WHERE id=$1', [id]);
   if (!attemptQ.rows[0]) return res.status(404).json({ error: 'not found' });

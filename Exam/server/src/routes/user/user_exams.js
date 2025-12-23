@@ -1,10 +1,7 @@
-// server/src/routes/user_exams.js
 const express = require('express');
 const router = express.Router();
 const db = require('../../db');
 const auth = require('../../middleware/authMiddleware');
-
-// ✅ Get assigned exams
 router.get('/assigned', auth, async (req, res) => {
   try {
     if (req.user.role === 'admin') {
@@ -15,7 +12,6 @@ router.get('/assigned', auth, async (req, res) => {
       `);
       return res.json({ exams: q.rows });
     }
-
     const q = await db.query(`
       SELECT 
         e.id,
@@ -40,8 +36,6 @@ router.get('/assigned', auth, async (req, res) => {
     res.status(500).json({ error: 'failed to fetch exams' });
   }
 });
-
-// ✅ Get single exam by ID
 router.get('/:examId', auth, async (req, res) => {
   const { examId } = req.params;
 

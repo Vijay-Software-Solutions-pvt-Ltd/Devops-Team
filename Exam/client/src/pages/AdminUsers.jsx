@@ -39,7 +39,6 @@ export default function AdminUsers() {
         <button onClick={addRow}>Add Row</button>
         <button onClick={bulkCreate}>Create Users</button>
       </div>
-
       <h4>Existing users</h4>
       <table>
         <thead><tr><th>Email</th><th>Name</th><th>Org</th><th>Active</th><th>Action</th></tr></thead>

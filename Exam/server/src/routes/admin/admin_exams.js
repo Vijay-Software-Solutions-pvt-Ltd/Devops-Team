@@ -1,12 +1,9 @@
-// server/src/routes/exams.js
 const express = require('express');
 const router = express.Router();
 const db = require('../../db');
 const { v4: uuidv4 } = require('uuid');
 const auth = require('../../middleware/authMiddleware');
 const requireRole = require('../../middleware/roleCheck');
-
-// Admin: create exam with questions + assign to org
 router.post('/create', auth, requireRole('admin'), async (req, res) => {
   // payload: { title, description, duration_minutes, start_date, end_date, org_id, questions: [{type,difficulty,content,choices,correct_answer,points}] }
   const { title, description, duration_minutes, start_date, end_date, org_id, questions } = req.body;

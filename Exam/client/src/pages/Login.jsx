@@ -1,8 +1,7 @@
 import React, { useState } from "react";
 import api from "../services/api";
-import { useNavigate } from "react-router-dom";
-import '../pages/login.css';
-
+import { useNavigate, Link } from "react-router-dom";
+import "../pages/login.css";
 export default function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -15,6 +14,7 @@ export default function Login() {
 
       localStorage.setItem("token", res.data.token);
       localStorage.setItem("user", JSON.stringify(res.data.user));
+
       if (res.data.user.role === "admin") {
         nav("/admin");
       } else {
@@ -25,12 +25,11 @@ export default function Login() {
       alert(err?.response?.data?.error || "Login failed");
     }
   }
-
   return (
     <div className="login-page">
       <div className="login-container">
 
-        {/* Left Side Image Section */}
+        {/* Left Side */}
         <div className="login-left">
           <div className="login-overlay">
             <h2>Vijay Software Solutions Pvt Ltd</h2>
@@ -38,8 +37,7 @@ export default function Login() {
             <p>Start your exam with confidence.</p>
           </div>
         </div>
-
-        {/* Right Side Form Section */}
+        {/* Right Side */}
         <div className="login-right">
           <div className="login-card">
             <h2 className="logo-text">LOGIN</h2>
@@ -70,10 +68,15 @@ export default function Login() {
               <button type="submit" className="login-btn">
                 Submit
               </button>
-              <Signup onClick={() => nav("/signup")}>
-                Don’t have an account? Sign Up
-              </Signup>
+
+              {/* ✅ FIXED SIGNUP LINK */}
+              <p style={{ marginTop: "12px", textAlign: "center" }}>
+                <Link to="/signup" className="signup-link">
+                  Don’t have an account? Sign Up
+                </Link>
+              </p>
             </form>
+
           </div>
         </div>
       </div>

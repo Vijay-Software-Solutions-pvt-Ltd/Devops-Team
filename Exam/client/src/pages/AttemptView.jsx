@@ -1,9 +1,7 @@
-// client/src/pages/AttemptView.jsx
 import React, { useEffect, useState } from 'react';
 import api from '../services/api';
 import { useParams } from 'react-router-dom';
 import StudentHeader from "../components/StudentHeader";
-
 export default function AttemptView() {
   const { id } = useParams();
   const [data, setData] = useState(null);

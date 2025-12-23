@@ -1,4 +1,3 @@
-// server/src/routes/user_attempts.js
 const express = require('express');
 const router = express.Router();
 const db = require('../../db');
@@ -6,8 +5,6 @@ const auth = require('../../middleware/authMiddleware');
 const { v4: uuidv4 } = require('uuid');
 const fetch = require('node-fetch');
 require('dotenv').config();
-
-// Utility: ensure the attempt belongs to the logged-in user
 async function ensureAttemptOwnership(attemptId, userId) {
   const q = await db.query(
     'SELECT id, user_id, exam_id, started_at_server, allowed_duration, status FROM exam.attempts WHERE id=$1',
@@ -24,10 +21,6 @@ async function ensureAttemptOwnership(attemptId, userId) {
 
   return attempt;
 }
-
-/**
- * Start a new attempt for an exam
- */
 router.post('/start/:examId', auth, async (req, res) => {
   const { examId } = req.params;
 
@@ -62,10 +55,6 @@ router.post('/start/:examId', auth, async (req, res) => {
     return res.status(500).json({ error: 'failed to start attempt' });
   }
 });
-
-/**
- * Save / update an answer
- */
 router.post('/:attemptId/answer', auth, async (req, res) => {
   const { attemptId } = req.params;
   const { questionId, answerPayload } = req.body;

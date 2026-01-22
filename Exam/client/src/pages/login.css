@@ -1,11 +1,22 @@
 /* Login Page Background */
-.login-page {
+ .login-page {
   height: 100vh;
-  background: linear-gradient(135deg, #5289ef, #2a5298, #f2412a);
   display: flex;
   align-items: center;
   justify-content: center;
   font-family: "Segoe UI", sans-serif;
+  background-image:
+    linear-gradient(
+      135deg,
+      rgba(82, 137, 239, 0.799),
+      rgba(30, 77, 158, 0.865),
+      rgba(242, 65, 42, 0.849)
+    ),
+    url("../resources/onlineexambackground.jpeg");
+
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
 }
 
 .login-logo {
@@ -59,7 +70,11 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: #ffffff;
+  background:  linear-gradient(
+      135deg,
+      rgba(16, 73, 170, 0.927),
+      rgba(212, 73, 55, 0.87)
+    );
 }
 
 /* Card */
@@ -69,11 +84,17 @@
   text-align: center;
 }
 
+.v-logo{
+  height: 70px;
+  width: 80px;
+  margin-left: 12cap;
+}
 .logo-text {
-  font-size: 22px;
+  font-size: 29px;
   font-family: sans-serif;
-  margin-bottom: 20px;
-  color: #0c2e80;
+  margin-bottom: 40px;
+  color: #091634;
+  margin-top: -10px;
 }
 
 /* Inputs */
@@ -83,8 +104,8 @@
 }
 
 .form-group label {
-  font-size: 12px;
-  color: #475569;
+  font-size: 15px bold;
+  color: #000000;
   margin-bottom: 5px;
   display: block;
 }

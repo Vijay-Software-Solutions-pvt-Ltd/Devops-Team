@@ -2,10 +2,13 @@ import React, { useState } from "react";
 import api from "../services/api";
 import { useNavigate, Link } from "react-router-dom";
 import "../pages/login.css";
+import img2 from "../resources/logo.png";
+
 export default function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const nav = useNavigate();
+
 
   async function handleLogin(e) {
     e.preventDefault();
@@ -32,6 +35,7 @@ export default function Login() {
         {/* Left Side */}
         <div className="login-left">
           <div className="login-overlay">
+            <img src={img2} className="v-logo" />
             <h2>Vijay Software Solutions Pvt Ltd</h2>
             <p>Online Examination Portal</p>
             <p>Start your exam with confidence.</p>

@@ -1,0 +1,108 @@
+[debug] [2025-12-26T12:39:22.932Z] ----------------------------------------------------------------------
+[debug] [2025-12-26T12:39:22.938Z] Command:       /nix/store/ws50yvm6vzlzf7jzz6n7xh4szddrack1-nodejs-20.19.1/bin/node /nix/store/c776mhyhgykcld7p90ajrka149ifn61a-firebase-tools-14.26.0/lib/node_modules/firebase-tools/lib/bin/firebase.js deploy --only hosting --debug
+[debug] [2025-12-26T12:39:22.939Z] CLI Version:   14.26.0
+[debug] [2025-12-26T12:39:22.939Z] Platform:      linux
+[debug] [2025-12-26T12:39:22.939Z] Node Version:  v20.19.1
+[debug] [2025-12-26T12:39:22.945Z] Time:          Fri Dec 26 2025 12:39:22 GMT+0000 (Coordinated Universal Time)
+[debug] [2025-12-26T12:39:22.945Z] ----------------------------------------------------------------------
+[debug] 
+[debug] [2025-12-26T12:39:23.644Z] Checked if tokens are valid: true, expires at: 1766755617116
+[debug] [2025-12-26T12:39:23.646Z] Checked if tokens are valid: true, expires at: 1766755617116
+[debug] [2025-12-26T12:39:23.651Z] >>> [apiv2][query] GET https://monospace-pa.googleapis.com/v1/workspaces/exam-96957713 [none]
+[debug] [2025-12-26T12:39:24.740Z] <<< [apiv2][status] GET https://monospace-pa.googleapis.com/v1/workspaces/exam-96957713 200
+[debug] [2025-12-26T12:39:24.741Z] <<< [apiv2][body] GET https://monospace-pa.googleapis.com/v1/workspaces/exam-96957713 {"workspaceId":"exam-96957713","name":"Exam","workspaceRedirectUrl":"firebase-exam-1763719599136.cluster-ys234awlzbhwoxmkkse6qo3fz6.cloudworkstations.dev","status":"WORKSPACE_STATUS_RUNNING","lastAccessDatetime":"2025-12-26T12:17:27.928844Z","workspaceTemplate":"WORKSPACE_TEMPLATE_BLANK_WEB","owner":"vamshimvr1802@gmail.com","serviceAccountEmail":"msp-3545127327525141990@monospace-per-ws-sa-10.iam.gserviceaccount.com","gitRepoUrl":"https://github.com/Vijay-Software-Solutions-pvt-Ltd/Devops-Team.git","enableNix":true,"ownerEmail":"vamshimvr1802@gmail.com","workstationAccessToken":"eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJodHRwczovL2Nsb3VkLmdvb2dsZS5jb20vd29ya3N0YXRpb25zIiwiYXVkIjoiZmlyZWJhc2UtZXhhbS0xNzYzNzE5NTk5MTM2LmNsdXN0ZXIteXMyMzRhd2x6Ymh3b3hta2tzZTZxbzNmejYuY2xvdWR3b3Jrc3RhdGlvbnMuZGV2IiwiaWF0IjoxNzY2NzUyNzY0LCJleHAiOjE3NjY4MzkxNjR9.ubkhvQ-30nQFrzUGf5kZOozcVLv1BxRBkN3Q4t0sYAHjLdW8bhop7Gs73clETiuYsQvw3VPL5BJbE16lvszwWvK8YP9lgne8Nqps2zPagoijbSMxkz-73SpUJOFCvD7Pf-JPu1kMSDXo4y2ngM0HMIMD3sCna9XUyrWHhQ5arLIv-SoQKfRv2GTJVmQOxIH-9xOhbaeulBqTUySDpkA9zD2WdBhPghyEw10KHm_VzFuAs0rLMfhJ0UhiGzYEgprbjJ_vHlqq4AvwCIIsf9h0alomeO8lQaUxBz9H4NSDplZEMDfSjY-9C12gbqE_ch8CILHcEw-_XNuo7UewiqX3kw","firebaseProjectId":"exam-96957713-e7f90"}
+[debug] [2025-12-26T12:39:24.744Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform","https://www.googleapis.com/auth/userinfo.email"]
+[debug] [2025-12-26T12:39:24.745Z] > authorizing via signed-in user (manojmalireddy0220@gmail.com)
+[debug] [2025-12-26T12:39:24.745Z] [iam] checking project exam-96957713-e7f90 for permissions ["firebase.projects.get","firebasehosting.sites.update"]
+[debug] [2025-12-26T12:39:24.746Z] Checked if tokens are valid: true, expires at: 1766755617116
+[debug] [2025-12-26T12:39:24.746Z] Checked if tokens are valid: true, expires at: 1766755617116
+[debug] [2025-12-26T12:39:24.747Z] >>> [apiv2][query] POST https://cloudresourcemanager.googleapis.com/v1/projects/exam-96957713-e7f90:testIamPermissions [none]
+[debug] [2025-12-26T12:39:24.747Z] >>> [apiv2][(partial)header] POST https://cloudresourcemanager.googleapis.com/v1/projects/exam-96957713-e7f90:testIamPermissions x-goog-quota-user=projects/exam-96957713-e7f90
+[debug] [2025-12-26T12:39:24.747Z] >>> [apiv2][body] POST https://cloudresourcemanager.googleapis.com/v1/projects/exam-96957713-e7f90:testIamPermissions {"permissions":["firebase.projects.get","firebasehosting.sites.update"]}
+[debug] [2025-12-26T12:39:25.511Z] <<< [apiv2][status] POST https://cloudresourcemanager.googleapis.com/v1/projects/exam-96957713-e7f90:testIamPermissions 200
+[debug] [2025-12-26T12:39:25.513Z] <<< [apiv2][body] POST https://cloudresourcemanager.googleapis.com/v1/projects/exam-96957713-e7f90:testIamPermissions {"permissions":["firebase.projects.get","firebasehosting.sites.update"]}
+[debug] [2025-12-26T12:39:25.519Z] Checked if tokens are valid: true, expires at: 1766755617116
+[debug] [2025-12-26T12:39:25.523Z] Checked if tokens are valid: true, expires at: 1766755617116
+[debug] [2025-12-26T12:39:25.524Z] >>> [apiv2][query] GET https://firebase.googleapis.com/v1beta1/projects/exam-96957713-e7f90 [none]
+[debug] [2025-12-26T12:39:25.798Z] <<< [apiv2][status] GET https://firebase.googleapis.com/v1beta1/projects/exam-96957713-e7f90 200
+[debug] [2025-12-26T12:39:25.799Z] <<< [apiv2][body] GET https://firebase.googleapis.com/v1beta1/projects/exam-96957713-e7f90 {"projectId":"exam-96957713-e7f90","projectNumber":"182607695170","displayName":"VSsolutions-OnlineExam","name":"projects/exam-96957713-e7f90","resources":{"hostingSite":"exam-96957713-e7f90"},"state":"ACTIVE","etag":"1_97ffcd3d-8f4c-41b8-b1a9-6b30602ea731"}
+[info] 
+[info] === Deploying to 'exam-96957713-e7f90'...
+[info] 
+[info] i  deploying hosting 
+[debug] [2025-12-26T12:39:25.814Z] Checked if tokens are valid: true, expires at: 1766755617116
+[debug] [2025-12-26T12:39:25.815Z] Checked if tokens are valid: true, expires at: 1766755617116
+[debug] [2025-12-26T12:39:25.815Z] >>> [apiv2][query] POST https://firebasehosting.googleapis.com/v1beta1/projects/-/sites/exam-96957713-e7f90/versions [none]
+[debug] [2025-12-26T12:39:25.815Z] >>> [apiv2][body] POST https://firebasehosting.googleapis.com/v1beta1/projects/-/sites/exam-96957713-e7f90/versions {"status":"CREATED","labels":{"deployment-tool":"cli-firebase--project-idx"}}
+[debug] [2025-12-26T12:39:27.089Z] <<< [apiv2][status] POST https://firebasehosting.googleapis.com/v1beta1/projects/-/sites/exam-96957713-e7f90/versions 200
+[debug] [2025-12-26T12:39:27.089Z] <<< [apiv2][body] POST https://firebasehosting.googleapis.com/v1beta1/projects/-/sites/exam-96957713-e7f90/versions {"name":"projects/182607695170/sites/exam-96957713-e7f90/versions/16c30cee924174a3","status":"CREATED","config":{},"labels":{"deployment-tool":"cli-firebase--project-idx"}}
+[info] i  hosting[exam-96957713-e7f90]: beginning deploy... 
+[info] i  hosting[exam-96957713-e7f90]: found 5 files in client/dist 
+[debug] [2025-12-26T12:39:27.113Z] [hosting] uploading with 200 concurrency
+[debug] [2025-12-26T12:39:27.117Z] Checked if tokens are valid: true, expires at: 1766755617116
+[debug] [2025-12-26T12:39:27.117Z] Checked if tokens are valid: true, expires at: 1766755617116
+[debug] [2025-12-26T12:39:27.118Z] [hosting] hash cache [Y2xpZW50L2Rpc3Q] stored for 5 files
+[debug] [2025-12-26T12:39:27.118Z] [hosting][hash queue][FINAL] {"max":1,"min":0,"avg":0,"active":0,"complete":5,"success":5,"errored":0,"retried":0,"total":5,"elapsed":3}
+[debug] [2025-12-26T12:39:27.119Z] >>> [apiv2][query] POST https://firebasehosting.googleapis.com/v1beta1/projects/182607695170/sites/exam-96957713-e7f90/versions/16c30cee924174a3:populateFiles [none]
+[debug] [2025-12-26T12:39:27.119Z] >>> [apiv2][body] POST https://firebasehosting.googleapis.com/v1beta1/projects/182607695170/sites/exam-96957713-e7f90/versions/16c30cee924174a3:populateFiles {"files":{"/index.html":"b734fc0554fe70b13715f928a1d4e180ebc413958afd6b50b818171a9ea0b8c3","/assets/logo-DFVLGVwY.jpg":"0803ee50a9159c52560a5fa7a875aa440a48432aa00837f7d6149f0100da24d6","/assets/index-DCVAWLnD.css":"1e2f4bd5c87be5fb6551eec2263f5d03881b0381edfa5643eba9d086140d0c38","/assets/index-D4jJl_ia.js":"9290d732cccf10659324b318ef9481eee23da7cfa58df59204a0e01be00ab477","/assets/img1-BnxGzjYw.png":"14806149ec4f7db89e80f181653085b86b81a42315a88e696352be0c77a50aef"}}
+[debug] [2025-12-26T12:39:27.379Z] <<< [apiv2][status] POST https://firebasehosting.googleapis.com/v1beta1/projects/182607695170/sites/exam-96957713-e7f90/versions/16c30cee924174a3:populateFiles 200
+[debug] [2025-12-26T12:39:27.379Z] <<< [apiv2][body] POST https://firebasehosting.googleapis.com/v1beta1/projects/182607695170/sites/exam-96957713-e7f90/versions/16c30cee924174a3:populateFiles {"uploadUrl":"https://upload-firebasehosting.googleapis.com/upload/sites/exam-96957713-e7f90/versions/16c30cee924174a3/files"}
+[debug] [2025-12-26T12:39:27.380Z] [hosting][populate queue][FINAL] {"max":262,"min":262,"avg":262,"active":0,"complete":1,"success":1,"errored":0,"retried":0,"total":1,"elapsed":263}
+[debug] [2025-12-26T12:39:27.380Z] [hosting] uploads queued: 0
+[debug] [2025-12-26T12:39:27.381Z] [hosting][upload queue][FINAL] {"max":0,"min":9999999999,"avg":0,"active":0,"complete":0,"success":0,"errored":0,"retried":0,"total":0,"elapsed":1766752767381}
+[info] i  hosting: upload complete 
+[info] ✔  hosting[exam-96957713-e7f90]: file upload complete 
+[debug] [2025-12-26T12:39:27.384Z] [hosting] deploy completed after 289ms
+[debug] [2025-12-26T12:39:27.384Z] [
+  {
+    "config": {
+      "public": "client/dist",
+      "rewrites": [
+        {
+          "source": "/api/**",
+          "run": {
+            "serviceId": "exam-backend",
+            "region": "asia-south1"
+          }
+        },
+        {
+          "source": "**",
+          "destination": "/index.html"
+        }
+      ],
+      "site": "exam-96957713-e7f90"
+    },
+    "version": "projects/182607695170/sites/exam-96957713-e7f90/versions/16c30cee924174a3"
+  }
+]
+[info] i  hosting[exam-96957713-e7f90]: finalizing version... 
+[debug] [2025-12-26T12:39:27.387Z] Checked if tokens are valid: true, expires at: 1766755617116
+[debug] [2025-12-26T12:39:27.388Z] Checked if tokens are valid: true, expires at: 1766755617116
+[debug] [2025-12-26T12:39:27.389Z] >>> [apiv2][query] GET https://cloudfunctions.googleapis.com/v1/projects/exam-96957713-e7f90/locations/-/functions [none]
+[debug] [2025-12-26T12:39:28.112Z] <<< [apiv2][status] GET https://cloudfunctions.googleapis.com/v1/projects/exam-96957713-e7f90/locations/-/functions 200
+[debug] [2025-12-26T12:39:28.113Z] <<< [apiv2][body] GET https://cloudfunctions.googleapis.com/v1/projects/exam-96957713-e7f90/locations/-/functions {}
+[debug] [2025-12-26T12:39:28.115Z] Checked if tokens are valid: true, expires at: 1766755617116
+[debug] [2025-12-26T12:39:28.115Z] Checked if tokens are valid: true, expires at: 1766755617116
+[debug] [2025-12-26T12:39:28.117Z] >>> [apiv2][query] GET https://cloudfunctions.googleapis.com/v2/projects/exam-96957713-e7f90/locations/-/functions filter=environment%3D%22GEN_2%22
+[debug] [2025-12-26T12:39:29.344Z] <<< [apiv2][status] GET https://cloudfunctions.googleapis.com/v2/projects/exam-96957713-e7f90/locations/-/functions 200
+[debug] [2025-12-26T12:39:29.345Z] <<< [apiv2][body] GET https://cloudfunctions.googleapis.com/v2/projects/exam-96957713-e7f90/locations/-/functions {}
+[debug] [2025-12-26T12:39:29.347Z] Checked if tokens are valid: true, expires at: 1766755617116
+[debug] [2025-12-26T12:39:29.347Z] Checked if tokens are valid: true, expires at: 1766755617116
+[debug] [2025-12-26T12:39:29.348Z] >>> [apiv2][query] PATCH https://firebasehosting.googleapis.com/v1beta1/projects/-/sites/exam-96957713-e7f90/versions/16c30cee924174a3 updateMask=status%2Cconfig
+[debug] [2025-12-26T12:39:29.348Z] >>> [apiv2][body] PATCH https://firebasehosting.googleapis.com/v1beta1/projects/-/sites/exam-96957713-e7f90/versions/16c30cee924174a3 {"status":"FINALIZED","config":{"rewrites":[{"glob":"/api/**","run":{"serviceId":"exam-backend","region":"asia-south1"}},{"glob":"**","path":"/index.html"}]}}
+[debug] [2025-12-26T12:39:30.202Z] <<< [apiv2][status] PATCH https://firebasehosting.googleapis.com/v1beta1/projects/-/sites/exam-96957713-e7f90/versions/16c30cee924174a3 404
+[debug] [2025-12-26T12:39:30.203Z] <<< [apiv2][body] PATCH https://firebasehosting.googleapis.com/v1beta1/projects/-/sites/exam-96957713-e7f90/versions/16c30cee924174a3 {"error":{"code":404,"message":"Requested entity was not found.","status":"NOT_FOUND"}}
+[error] 
+[error] Error: Request to https://firebasehosting.googleapis.com/v1beta1/projects/-/sites/exam-96957713-e7f90/versions/16c30cee924174a3?updateMask=status%2Cconfig had HTTP Error: 404, Requested entity was not found.
+[debug] [2025-12-26T12:39:30.232Z] Error Context: {
+  "body": {
+    "error": {
+      "code": 404,
+      "message": "Requested entity was not found.",
+      "status": "NOT_FOUND"
+    }
+  },
+  "response": {
+    "statusCode": 404
+  }
+}

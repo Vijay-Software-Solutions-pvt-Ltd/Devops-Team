@@ -25,7 +25,7 @@ export default function AdminOrgs() {
     if (!name || !address) return alert("Enter all fields");
     setLoading(true);
     try {
-      const res = await api.post('/orgs', { name, address });
+      const res = await api.post('/admin/orgs/', { name, address });
       alert('✅ Organization created');
       setName('');
       setAddress('');

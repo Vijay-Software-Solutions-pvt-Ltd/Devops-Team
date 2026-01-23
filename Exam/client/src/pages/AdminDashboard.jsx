@@ -38,9 +38,9 @@ export default function AdminDashboard() {
   async function loadAllData() {
     try {
       const [attemptsRes, usersRes, examsRes] = await Promise.all([
-        api.get("/admin/reports/attempts"),
+        api.get("/admin/attempts"),
         api.get("/admin/users"),
-        api.get("/admin/reports/exams")
+        api.get("/admin/exams")
       ]);
 
       const attemptsData = attemptsRes.data.attempts || [];
@@ -216,9 +216,9 @@ export default function AdminDashboard() {
 /* ---------- MODERN STYLES ---------- */
 
 const layoutStyle = {
-  background: "linear-gradient(135deg, #425ac3 0%, #d23c3cd4 100%)",
+  background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
   minHeight: "100vh",
-  padding: "2px",
+  padding: "32px",
   fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif"
 };
 

@@ -14,7 +14,7 @@ export default function AdminOrgs() {
 
   async function fetchOrgs() {
     try {
-      const res = await api.get('/orgs');
+      const res = await api.get('/admin/orgs/');
       setOrgs(res.data.orgs || []);
     } catch (err) {
       console.error(err);

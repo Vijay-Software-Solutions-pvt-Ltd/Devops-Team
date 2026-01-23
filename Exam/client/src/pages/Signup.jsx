@@ -1,117 +1,171 @@
 import React, { useState } from "react";
-import img1 from "../resources/img1.png";
+import api from "../services/api";
+import { Link, useNavigate } from "react-router-dom";
+import "../pages/signup.css"; // reuse same CSS for consistency
+import img2 from "../resources/logo.png";
 
 export default function Signup() {
+  const nav = useNavigate();
+
   const [formData, setFormData] = useState({
     name: "",
     email: "",
     mobile: "",
+    org_id: "",
     password: "",
     confirmPassword: "",
     department: "",
-    branch: "",
+    sub_department: "",
   });
-
-  const [errors, setErrors] = useState({});
-  const [showModal, setShowModal] = useState(false);
-  const [modalMessage, setModalMessage] = useState("");
-  const [showPass, setShowPass] = useState(false);
-  const [showConfirmPass, setShowConfirmPass] = useState(false);
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  const validateForm = () => {
-    const err = {};
-    if (!formData.name) err.name = "Name required";
-    if (!formData.email.includes("@")) err.email = "Invalid email";
-    if (!/^\d{10}$/.test(formData.mobile)) err.mobile = "Mobile must be 10 digits";
-    if (formData.password !== formData.confirmPassword)
-      err.confirmPassword = "Passwords do not match";
-
-    setErrors(err);
-    return Object.keys(err).length === 0;
-  };
-
-  const handleSubmit = async (e) => {
+  async function handleSignup(e) {
     e.preventDefault();
 
-    if (!validateForm()) {
-      setModalMessage("Please fix errors");
-      setShowModal(true);
+    if (formData.password !== formData.confirmPassword) {
+      alert("Passwords do not match");
       return;
     }
 
     try {
-      const res = await fetch("/auth/register", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          ...formData,
-          role: "student",
-        }),
+      await api.post("/auth/register", {
+        ...formData,
+        role: "student",
       });
 
-      const data = await res.json();
-      setModalMessage(res.ok ? "✅ Registered successfully" : data.error);
-    } catch {
-      setModalMessage("❌ Server error");
+      alert("Registration successful. Please login.");
+      nav("/login");
+    } catch (err) {
+      console.error(err);
+      alert(err?.response?.data?.error || "Signup failed");
     }
-
-    setShowModal(true);
-  };
+  }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-r from-blue-800 via-blue-500 to-red-800 p-4">
-      <div className="flex w-full max-w-5xl h-[640px] bg-white rounded-2xl shadow-2xl overflow-hidden">
+    <div className="login-page">
+      <div className="login-container">
 
-        {/* Left Image */}
-        <div className="hidden md:block w-1/2 relative">
-          <img src={img1} className="w-full h-full object-cover" alt="bg" />
-        </div>
-
-        {/* Right Form */}
-        <div className="w-full md:w-1/2 p-8 overflow-y-auto">
-          <h2 className="text-2xl font-bold text-center mb-6">SIGN UP</h2>
-
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <input name="name" placeholder="Name" onChange={handleChange} />
-            <input name="email" placeholder="Email" onChange={handleChange} />
-            <input name="mobile" placeholder="Mobile" onChange={handleChange} />
-
-            <input
-              type={showPass ? "text" : "password"}
-              name="password"
-              placeholder="Password"
-              onChange={handleChange}
-            />
-
-            <input
-              type={showConfirmPass ? "text" : "password"}
-              name="confirmPassword"
-              placeholder="Confirm Password"
-              onChange={handleChange}
-            />
-
-            <input name="department" placeholder="Department" onChange={handleChange} />
-            <input name="branch" placeholder="Branch" onChange={handleChange} />
-
-            <button className="w-full bg-blue-800 text-white py-2 rounded">
-              Register
-            </button>
-          </form>
-        </div>
-      </div>
-
-      {showModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center">
-          <div className="bg-white p-6 rounded">
-            <p>{modalMessage}</p>
-            <button onClick={() => setShowModal(false)}>OK</button>
+        {/* Left Side */}
+        <div className="login-left">
+          <div className="login-overlay">
+            <img src={img2} className="v-logo" alt="Logo" />
+            <h2>Vijay Software Solutions Pvt Ltd</h2>
+            <p>Online Examination Portal</p>
+            <p>Create your account to get started.</p>
           </div>
         </div>
-      )}
+
+        {/* Right Side */}
+        <div className="login-right">
+          <div className="login-card">
+            <h2 className="logo-text">SIGN UP</h2>
+
+            <form onSubmit={handleSignup}>
+
+              <div className="form-group">
+                <label>Full Name</label>
+                <input
+                  type="text"
+                  name="name"
+                  placeholder="Enter full name"
+                  onChange={handleChange}
+                  required
+                />
+              </div>
+
+              <div className="form-group">
+                <label>Email</label>
+                <input
+                  type="email"
+                  name="email"
+                  placeholder="Enter email"
+                  onChange={handleChange}
+                  required
+                />
+              </div>
+
+              <div className="form-group">
+                <label>Mobile</label>
+                <input
+                  type="text"
+                  name="mobile"
+                  placeholder="10-digit mobile number"
+                  onChange={handleChange}
+                  required
+                />
+              </div>
+
+               <div className="form-group">
+                <label>Organisation ID</label>
+                <input
+                  type="text"
+                  name="org"
+                  placeholder="Enter Organisation ID"
+                  onChange={handleChange}
+                  required
+                />
+              </div>
+
+              <div className="form-group">
+                <label>Password</label>
+                <input
+                  type="password"
+                  name="password"
+                  placeholder="********"
+                  onChange={handleChange}
+                  required
+                />
+              </div>
+
+              <div className="form-group">
+                <label>Confirm Password</label>
+                <input
+                  type="password"
+                  name="confirmPassword"
+                  placeholder="********"
+                  onChange={handleChange}
+                  required
+                />
+              </div>
+
+              <div className="form-group">
+                <label>Department</label>
+                <input
+                  type="text"
+                  name="department"
+                  placeholder="Department"
+                  onChange={handleChange}
+                />
+              </div>
+
+              <div className="form-group">
+                <label>Sub Department</label>
+                <input
+                  type="text"
+                  name="sub-department"
+                  placeholder="Sub Department"
+                  onChange={handleChange}
+                />
+              </div>
+
+              <button type="submit" className="login-btn">
+                Register
+              </button>
+
+              <p style={{ marginTop: "12px", textAlign: "center" }}>
+                <Link to="/login" className="signup-link">
+                  Already have an account? Login
+                </Link>
+              </p>
+
+            </form>
+          </div>
+        </div>
+
+      </div>
     </div>
   );
 }

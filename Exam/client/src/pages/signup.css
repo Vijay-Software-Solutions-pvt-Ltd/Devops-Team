@@ -1,0 +1,155 @@
+ .login-page {
+     height: 100vh;
+     display: flex;
+     align-items: center;
+     justify-content: center;
+     font-family: "Segoe UI", sans-serif;
+     background-image:
+         linear-gradient(135deg,
+             rgba(82, 137, 239, 0.799),
+             rgba(30, 77, 158, 0.865),
+             rgba(242, 65, 42, 0.849)),
+         url("../resources/onlineexambackground.jpeg");
+
+     background-size: cover;
+     background-position: center;
+     background-repeat: no-repeat;
+ }
+
+ .login-logo {
+     width: 360px;
+     margin: 0 auto 15px;
+     display: block;
+ }
+
+ /* Main Container */
+ .login-container {
+     display: flex;
+     width: 950px;
+     height: 500px;
+     background: white;
+     border-radius: 20px;
+     overflow: hidden;
+     box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+ }
+
+ /* Left Panel */
+ .login-left {
+     flex: 1;
+     background: url("../resources/img1.png") center/cover no-repeat;
+     position: relative;
+ }
+
+ .login-overlay {
+     position: absolute;
+     inset: 0;
+     background: rgba(0, 33, 71, 0.75);
+     color: white;
+     display: flex;
+     flex-direction: column;
+     justify-content: center;
+     padding: 40px;
+ }
+
+ .login-overlay h2 {
+     font-size: 22px;
+     margin-bottom: 10px;
+ }
+
+ .login-overlay p {
+     font-size: 14px;
+     opacity: 0.9;
+ }
+
+ /* Right Panel */
+ .login-right {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  padding: 30px 0;
+
+  background: linear-gradient(
+    135deg,
+    rgba(16, 73, 170, 0.927),
+    rgba(212, 73, 55, 0.87)
+  );
+
+  overflow-y: auto;
+}
+
+ .login-right::-webkit-scrollbar {
+     width: 6px;
+ }
+
+ .login-right::-webkit-scrollbar-thumb {
+     background-color: rgba(255, 255, 255, 0.4);
+     border-radius: 10px;
+ }
+
+ /* Card */
+ .login-card {
+     width: 80%;
+     max-width: 320px;
+     text-align: center;
+     margin-top: auto;
+ }
+
+ .v-logo {
+     height: 70px;
+     width: 80px;
+     margin-left: 12cap;
+ }
+
+ .logo-text {
+     font-size: 29px;
+     font-family: sans-serif;
+     margin-bottom: 40px;
+     color: #091634;
+     margin-top: 10px;
+     padding-top: 0.5cap;
+ }
+
+ /* Inputs */
+ .form-group {
+     margin-bottom: 1px;
+     text-align: left;
+ }
+
+ .form-group label {
+     font-size: 15px bold;
+     color: #000000;
+     margin-bottom: 5px;
+     display: block;
+ }
+
+ .form-group input {
+     width: 100%;
+     padding: 10px 12px;
+     border-radius: 10px;
+     border: 1px solid #cbd5f5;
+     outline: none;
+     font-size: 14px;
+ }
+
+ .form-group input:focus {
+     border-color: #2563eb;
+ }
+
+ /* Button */
+ .login-btn {
+     margin-top: 10px;
+     width: 40%;
+     background: #2563eb;
+     color: white;
+     border: none;
+     padding: 12px;
+     border-radius: 10px;
+     font-size: 14px;
+     cursor: pointer;
+     font-weight: 600;
+ }
+
+ .login-btn:hover {
+     background: #1d4ed8;
+ }

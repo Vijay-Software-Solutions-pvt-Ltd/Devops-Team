@@ -103,7 +103,8 @@ export default function AdminOrgs() {
 const pageWrapper = {
   padding: '10px 10px',
   background: '#f1f5f9',
-  minHeight: '100vh'
+  minHeight: '100vh',
+  marginTop: '30px'
 };
 
 const pageTitle = {

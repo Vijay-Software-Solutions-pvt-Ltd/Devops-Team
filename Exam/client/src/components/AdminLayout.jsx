@@ -24,7 +24,7 @@ export default function AdminLayout({ children }) {
           src={img1}
           alt="Logo"
           className="login-logo"
-          style={{ height: "58px", width:"30%",marginLeft:"1px" }} />
+          style={{ height: "40px", width:"30%",marginLeft:"1px",marginTop:'12px' }} />
         <button style={logoutBtn} onClick={handleLogout}>
           <FiLogOut style={{ marginRight: 6 }} />
           Logout
@@ -102,12 +102,12 @@ const container = {
   width: '100%',
   display: 'flex',
   flexDirection: 'column',
-  background: '#f1f5f9'
+  background: '#f1f5f9',
 };
 
 const header = {
-  height: '44px',
-  width: '96.2%',
+  height: '50px',
+  width: '100%',
   background: '#ffffff',
   display: 'flex',
   alignItems: 'center',
@@ -115,14 +115,8 @@ const header = {
   padding: '0 24px',
   borderBottom: '1px solid #e5e7eb',
   boxShadow: '0 2px 6px rgba(0,0,0,0.05)',
-  zIndex: 10
-};
-
-
-const headerTitle = {
-  fontSize: '18px',
-  fontWeight: '700',
-  color: '#1e293b'
+  zIndex: 10,
+  position: 'fixed',
 };
 
 const logoutBtn = {
@@ -134,7 +128,8 @@ const logoutBtn = {
   borderRadius: '10px',
   padding: '8px 16px',
   fontWeight: '600',
-  cursor: 'pointer'
+  cursor: 'pointer',
+  marginRight: '50px'
 };
 
 const bodyWrapper = {
@@ -147,13 +142,14 @@ const sidebar = {
   background: 'linear-gradient(180deg, #eaf2ff, #deeaff)',
   padding: '24px',
   boxShadow: '2px 0px 12px rgba(0,0,0,0.05)',
+  marginTop:'35px'
 };
 
 const brand = {
   fontSize: '20px',
   fontWeight: '800',
   color: '#1e3a8a',
-  marginBottom: '30px'
+  marginBottom: '10px'
 };
 
 const nav = {

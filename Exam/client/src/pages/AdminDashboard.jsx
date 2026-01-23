@@ -218,14 +218,15 @@ export default function AdminDashboard() {
 const layoutStyle = {
   background: "linear-gradient(135deg, #425ac3 0%, #d23c3cd4 100%)",
   minHeight: "100vh",
-  padding: "2px",
-  fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif"
+  padding: "20px",
+  fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
+  marginTop:'50px'
 };
 
 const headerSection = {
   background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
   borderRadius: "24px",
-  padding: "40px",
+  padding: "30px",
   marginBottom: "32px",
   display: "flex",
   justifyContent: "space-between",
@@ -279,7 +280,7 @@ const actionButton = {
 
 const cardGrid = {
   display: "grid",
-  gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))",
+  gridTemplateColumns: "repeat(auto-fit, minmax(100px, 1fr))",
   gap: "24px",
   marginBottom: "32px"
 };

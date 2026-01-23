@@ -4,6 +4,7 @@ import { Link, useLocation } from 'react-router-dom';
 import {
   FiHome, FiUsers, FiBookOpen, FiLayers, FiLogOut
 } from "react-icons/fi";
+import img1 from "../resources/img2.jpg";
 
 export default function AdminLayout({ children }) {
   const location = useLocation();
@@ -20,11 +21,10 @@ export default function AdminLayout({ children }) {
       {/* ===== TOP HEADER ===== */}
       <header style={header}>
         <img
-  src="/img2.png"
-  alt="Logo"
-  className="login-logo"
-  style={{ height: "40px" }}
-/>
+          src={img1}
+          alt="Logo"
+          className="login-logo"
+          style={{ height: "58px", width:"30%",marginLeft:"1px" }} />
         <button style={logoutBtn} onClick={handleLogout}>
           <FiLogOut style={{ marginRight: 6 }} />
           Logout
@@ -106,7 +106,7 @@ const container = {
 };
 
 const header = {
-  height: '64px',
+  height: '44px',
   width: '96.2%',
   background: '#ffffff',
   display: 'flex',
@@ -117,6 +117,7 @@ const header = {
   boxShadow: '0 2px 6px rgba(0,0,0,0.05)',
   zIndex: 10
 };
+
 
 const headerTitle = {
   fontSize: '18px',
@@ -142,10 +143,10 @@ const bodyWrapper = {
 };
 
 const sidebar = {
-  width: '250px',
+  width: '180px',
   background: 'linear-gradient(180deg, #eaf2ff, #deeaff)',
   padding: '24px',
-  boxShadow: '2px 0px 12px rgba(0,0,0,0.05)'
+  boxShadow: '2px 0px 12px rgba(0,0,0,0.05)',
 };
 
 const brand = {
@@ -173,7 +174,7 @@ const menuItem = {
 
 const mainContent = {
   flex: 1,
-  padding: '24px',
+  padding: '1px',
   background: '#f6f9fd',
   overflowY: 'auto'
 };

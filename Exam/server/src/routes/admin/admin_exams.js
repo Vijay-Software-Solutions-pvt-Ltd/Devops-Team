@@ -9,7 +9,7 @@ router.post('/create', auth, requireRole('admin'), async (req, res) => {
   const { title, description, duration_minutes, start_date, end_date, org_id, questions } = req.body;
   try {
     const examId = uuidv4();
-    await db.query(`INSERT INTO exam.exams (id, title, description, duration_minutes, start_date, end_date, created_by) VALUES ($1,$2,$3,$4,$5,$6,$7)`, [examId, title, description || null, duration_minutes, start_date || null, end_date || null, req.user.id]);
+    await db.query(`INSERT INTO exam.exams (id, title, description, duration_minutes, start_date, end_date) VALUES ($1,$2,$3,$4,$5,$6)`, [examId, title, description || null, duration_minutes, start_date || null, end_date || null]);
 
     // assign to org
     if (org_id) {
@@ -18,17 +18,32 @@ router.post('/create', auth, requireRole('admin'), async (req, res) => {
 
     // questions
     if (Array.isArray(questions)) {
-      for (const q of questions) {
-        await db.query(`INSERT INTO exam.questions (id, exam_id, type, difficulty, content, choices, correct_answer, points) VALUES ($1,$2,$3,$4,$5,$6,$7,$8)`, [
-          uuidv4(), examId, q.type, q.difficulty || 'normal', q.content || {}, q.choices ? q.choices : null, q.correct_answer ? q.correct_answer : null, q.points || 1
-        ]);
+      for (const [idx, q] of questions.entries()) {
+        try {
+          await db.query(`INSERT INTO exam.questions (id, exam_id, type, difficulty, content, choices, correct_answer, points) VALUES ($1,$2,$3,$4,$5,$6,$7,$8)`, [
+            uuidv4(),
+            examId,
+            q.type,
+            q.difficulty || 'normal',
+            JSON.stringify(q.content || {}),
+            q.choices ? JSON.stringify(q.choices) : null,
+            q.correct_answer ? JSON.stringify(q.correct_answer) : null,
+            q.points || 1
+          ]);
+        } catch (qErr) {
+          console.error(`Failed to insert question index ${idx}:`, qErr);
+          throw qErr; // Re-throw to cancel transaction (if we had one) or just fail
+        }
       }
     }
 
     res.json({ ok: true, examId });
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: 'failed to create exam' });
+    console.error("CREATE EXAM ERROR FULL:", err);
+    if (err.code === '23503') {
+      return res.status(400).json({ error: 'Invalid Organization ID (FK Violation)' });
+    }
+    res.status(500).json({ error: 'failed to create exam', details: err.message, stack: err.stack });
   }
 });
 
@@ -69,6 +84,88 @@ router.get('/:id', auth, async (req, res) => {
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'failed to fetch exam' });
+  }
+});
+
+// Update exam and upsert questions
+router.put('/:id', auth, requireRole('admin'), async (req, res) => {
+  const { id } = req.params;
+  const { title, description, duration_minutes, start_date, end_date, org_id, questions } = req.body;
+
+  try {
+    // 1. Update Exam Meta
+    await db.query(
+      `UPDATE exam.exams 
+       SET title=$1, description=$2, duration_minutes=$3, start_date=$4, end_date=$5 
+       WHERE id=$6`,
+      [title, description || null, duration_minutes, start_date || null, end_date || null, id]
+    );
+
+    // 2. Update Org Assignment if needed
+    if (org_id) {
+      // delete old assignment
+      await db.query('DELETE FROM exam.exam_assignments WHERE exam_id=$1', [id]);
+      // insert new
+      await db.query(`INSERT INTO exam.exam_assignments (id, exam_id, org_id) VALUES ($1,$2,$3)`, [uuidv4(), id, org_id]);
+    }
+
+    // 3. Upsert Questions
+    if (Array.isArray(questions)) {
+      for (const q of questions) {
+        if (q.id) {
+          // Update existing
+          await db.query(
+            `UPDATE exam.questions 
+             SET type=$1, difficulty=$2, content=$3, choices=$4, correct_answer=$5, points=$6 
+             WHERE id=$7`,
+            [
+              q.type,
+              q.difficulty || 'normal',
+              JSON.stringify(q.content || {}),
+              q.choices ? JSON.stringify(q.choices) : null,
+              q.correct_answer ? JSON.stringify(q.correct_answer) : null,
+              q.points || 1,
+              q.id
+            ]
+          );
+        } else {
+          // Insert new
+          await db.query(
+            `INSERT INTO exam.questions (id, exam_id, type, difficulty, content, choices, correct_answer, points) 
+             VALUES ($1,$2,$3,$4,$5,$6,$7,$8)`,
+            [
+              uuidv4(),
+              id,
+              q.type,
+              q.difficulty || 'normal',
+              JSON.stringify(q.content || {}),
+              q.choices ? JSON.stringify(q.choices) : null,
+              q.correct_answer ? JSON.stringify(q.correct_answer) : null,
+              q.points || 1
+            ]
+          );
+        }
+      }
+    }
+
+    res.json({ ok: true });
+  } catch (err) {
+    console.error("UPDATE EXAM ERROR:", err);
+    res.status(500).json({ error: 'Failed to update exam' });
+  }
+});
+
+router.delete('/:id', auth, requireRole('admin'), async (req, res) => {
+  const { id } = req.params;
+  try {
+    // Rely on CASCADE or delete manually. 
+    // Safest to try deleting. If foreign keys exist (attempts), it might fail unless cascade is on.
+    // For now, let's try deleting the exam.
+    await db.query('DELETE FROM exam.exams WHERE id=$1', [id]);
+    res.json({ ok: true });
+  } catch (err) {
+    console.error("DELETE EXAM ERROR:", err);
+    res.status(500).json({ error: 'Failed to delete exam. It might have related attempts.' });
   }
 });
 

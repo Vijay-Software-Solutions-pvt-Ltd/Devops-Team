@@ -12,6 +12,13 @@ router.get('/assigned', auth, async (req, res) => {
       `);
       return res.json({ exams: q.rows });
     }
+    // If user is admin (and not viewing as student), show all (handled above)
+
+    if (!req.user.org_id) {
+      console.warn(`User ${req.user.email} has no Org ID. Returning empty exams list.`);
+      return res.json({ exams: [] });
+    }
+
     const q = await db.query(`
       SELECT 
         e.id,
@@ -30,6 +37,7 @@ router.get('/assigned', auth, async (req, res) => {
       ORDER BY e.start_date ASC
     `, [req.user.id, req.user.org_id]);
 
+    console.log(`User ${req.user.email} (Org: ${req.user.org_id}) fetched ${q.rows.length} exams.`);
     res.json({ exams: q.rows });
   } catch (err) {
     console.error('Assigned exams error:', err);

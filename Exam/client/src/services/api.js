@@ -7,9 +7,9 @@ function getToken() {
 }
 
 const api = axios.create({
-  baseURL: "https://exam-backend-982394596304.asia-south1.run.app",
-  timeout: 15000,               
-  withCredentials: false     
+  baseURL: import.meta.env.VITE_API_URL || "http://localhost:8080",
+  timeout: 15000,
+  withCredentials: false
 });
 
 api.interceptors.request.use(

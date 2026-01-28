@@ -1,6 +1,7 @@
 // client/src/pages/AdminOrgs.jsx
 import React, { useEffect, useState } from 'react';
 import api from '../services/api';
+import { FiLayers, FiMapPin, FiPlus, FiBriefcase, FiHash } from "react-icons/fi";
 
 export default function AdminOrgs() {
   const [orgs, setOrgs] = useState([]);
@@ -25,8 +26,8 @@ export default function AdminOrgs() {
     if (!name || !address) return alert("Enter all fields");
     setLoading(true);
     try {
-      const res = await api.post('/admin/orgs/', { name, address });
-      alert('✅ Organization created');
+      await api.post('/admin/orgs/', { name, address });
+      alert('✅ Organization created successfully!');
       setName('');
       setAddress('');
       fetchOrgs();
@@ -37,146 +38,241 @@ export default function AdminOrgs() {
   }
 
   return (
-    <div style={pageWrapper}>
-      <h2 style={pageTitle}>Organizations</h2>
+    <div style={styles.container}>
+      <h1 style={styles.title}>Organization Management</h1>
+      <p style={styles.subtitle}>Manage departments and organizational units</p>
 
-      {/* Create Org Card */}
-      <div style={card}>
-        <h4 style={cardHeader}>Create Organization</h4>
+      {/* Grid Layout */}
+      <div style={styles.grid}>
 
-        <div style={formRow}>
-          <input
-            style={inputStyle}
-            placeholder="Organization Name"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-          />
+        {/* Create Org Card */}
+        <div style={styles.card}>
+          <div style={styles.cardHeader}>
+            <span style={styles.iconCircle}><FiPlus /></span>
+            <h3 style={styles.cardTitle}>Create New Organization</h3>
+          </div>
 
-          <input
-            style={inputStyle}
-            placeholder="Address"
-            value={address}
-            onChange={(e) => setAddress(e.target.value)}
-          />
+          <div style={styles.formGroup}>
+            <label style={styles.label}>Organization Name</label>
+            <div style={styles.inputWrapper}>
+              <span style={styles.inputIcon}><FiBriefcase /></span>
+              <input
+                style={styles.input}
+                placeholder="e.g. Engineering Dept"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+              />
+            </div>
+          </div>
 
-          <button style={buttonStyle} onClick={createOrg} disabled={loading}>
-            {loading ? "Creating..." : "Create"}
+          <div style={styles.formGroup}>
+            <label style={styles.label}>Location / Address</label>
+            <div style={styles.inputWrapper}>
+              <span style={styles.inputIcon}><FiMapPin /></span>
+              <input
+                style={styles.input}
+                placeholder="e.g. Building A, Floor 3"
+                value={address}
+                onChange={(e) => setAddress(e.target.value)}
+              />
+            </div>
+          </div>
+
+          <button style={styles.button} onClick={createOrg} disabled={loading}>
+            {loading ? "Creating..." : "Create Organization"}
           </button>
         </div>
-      </div>
 
-      {/* List Orgs */}
-      <div style={card}>
-        <h4 style={cardHeader}>All Organizations</h4>
+        {/* List Orgs Card */}
+        <div style={styles.card}>
+          <div style={styles.cardHeader}>
+            <span style={{ ...styles.iconCircle, background: '#e0f2fe', color: '#0284c7' }}><FiLayers /></span>
+            <h3 style={styles.cardTitle}>Existing Organizations ({orgs.length})</h3>
+          </div>
 
-        <table style={table}>
-          <thead>
-            <tr>
-              <th style={th}>Name</th>
-              <th style={th}>Address</th>
-              <th style={th}>Org ID</th>
-            </tr>
-          </thead>
-          <tbody>
-            {orgs.length === 0 ? (
-              <tr>
-                <td colSpan="3" style={emptyState}>No organizations found</td>
-              </tr>
-            ) : (
-              orgs.map((o, idx) => (
-                <tr key={o.id} style={idx % 2 ? rowAlt : {}}>
-                  <td style={td}>{o.name}</td>
-                  <td style={td}>{o.address}</td>
-                  <td style={td}><code>{o.id}</code></td>
+          <div style={styles.tableWrapper}>
+            <table style={styles.table}>
+              <thead>
+                <tr>
+                  <th style={styles.th}>Name</th>
+                  <th style={styles.th}>Address</th>
+                  <th style={styles.th}>Org ID (UUID)</th>
                 </tr>
-              ))
-            )}
-          </tbody>
-        </table>
+              </thead>
+              <tbody>
+                {orgs.length === 0 ? (
+                  <tr>
+                    <td colSpan="3" style={styles.emptyState}>No organizations found.</td>
+                  </tr>
+                ) : (
+                  orgs.map((o, idx) => (
+                    <tr key={o.id} style={idx % 2 !== 0 ? styles.trAlt : {}}>
+                      <td style={styles.td}>
+                        <div style={styles.orgName}>{o.name}</div>
+                      </td>
+                      <td style={styles.td}>
+                        <div style={styles.orgAddr}><FiMapPin size={12} style={{ marginRight: 4 }} /> {o.address}</div>
+                      </td>
+                      <td style={styles.td}>
+                        <code style={styles.code}>{o.id}</code>
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
       </div>
     </div>
   );
 }
 
 /* ================= STYLES ================= */
-
-const pageWrapper = {
-  padding: '10px 10px',
-  background: '#f1f5f9',
-  minHeight: '100vh',
-  marginTop: '30px'
-};
-
-const pageTitle = {
-  fontSize: '26px',
-  fontWeight: 700,
-  marginBottom: '20px'
-};
-
-const card = {
-  background: '#ffffff',
-  borderRadius: '16px',
-  boxShadow: '0 6px 18px rgba(0,0,0,0.06)',
-  padding: '20px',
-  marginBottom: '20px'
-};
-
-const cardHeader = {
-  fontSize: '16px',
-  fontWeight: 600,
-  marginBottom: '14px'
-};
-
-const formRow = {
-  display: 'flex',
-  gap: '12px',
-  flexWrap: 'wrap'
-};
-
-const inputStyle = {
-  flex: 1,
-  minWidth: '220px',
-  padding: '12px',
-  borderRadius: '12px',
-  border: '1px solid #cbd5f5',
-  fontSize: '14px'
-};
-
-const buttonStyle = {
-  background: '#2563eb',
-  color: '#fff',
-  border: 'none',
-  borderRadius: '12px',
-  padding: '12px 18px',
-  fontWeight: 600,
-  cursor: 'pointer'
-};
-
-const table = {
-  width: '100%',
-  borderCollapse: 'collapse'
-};
-
-const th = {
-  textAlign: 'left',
-  fontSize: '13px',
-  color: '#475569',
-  background: '#e2e8f0',
-  padding: '12px'
-};
-
-const td = {
-  padding: '12px',
-  fontSize: '14px',
-  borderBottom: '1px solid #e2e8f0'
-};
-
-const rowAlt = {
-  background: '#f8fafc'
-};
-
-const emptyState = {
-  textAlign: 'center',
-  padding: '20px',
-  color: '#94a3b8'
+const styles = {
+  container: {
+    padding: '32px',
+    maxWidth: '1200px',
+    margin: '0 auto',
+    fontFamily: "'Inter', sans-serif"
+  },
+  title: {
+    fontSize: '28px',
+    fontWeight: '700',
+    color: '#1e293b',
+    marginBottom: '4px'
+  },
+  subtitle: {
+    fontSize: '14px',
+    color: '#64748b',
+    marginBottom: '32px'
+  },
+  grid: {
+    display: 'grid',
+    gridTemplateColumns: 'repeat(auto-fit, minmax(350px, 1fr))',
+    gap: '24px',
+    alignItems: 'start'
+  },
+  card: {
+    background: '#fff',
+    borderRadius: '16px',
+    boxShadow: '0 4px 20px rgba(0,0,0,0.03)',
+    border: '1px solid #e2e8f0',
+    padding: '24px',
+    overflow: 'hidden'
+  },
+  cardHeader: {
+    display: 'flex',
+    alignItems: 'center',
+    marginBottom: '20px',
+    gap: '12px'
+  },
+  iconCircle: {
+    width: '36px',
+    height: '36px',
+    borderRadius: '50%',
+    background: '#eff6ff',
+    color: '#2563eb',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    fontSize: '18px'
+  },
+  cardTitle: {
+    fontSize: '18px',
+    fontWeight: '600',
+    color: '#334155',
+    margin: 0
+  },
+  formGroup: {
+    marginBottom: '16px'
+  },
+  label: {
+    display: 'block',
+    fontSize: '13px',
+    fontWeight: '500',
+    color: '#64748b',
+    marginBottom: '8px'
+  },
+  inputWrapper: {
+    display: 'flex',
+    alignItems: 'center',
+    position: 'relative'
+  },
+  inputIcon: {
+    position: 'absolute',
+    left: '12px',
+    color: '#94a3b8'
+  },
+  input: {
+    width: '100%',
+    padding: '10px 10px 10px 36px',
+    borderRadius: '8px',
+    border: '1px solid #cbd5e1',
+    fontSize: '14px',
+    outline: 'none',
+    transition: 'border-color 0.2s'
+  },
+  button: {
+    width: '100%',
+    background: '#2563eb',
+    color: '#fff',
+    border: 'none',
+    borderRadius: '8px',
+    padding: '12px',
+    fontWeight: '600',
+    cursor: 'pointer',
+    marginTop: '8px',
+    boxShadow: '0 4px 12px rgba(37, 99, 235, 0.2)'
+  },
+  tableWrapper: {
+    overflowX: 'auto'
+  },
+  table: {
+    width: '100%',
+    borderCollapse: 'collapse',
+    fontSize: '14px'
+  },
+  th: {
+    textAlign: 'left',
+    padding: '14px',
+    background: '#f8fafc',
+    color: '#64748b',
+    fontWeight: '600',
+    borderBottom: '1px solid #e2e8f0'
+  },
+  td: {
+    padding: '14px',
+    borderBottom: '1px solid #e2e8f0',
+    color: '#334155',
+    verticalAlign: 'middle'
+  },
+  trAlt: {
+    background: '#f8fafc'
+  },
+  orgName: {
+    fontWeight: '600',
+    color: '#0f172a'
+  },
+  orgAddr: {
+    fontSize: '13px',
+    color: '#64748b',
+    display: 'flex',
+    alignItems: 'center'
+  },
+  code: {
+    background: '#f1f5f9',
+    padding: '4px 8px',
+    borderRadius: '6px',
+    fontFamily: 'monospace',
+    fontSize: '11px',
+    color: '#475569',
+    border: '1px solid #e2e8f0'
+  },
+  emptyState: {
+    textAlign: 'center',
+    padding: '24px',
+    color: '#94a3b8'
+  }
 };

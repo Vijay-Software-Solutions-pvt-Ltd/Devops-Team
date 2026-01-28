@@ -1,133 +1,417 @@
 // client/src/pages/AdminCreateExam.jsx
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import api from '../services/api';
+import { FiPlus, FiTrash2, FiClock, FiCalendar, FiLayers, FiType, FiCode } from 'react-icons/fi';
 
 export default function AdminCreateExam() {
-  const [title, setTitle] = useState('');
-  const [duration, setDuration] = useState(30);
-  const [startDate, setStartDate] = useState('');
-  const [endDate, setEndDate] = useState('');
-  const [orgId, setOrgId] = useState('');
+  const [exam, setExam] = useState({
+    title: '',
+    description: '',
+    duration: 60,
+    start_date: '',
+    end_date: '',
+    org_id: ''
+  });
+
   const [questions, setQuestions] = useState([]);
+  const [orgs, setOrgs] = useState([]);
 
-  function addMCQ() {
+  useEffect(() => {
+    api.get('/admin/orgs')
+      .then(res => {
+        if (res.data && res.data.orgs) {
+          setOrgs(res.data.orgs);
+        }
+      })
+      .catch(err => console.error("Failed to fetch orgs", err));
+  }, []);
+
+  function addQuestion(type) {
     setQuestions(prev => [
       ...prev,
       {
-        type: 'mcq',
-        difficulty: 'normal',
+        type,
+        difficulty: type === 'coding' ? 'hard' : 'normal',
         content: { prompt: '' },
-        choices: ['', '', '', ''],
-        correct_answer: { correct: 0 },
-        points: 1
+        choices: type === 'mcq' ? ['', '', '', ''] : null,
+        correct_answer: type === 'mcq' ? { correct: 0 } : null,
+        points: type === 'coding' ? 10 : 2
       }
     ]);
   }
 
-  function addCoding() {
-    setQuestions(prev => [
-      ...prev,
-      {
-        type: 'coding',
-        difficulty: 'hard',
-        content: { prompt: '' },
-        points: 5
-      }
-    ]);
+  function removeQuestion(index) {
+    setQuestions(prev => prev.filter((_, i) => i !== index));
   }
 
-  function updateQuestion(i, key, val) {
+  function updateQuestion(index, field, value) {
     const arr = [...questions];
-    arr[i][key] = val;
+    if (field === 'prompt') arr[index].content.prompt = value;
+    else arr[index][field] = value;
+    setQuestions(arr);
+  }
+
+  function updateChoice(qIndex, cIndex, value) {
+    const arr = [...questions];
+    arr[qIndex].choices[cIndex] = value;
     setQuestions(arr);
   }
 
   async function createExam() {
-    await api.post('/exams/create', {
-      title,
-      duration_minutes: duration,
-      start_date: startDate,
-      end_date: endDate,
-      org_id: orgId,
-      questions
-    });
+    if (!exam.title || !exam.org_id) return alert("Title and Org ID are required");
 
-    alert('Exam created');
-    setTitle('');
-    setQuestions([]);
+    // Convert Local datetime-local string back to UTC ISO string for server
+    const toUTC = (localStr) => {
+      if (!localStr) return null;
+      return new Date(localStr).toISOString();
+    };
+
+    try {
+      await api.post('/admin/exams/create', {
+        ...exam,
+        start_date: toUTC(exam.start_date),
+        end_date: toUTC(exam.end_date),
+        duration_minutes: exam.duration,
+        questions
+      });
+      alert('Exam created successfully!');
+      setExam({ title: '', description: '', duration: 60, start_date: '', end_date: '', org_id: '' });
+      setQuestions([]);
+    } catch (err) {
+      console.error(err);
+      alert('Failed to create exam');
+    }
   }
 
   return (
-    <div>
-      <h3>Create Exam</h3>
+    <div style={styles.container}>
+      <h1 style={styles.title}>Create New Exam</h1>
 
-      <input
-        placeholder="Title"
-        value={title}
-        onChange={e => setTitle(e.target.value)}
-      />
+      <div style={styles.grid}>
 
-      <input
-        placeholder="Duration (min)"
-        value={duration}
-        onChange={e => setDuration(e.target.value)}
-      />
+        {/* LEFT COLUMN: EXAM DETAILS */}
+        <div style={styles.card}>
+          <h3 style={styles.cardTitle}> <FiLayers style={{ marginRight: 8 }} /> Exam Details</h3>
 
-      <input
-        type="datetime-local"
-        value={startDate}
-        onChange={e => setStartDate(e.target.value)}
-      />
+          <div style={styles.formGroup}>
+            <label style={styles.label}>Exam Title</label>
+            <input
+              style={styles.input}
+              placeholder="e.g. Final Assessment 2024"
+              value={exam.title}
+              onChange={e => setExam({ ...exam, title: e.target.value })}
+            />
+          </div>
 
-      <input
-        type="datetime-local"
-        value={endDate}
-        onChange={e => setEndDate(e.target.value)}
-      />
+          <div style={styles.formGroup}>
+            <label style={styles.label}>Description</label>
+            <textarea
+              style={{ ...styles.input, height: '80px', resize: 'vertical' }}
+              placeholder="Brief description..."
+              value={exam.description}
+              onChange={e => setExam({ ...exam, description: e.target.value })}
+            />
+          </div>
 
-      <input
-        placeholder="Org ID"
-        value={orgId}
-        onChange={e => setOrgId(e.target.value)}
-      />
+          <div style={styles.formGroup}>
+            <label style={styles.label}>Organization</label>
+            <select
+              style={styles.select}
+              value={exam.org_id}
+              onChange={e => setExam({ ...exam, org_id: e.target.value })}
+            >
+              <option value="">Select Organization</option>
+              {orgs.map(org => (
+                <option key={org.id} value={org.id}>{org.name}</option>
+              ))}
+            </select>
+          </div>
 
-      <h4>Questions</h4>
-
-      {questions.map((q, i) => (
-        <div key={i} style={{ border: '1px solid #ddd', padding: 8, margin: 8 }}>
-          <div>Type: {q.type}</div>
-
-          <input
-            placeholder="Prompt"
-            value={q.content.prompt}
-            onChange={e => {
-              q.content.prompt = e.target.value;
-              updateQuestion(i, 'content', q.content);
-            }}
-          />
-
-          {q.type === 'mcq' &&
-            q.choices.map((c, ci) => (
+          <div style={styles.row}>
+            <div style={styles.col}>
+              <label style={styles.label}><FiClock /> Duration (min)</label>
               <input
-                key={ci}
-                placeholder={`Choice ${ci + 1}`}
-                value={q.choices[ci]}
-                onChange={e => {
-                  q.choices[ci] = e.target.value;
-                  updateQuestion(i, 'choices', q.choices);
-                }}
+                type="number" style={styles.input}
+                value={exam.duration}
+                onChange={e => setExam({ ...exam, duration: e.target.value })}
               />
-            ))}
+            </div>
+          </div>
 
-          <button onClick={() => updateQuestion(i, 'points', q.points + 1)}>
-            Points: {q.points}
-          </button>
+          <div style={styles.formGroup}>
+            <label style={styles.label}><FiCalendar /> Start Date</label>
+            <input
+              type="datetime-local" style={styles.input}
+              value={exam.start_date}
+              onChange={e => setExam({ ...exam, start_date: e.target.value })}
+            />
+          </div>
+
+          <div style={styles.formGroup}>
+            <label style={styles.label}><FiCalendar /> End Date</label>
+            <input
+              type="datetime-local" style={styles.input}
+              value={exam.end_date}
+              onChange={e => setExam({ ...exam, end_date: e.target.value })}
+            />
+          </div>
         </div>
-      ))}
 
-      <button onClick={addMCQ}>Add MCQ</button>
-      <button onClick={addCoding}>Add Coding</button>
-      <button onClick={createExam}>Create Exam</button>
+        {/* RIGHT COLUMN: QUESTIONS */}
+        <div>
+          <div style={styles.questionsHeader}>
+            <h3 style={{ ...styles.cardTitle, marginBottom: 0 }}>Questions ({questions.length})</h3>
+            <div style={styles.btnGroup}>
+              <button style={styles.addBtn} onClick={() => addQuestion('mcq')}>+ MCQ</button>
+              <button style={styles.addBtn} onClick={() => addQuestion('coding')}>+ Coding</button>
+            </div>
+          </div>
+
+          {questions.length === 0 && (
+            <div style={styles.emptyState}>
+              No questions added yet. Click above to add one.
+            </div>
+          )}
+
+          {questions.map((q, i) => (
+            <div key={i} style={styles.questionCard}>
+              <div style={styles.qHeader}>
+                <span style={styles.qTypeBadge}>
+                  {q.type === 'mcq' ? <FiType /> : <FiCode />} {q.type.toUpperCase()}
+                </span>
+                <button style={styles.deleteBtn} onClick={() => removeQuestion(i)}>
+                  <FiTrash2 />
+                </button>
+              </div>
+
+              <div style={styles.formGroup}>
+                <label style={styles.label}>Prompt / Question</label>
+                <textarea
+                  style={{ ...styles.input, height: '60px' }}
+                  value={q.content.prompt}
+                  onChange={e => updateQuestion(i, 'prompt', e.target.value)}
+                  placeholder="Enter the question here..."
+                />
+              </div>
+
+              <div style={styles.row}>
+                <div style={styles.col}>
+                  <label style={styles.label}>Points</label>
+                  <input
+                    type="number" style={styles.input}
+                    value={q.points}
+                    onChange={e => updateQuestion(i, 'points', Number(e.target.value))}
+                  />
+                </div>
+                <div style={styles.col}>
+                  <label style={styles.label}>Difficulty</label>
+                  <select
+                    style={styles.select}
+                    value={q.difficulty}
+                    onChange={e => updateQuestion(i, 'difficulty', e.target.value)}
+                  >
+                    <option value="easy">Easy</option>
+                    <option value="normal">Normal</option>
+                    <option value="hard">Hard</option>
+                  </select>
+                </div>
+              </div>
+
+              {q.type === 'mcq' && (
+                <div style={{ marginTop: 12 }}>
+                  <label style={styles.label}>Choices (Select correct index via radio)</label>
+                  {q.choices.map((c, idx) => (
+                    <div key={idx} style={styles.choiceRow}>
+                      <input
+                        type="radio"
+                        name={`correct-${i}`}
+                        checked={q.correct_answer.correct === idx}
+                        onChange={() => {
+                          const arr = [...questions];
+                          arr[i].correct_answer.correct = idx;
+                          setQuestions(arr);
+                        }}
+                      />
+                      <input
+                        style={styles.choiceInput}
+                        value={c}
+                        onChange={e => updateChoice(i, idx, e.target.value)}
+                        placeholder={`Option ${idx + 1}`}
+                      />
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          ))}
+
+          {questions.length > 0 && (
+            <button style={styles.publishBtn} onClick={createExam}>
+              Publish Exam
+            </button>
+          )}
+
+        </div>
+      </div>
     </div>
   );
 }
+
+const styles = {
+  container: {
+    padding: '32px',
+    maxWidth: '1200px',
+    margin: '0 auto',
+    fontFamily: "'Inter', sans-serif"
+  },
+  title: {
+    fontSize: '28px',
+    fontWeight: '700',
+    color: '#1e293b',
+    marginBottom: '32px'
+  },
+  grid: {
+    display: 'grid',
+    gridTemplateColumns: '350px 1fr',
+    gap: '32px',
+    alignItems: 'start'
+  },
+  card: {
+    background: '#fff',
+    borderRadius: '12px',
+    padding: '24px',
+    boxShadow: '0 4px 6px rgba(0,0,0,0.02)',
+    border: '1px solid #e2e8f0'
+  },
+  cardTitle: {
+    fontSize: '18px',
+    fontWeight: '600',
+    marginBottom: '20px',
+    color: '#334155',
+    display: 'flex',
+    alignItems: 'center'
+  },
+  formGroup: {
+    marginBottom: '16px'
+  },
+  label: {
+    display: 'block',
+    fontSize: '13px',
+    fontWeight: '500',
+    color: '#64748b',
+    marginBottom: '6px'
+  },
+  input: {
+    width: '100%',
+    padding: '10px 12px',
+    borderRadius: '8px',
+    border: '1px solid #cbd5e1',
+    fontSize: '14px',
+    outline: 'none',
+    transition: 'border-color 0.2s',
+    boxSizing: 'border-box'
+  },
+  select: {
+    width: '100%',
+    padding: '10px 12px',
+    borderRadius: '8px',
+    border: '1px solid #cbd5e1',
+    fontSize: '14px',
+    background: '#fff',
+    outline: 'none',
+    boxSizing: 'border-box'
+  },
+  row: {
+    display: 'flex',
+    gap: '12px'
+  },
+  col: {
+    flex: 1
+  },
+  questionsHeader: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: '16px'
+  },
+  btnGroup: {
+    display: 'flex',
+    gap: '8px'
+  },
+  addBtn: {
+    background: '#fff',
+    border: '1px solid #cbd5e1',
+    padding: '8px 16px',
+    borderRadius: '8px',
+    fontSize: '13px',
+    fontWeight: '600',
+    color: '#475569',
+    cursor: 'pointer',
+    transition: 'all 0.2s'
+  },
+  questionCard: {
+    background: '#fff',
+    borderRadius: '12px',
+    padding: '20px',
+    marginBottom: '16px',
+    border: '1px solid #e2e8f0',
+    boxShadow: '0 2px 4px rgba(0,0,0,0.02)'
+  },
+  qHeader: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    marginBottom: '16px'
+  },
+  qTypeBadge: {
+    background: '#f1f5f9',
+    padding: '4px 10px',
+    borderRadius: '6px',
+    fontSize: '12px',
+    fontWeight: '600',
+    color: '#475569',
+    display: 'flex',
+    alignItems: 'center',
+    gap: '6px'
+  },
+  deleteBtn: {
+    background: 'transparent',
+    border: 'none',
+    color: '#ef4444',
+    cursor: 'pointer',
+    padding: '4px'
+  },
+  choiceRow: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '8px',
+    marginBottom: '8px'
+  },
+  choiceInput: {
+    flex: 1,
+    padding: '8px 12px',
+    borderRadius: '6px',
+    border: '1px solid #e2e8f0',
+    fontSize: '14px'
+  },
+  publishBtn: {
+    width: '100%',
+    padding: '14px',
+    background: '#2563eb',
+    color: '#fff',
+    border: 'none',
+    borderRadius: '10px',
+    fontWeight: '600',
+    fontSize: '16px',
+    cursor: 'pointer',
+    marginTop: '16px',
+    boxShadow: '0 4px 12px rgba(37,99,235,0.2)'
+  },
+  emptyState: {
+    background: '#f8fafc',
+    padding: '32px',
+    borderRadius: '12px',
+    border: '2px dashed #cbd5e1',
+    textAlign: 'center',
+    color: '#94a3b8'
+  }
+};

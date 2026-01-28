@@ -24,7 +24,7 @@ export default function AdminLayout({ children }) {
           src={img1}
           alt="Logo"
           className="login-logo"
-          style={{ height: "40px", width:"30%",marginLeft:"1px",marginTop:'12px' }} />
+          style={{ height: "40px", width: "30%", marginLeft: "1px", marginTop: '12px' }} />
         <button style={logoutBtn} onClick={handleLogout}>
           <FiLogOut style={{ marginRight: 6 }} />
           Logout
@@ -58,6 +58,13 @@ export default function AdminLayout({ children }) {
               label="Users"
               icon={<FiUsers />}
               active={location.pathname === "/admin/users"}
+            />
+
+            <MenuItem
+              to="/admin/exams"
+              label="Exams"
+              icon={<FiBookOpen />}
+              active={location.pathname === "/admin/exams"}
             />
 
             <MenuItem
@@ -142,7 +149,7 @@ const sidebar = {
   background: 'linear-gradient(180deg, #eaf2ff, #deeaff)',
   padding: '24px',
   boxShadow: '2px 0px 12px rgba(0,0,0,0.05)',
-  marginTop:'35px'
+  marginTop: '35px'
 };
 
 const brand = {

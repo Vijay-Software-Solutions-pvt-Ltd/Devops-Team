@@ -12,6 +12,8 @@ import AdminDashboard from "./pages/AdminDashboard";
 import AdminUsers from "./pages/AdminUsers";
 import AdminOrgs from "./pages/AdminOrgs";
 import AdminCreateExam from "./pages/AdminCreateExam";
+import AdminExams from "./pages/AdminExams";
+import AdminEditExam from "./pages/AdminEditExam";
 import AttemptView from "./pages/AttemptView";
 import AdminAttemptDetails from "./pages/AdminAttemptDetails";
 
@@ -40,7 +42,7 @@ export default function App() {
         <Routes>
           {/* ================= PUBLIC ================= */}
           <Route path="/login" element={<Login />} />
-           <Route path="/signup" element={<Signup />} />
+          <Route path="/signup" element={<Signup />} />
 
           {/* ================= ROOT REDIRECT ================= */}
           <Route
@@ -64,7 +66,9 @@ export default function App() {
             <Route index element={<AdminDashboard />} />
             <Route path="users" element={<AdminUsers />} />
             <Route path="orgs" element={<AdminOrgs />} />
+            <Route path="exams" element={<AdminExams />} />
             <Route path="create-exam" element={<AdminCreateExam />} />
+            <Route path="edit-exam/:id" element={<AdminEditExam />} />
             <Route path="attempt/:id" element={<AttemptView />} />
             <Route path="/admin/attempt/:attemptId" element={<AdminAttemptDetails />} />
           </Route>

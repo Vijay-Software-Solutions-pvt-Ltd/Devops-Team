@@ -3,7 +3,7 @@ import React, { useEffect, useState } from "react";
 import api from "../services/api";
 import { Link } from "react-router-dom";
 import StudentHeader from "../components/StudentHeader";
-
+import { FiClock, FiCalendar, FiBookOpen, FiUser } from "react-icons/fi";
 
 export default function StudentDashboard() {
   const [exams, setExams] = useState([]);
@@ -31,186 +31,210 @@ export default function StudentDashboard() {
 
   return (
     <>
-  <StudentHeader />
-    <div style={pageWrapper}>
-      {/* Top Bar / Welcome Section */}
-      <div style={topRow}>
-        <div>
-          <h1 style={title}>Online Exam</h1>
-          <p style={subtitle}>Welcome to your exams dashboard</p>
+      <StudentHeader />
+      <div style={styles.container}>
+
+        {/* Welcome Section */}
+        <div style={styles.welcomeCard}>
+          <div style={styles.welcomeInfo}>
+            <h1 style={styles.welcomeTitle}>Welcome back, {user.name || 'Student'}! 👋</h1>
+            <p style={styles.welcomeSubtitle}>
+              You have <strong>{exams.length}</strong> upcoming {exams.length === 1 ? 'exam' : 'exams'} scheduled.
+            </p>
+          </div>
+          <div style={styles.userBadge}>
+            <FiUser style={{ marginRight: 8 }} />
+            {user.email}
+          </div>
         </div>
 
-        <div style={userCard}>
-          <div style={{ fontSize: 14, color: "#64748b" }}>Logged in as</div>
-          <div style={{ fontWeight: 600 }}>{user?.name || "Student"}</div>
-          <div style={{ fontSize: 12, color: "#94a3b8" }}>{user?.email}</div>
-        </div>
-      </div>
+        {/* Section Title */}
+        <h2 style={styles.sectionTitle}>Your Assignments</h2>
 
-      {/* Welcome Panel */}
-      <div style={welcomeCard}>
-        <div>
-          <h2 style={{ margin: 0, fontSize: 22 }}>Welcome to your Exams 👋</h2>
-          <p style={{ marginTop: 4, color: "#64748b", fontSize: 14 }}>
-            You have{" "}
-            <strong>{exams.length}</strong>{" "}
-            upcoming {exams.length === 1 ? "exam" : "exams"} assigned.
-          </p>
-        </div>
-      </div>
-
-      {/* Exams Grid */}
-      <div style={examGrid}>
-        {exams.length === 0 ? (
-          <div style={emptyBox}>No exams assigned yet.</div>
-        ) : (
-          exams.map((exam) => (
-            <div key={exam.id} style={examCard}>
-              <h4 style={examTitle}>{exam.title}</h4>
-              <p style={examDesc}>{exam.description}</p>
-
-              <div style={examMetaRow}>
-                <span style={pill}>
-                  ⏱ {exam.duration_minutes} mins
-                </span>
-                <span style={pillLight}>
-                  🕒 Starts: {formatDate(exam.start_date)}
-                </span>
-              </div>
-
-              <div style={{ marginTop: 14, display: "flex", justifyContent: "flex-end" }}>
-                {/* 👉 Go to Exam Details (with T&C) */}
-                <Link to={`/exams/${exam.id}/details`} style={startBtn}>
-                  View & Start
-                </Link>
-              </div>
+        {/* Exams Grid */}
+        <div style={styles.grid}>
+          {exams.length === 0 ? (
+            <div style={styles.emptyState}>
+              <h3>No exams assigned yet</h3>
+              <p>Check back later or contact your administrator.</p>
             </div>
-          ))
-        )}
+          ) : (
+            exams.map((exam) => (
+              <div key={exam.id} style={styles.card}>
+                <div style={styles.cardHeader}>
+                  <div style={styles.iconBox}>
+                    <FiBookOpen />
+                  </div>
+                  <h3 style={styles.cardTitle}>{exam.title}</h3>
+                </div>
+
+                <p style={styles.cardDesc}>
+                  {exam.description || "No description provided."}
+                </p>
+
+                <div style={styles.metaGrid}>
+                  <div style={styles.metaItem}>
+                    <FiClock style={styles.metaIcon} />
+                    <span>{exam.duration_minutes} mins</span>
+                  </div>
+                  <div style={styles.metaItem}>
+                    <FiCalendar style={styles.metaIcon} />
+                    <span>{formatDate(exam.start_date)}</span>
+                  </div>
+                </div>
+
+                <div style={styles.cardFooter}>
+                  <Link to={`/exams/${exam.id}/details`} style={styles.button}>
+                    View & Start Exam
+                  </Link>
+                </div>
+              </div>
+            ))
+          )}
+        </div>
+
       </div>
-    </div>
     </>
   );
 }
 
 /* ============ STYLES ============ */
-
-const pageWrapper = {
-  background: "#f1f5f9",
-  minHeight: "100vh",
-  padding: "30px 40px",
-  fontFamily: "Segoe UI, system-ui, sans-serif",
-};
-
-const topRow = {
-  display: "flex",
-  alignItems: "center",
-  justifyContent: "space-between",
-  marginBottom: 20,
-};
-
-const title = {
-  fontSize: 26,
-  fontWeight: 800,
-  color: "#0f172a",
-};
-
-const subtitle = {
-  fontSize: 14,
-  color: "#64748b",
-};
-
-const userCard = {
-  padding: "10px 16px",
-  borderRadius: 14,
-  background: "#ffffff",
-  boxShadow: "0 8px 24px rgba(15,23,42,0.08)",
-  textAlign: "right",
-  minWidth: 220,
-};
-
-const welcomeCard = {
-  background:
-    "linear-gradient(120deg, #2563eb, #1d4ed8, #0ea5e9)",
-  padding: "18px 22px",
-  borderRadius: 18,
-  color: "#eff6ff",
-  boxShadow: "0 16px 30px rgba(37,99,235,0.35)",
-  marginBottom: 24,
-};
-
-const examGrid = {
-  display: "grid",
-  gridTemplateColumns: "repeat(auto-fill, minmax(260px, 1fr))",
-  gap: "18px",
-};
-
-const examCard = {
-  background: "#ffffff",
-  borderRadius: 18,
-  padding: 18,
-  boxShadow: "0 10px 30px rgba(15,23,42,0.08)",
-  border: "1px solid #e2e8f0",
-  display: "flex",
-  flexDirection: "column",
-};
-
-const examTitle = {
-  fontSize: 16,
-  fontWeight: 600,
-  marginBottom: 6,
-  color: "#0f172a",
-};
-
-const examDesc = {
-  fontSize: 13,
-  color: "#64748b",
-  marginBottom: 10,
-  minHeight: 36,
-};
-
-const examMetaRow = {
-  display: "flex",
-  gap: 8,
-  flexWrap: "wrap",
-  marginTop: 4,
-};
-
-const pill = {
-  padding: "3px 10px",
-  borderRadius: 999,
-  background: "#e0f2fe",
-  fontSize: 12,
-  color: "#0369a1",
-};
-
-const pillLight = {
-  padding: "3px 10px",
-  borderRadius: 999,
-  background: "#f1f5f9",
-  fontSize: 12,
-  color: "#475569",
-};
-
-const startBtn = {
-  display: "inline-block",
-  background: "#2563eb",
-  color: "#fff",
-  padding: "8px 16px",
-  borderRadius: 999,
-  fontSize: 13,
-  fontWeight: 600,
-  textDecoration: "none",
-  boxShadow: "0 6px 18px rgba(37,99,235,0.4)",
-  transform: "translateY(0)",
-  transition: "all 0.15s ease",
-};
-
-const emptyBox = {
-  padding: "30px",
-  background: "#ffffff",
-  borderRadius: 12,
-  textAlign: "center",
-  color: "#94a3b8",
-  gridColumn: "1 / -1",
+const styles = {
+  container: {
+    padding: '40px',
+    maxWidth: '1200px',
+    margin: '0 auto',
+    fontFamily: "'Inter', sans-serif"
+  },
+  welcomeCard: {
+    background: 'linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%)',
+    borderRadius: '20px',
+    padding: '32px',
+    marginBottom: '40px',
+    color: '#fff',
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    boxShadow: '0 10px 25px rgba(37,99,235,0.3)'
+  },
+  welcomeTitle: {
+    fontSize: '32px',
+    fontWeight: '700',
+    margin: '0 0 8px 0'
+  },
+  welcomeSubtitle: {
+    fontSize: '16px',
+    opacity: 0.9,
+    margin: 0
+  },
+  userBadge: {
+    background: 'rgba(255,255,255,0.2)',
+    padding: '8px 16px',
+    borderRadius: '50px',
+    fontSize: '14px',
+    display: 'flex',
+    alignItems: 'center',
+    fontWeight: '500',
+    backdropFilter: 'blur(5px)'
+  },
+  sectionTitle: {
+    fontSize: '24px',
+    fontWeight: '700',
+    color: '#1e293b',
+    marginBottom: '24px'
+  },
+  grid: {
+    display: 'grid',
+    gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))',
+    gap: '24px'
+  },
+  emptyState: {
+    gridColumn: '1 / -1',
+    background: '#f8fafc',
+    borderRadius: '16px',
+    padding: '40px',
+    textAlign: 'center',
+    border: '2px dashed #cbd5e1',
+    color: '#64748b'
+  },
+  card: {
+    background: '#ffffff',
+    borderRadius: '16px',
+    padding: '24px',
+    boxShadow: '0 4px 12px rgba(0,0,0,0.05)',
+    border: '1px solid #e2e8f0',
+    display: 'flex',
+    flexDirection: 'column',
+    transition: 'transform 0.2s, box-shadow 0.2s',
+    ':hover': {
+      transform: 'translateY(-4px)',
+      boxShadow: '0 12px 24px rgba(0,0,0,0.1)'
+    }
+  },
+  cardHeader: {
+    display: 'flex',
+    alignItems: 'start',
+    gap: '16px',
+    marginBottom: '16px'
+  },
+  iconBox: {
+    width: '40px',
+    height: '40px',
+    borderRadius: '10px',
+    background: '#eff6ff',
+    color: '#2563eb',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    fontSize: '20px',
+    flexShrink: 0
+  },
+  cardTitle: {
+    fontSize: '18px',
+    fontWeight: '600',
+    color: '#0f172a',
+    margin: 0,
+    lineHeight: '1.4'
+  },
+  cardDesc: {
+    fontSize: '14px',
+    color: '#64748b',
+    marginBottom: '20px',
+    lineHeight: '1.5',
+    flex: 1
+  },
+  metaGrid: {
+    display: 'flex',
+    gap: '12px',
+    marginBottom: '24px',
+    flexWrap: 'wrap'
+  },
+  metaItem: {
+    display: 'flex',
+    alignItems: 'center',
+    fontSize: '13px',
+    color: '#475569',
+    background: '#f1f5f9',
+    padding: '6px 12px',
+    borderRadius: '8px'
+  },
+  metaIcon: {
+    marginRight: '6px',
+    color: '#64748b'
+  },
+  cardFooter: {
+    marginTop: 'auto'
+  },
+  button: {
+    display: 'block',
+    textAlign: 'center',
+    background: '#0f172a',
+    color: '#fff',
+    padding: '12px',
+    borderRadius: '10px',
+    textDecoration: 'none',
+    fontWeight: '600',
+    fontSize: '14px',
+    transition: 'background 0.2s'
+  }
 };

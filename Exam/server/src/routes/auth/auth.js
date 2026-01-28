@@ -8,6 +8,7 @@ const { v4: uuidv4 } = require('uuid');
 require('dotenv').config();
 
 router.post('/register', async (req, res) => {
+  console.log("REGISTER PAYLOAD:", JSON.stringify(req.body, null, 2));
   const users = Array.isArray(req.body) ? req.body : [req.body];
 
   const client = await db.connect();
@@ -83,9 +84,16 @@ router.post('/register', async (req, res) => {
     await client.query('ROLLBACK');
     console.error("REGISTER ERROR 👉", err.message);
 
-    res.status(500).json({ 
-      error: 'Failed to register users', 
-      details: err.message 
+    if (err.code === '23505') {
+      return res.status(400).json({ error: 'Email or Mobile already registered' });
+    }
+    if (err.code === '23503') {
+      return res.status(400).json({ error: 'Invalid Organization ID' });
+    }
+
+    res.status(500).json({
+      error: 'Failed to register users',
+      details: err.message
     });
   } finally {
     client.release();

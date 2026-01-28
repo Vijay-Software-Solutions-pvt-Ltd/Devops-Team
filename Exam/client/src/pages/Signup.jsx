@@ -98,11 +98,11 @@ export default function Signup() {
                 />
               </div>
 
-               <div className="form-group">
+              <div className="form-group">
                 <label>Organisation ID</label>
                 <input
                   type="text"
-                  name="org"
+                  name="org_id"
                   placeholder="Enter Organisation ID"
                   onChange={handleChange}
                   required
@@ -145,7 +145,7 @@ export default function Signup() {
                 <label>Sub Department</label>
                 <input
                   type="text"
-                  name="sub-department"
+                  name="sub_department"
                   placeholder="Sub Department"
                   onChange={handleChange}
                 />

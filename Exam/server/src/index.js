@@ -22,26 +22,16 @@ console.log("PORT =", PORT);
 console.log("FB_BUCKET =", process.env.FB_BUCKET);
 
 // CORS
-const allowedOrigins = [
-  "http://localhost:5173",
-  "https://exam-96957713-e7f90.web.app",
-  "https://exam-96957713.firebaseapp.com",
-];
-
-app.use((req, res, next) => {
-  const origin = req.headers.origin;
-  if (allowedOrigins.includes(origin)) {
-    res.header("Access-Control-Allow-Origin", origin);
-  }
-  res.header("Access-Control-Allow-Methods", "GET, POST, PUT, PATCH, DELETE, OPTIONS");
-  res.header("Access-Control-Allow-Headers", "Content-Type, Authorization");
-  res.header("Access-Control-Allow-Credentials", "true");
-
-  if (req.method === "OPTIONS") {
-    return res.sendStatus(200);
-  }
-  next();
-});
+const cors = require("cors");
+app.use(cors({
+  origin: [
+    "http://localhost:5173",
+    "http://127.0.0.1:5173",
+    "https://exam-96957713-e7f90.web.app",
+    "https://exam-96957713.firebaseapp.com"
+  ],
+  credentials: true
+}));
 
 // BODY
 app.use(bodyParser.json({ limit: "20mb" }));
@@ -75,6 +65,7 @@ app.use("/admin/exams", adminExamsRoutes);
 app.use("/admin/users", adminUsersRoutes);
 app.use("/admin/reports", adminReportsRoutes);
 app.use("/admin/orgs", orgRoutes);
+app.use("/public/orgs", require("./routes/public_orgs"));
 
 // START
 (async () => {

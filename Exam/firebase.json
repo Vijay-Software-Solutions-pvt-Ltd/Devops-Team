@@ -3,13 +3,6 @@
     "public": "client/dist",
     "rewrites": [
       {
-        "source": "/api/**",
-        "run": {
-          "serviceId": "online-exam",
-          "region": "asia-south1"
-        }
-      },
-      {
         "source": "**",
         "destination": "/index.html"
       }

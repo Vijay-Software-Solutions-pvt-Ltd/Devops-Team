@@ -27,8 +27,8 @@ app.use(cors({
   origin: function (origin, callback) {
     // Allow requests with no origin (like mobile apps or curl requests)
     if (!origin) return callback(null, true);
-    // Allow any localhost
-    if (origin.includes('localhost') || origin.includes('127.0.0.1') || origin.includes('firebaseapp.com')) {
+    // Allow any localhost, firebaseapp.com and .web.app
+    if (origin.includes('localhost') || origin.includes('127.0.0.1') || origin.includes('firebaseapp.com') || origin.includes('.web.app')) {
       return callback(null, true);
     }
     const msg = 'The CORS policy for this site does not allow access from the specified Origin.';

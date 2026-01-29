@@ -51,7 +51,13 @@ router.post('/create', auth, requireRole('admin'), async (req, res) => {
 router.get('/assigned', auth, async (req, res) => {
   try {
     if (req.user.role === 'admin') {
-      const q = await db.query('SELECT * FROM exam.exams ORDER BY created_at DESC');
+      const q = await db.query(`
+        SELECT e.*, o.name as org_name, o.id as assigned_org_id 
+        FROM exam.exams e
+        LEFT JOIN exam.exam_assignments ea ON ea.exam_id = e.id
+        LEFT JOIN exam.organizations o ON o.id = ea.org_id
+        ORDER BY e.created_at DESC
+      `);
       return res.json({ exams: q.rows });
     }
 

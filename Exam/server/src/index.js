@@ -24,12 +24,16 @@ console.log("FB_BUCKET =", process.env.FB_BUCKET);
 // CORS
 const cors = require("cors");
 app.use(cors({
-  origin: [
-    "http://localhost:5173",
-    "http://127.0.0.1:5173",
-    "https://exam-96957713-e7f90.web.app",
-    "https://exam-96957713.firebaseapp.com"
-  ],
+  origin: function (origin, callback) {
+    // Allow requests with no origin (like mobile apps or curl requests)
+    if (!origin) return callback(null, true);
+    // Allow any localhost
+    if (origin.includes('localhost') || origin.includes('127.0.0.1') || origin.includes('firebaseapp.com')) {
+      return callback(null, true);
+    }
+    const msg = 'The CORS policy for this site does not allow access from the specified Origin.';
+    return callback(new Error(msg), false);
+  },
   credentials: true
 }));
 

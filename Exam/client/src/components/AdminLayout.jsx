@@ -12,7 +12,8 @@ export default function AdminLayout({ children }) {
   function handleLogout() {
     localStorage.removeItem("token");
     localStorage.removeItem("user");
-    window.location.href = "/#/login";
+    window.location.replace("/#/login");
+    window.location.reload();
   }
 
   return (

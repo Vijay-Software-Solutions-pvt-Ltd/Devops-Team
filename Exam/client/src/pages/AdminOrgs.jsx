@@ -1,13 +1,14 @@
 // client/src/pages/AdminOrgs.jsx
 import React, { useEffect, useState } from 'react';
 import api from '../services/api';
-import { FiLayers, FiMapPin, FiPlus, FiBriefcase, FiHash } from "react-icons/fi";
+import { FiLayers, FiMapPin, FiPlus, FiBriefcase, FiHash, FiEdit, FiTrash2, FiX } from "react-icons/fi";
 
 export default function AdminOrgs() {
   const [orgs, setOrgs] = useState([]);
   const [name, setName] = useState('');
   const [address, setAddress] = useState('');
   const [loading, setLoading] = useState(false);
+  const [editingOrg, setEditingOrg] = useState(null);
 
   useEffect(() => {
     fetchOrgs();
@@ -22,19 +23,49 @@ export default function AdminOrgs() {
     }
   }
 
-  async function createOrg() {
+  async function handleSubmit() {
     if (!name || !address) return alert("Enter all fields");
     setLoading(true);
     try {
-      await api.post('/admin/orgs/', { name, address });
-      alert('✅ Organization created successfully!');
-      setName('');
-      setAddress('');
+      if (editingOrg) {
+        // Update
+        await api.put(`/admin/orgs/${editingOrg.id}`, { name, address });
+        alert('✅ Organization updated successfully!');
+      } else {
+        // Create
+        await api.post('/admin/orgs/', { name, address });
+        alert('✅ Organization created successfully!');
+      }
+      resetForm();
       fetchOrgs();
     } catch (err) {
-      alert('Failed to create org');
+      alert('Failed to save org');
+      console.error(err);
     }
     setLoading(false);
+  }
+
+  async function deleteOrg(id) {
+    if (!confirm("Are you sure you want to delete this organization?")) return;
+    try {
+      await api.delete(`/admin/orgs/${id}`);
+      fetchOrgs();
+    } catch (err) {
+      alert("Failed to delete: " + (err.response?.data?.error || err.message));
+    }
+  }
+
+  function handleEdit(org) {
+    setEditingOrg(org);
+    setName(org.name);
+    setAddress(org.address);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  function resetForm() {
+    setEditingOrg(null);
+    setName('');
+    setAddress('');
   }
 
   return (
@@ -48,8 +79,11 @@ export default function AdminOrgs() {
         {/* Create Org Card */}
         <div style={styles.card}>
           <div style={styles.cardHeader}>
-            <span style={styles.iconCircle}><FiPlus /></span>
-            <h3 style={styles.cardTitle}>Create New Organization</h3>
+            <span style={styles.iconCircle}>{editingOrg ? <FiEdit /> : <FiPlus />}</span>
+            <h3 style={styles.cardTitle}>{editingOrg ? "Edit Organization" : "Create New Organization"}</h3>
+            {editingOrg && (
+              <button onClick={resetForm} style={styles.closeBtn} title="Cancel Edit"><FiX /></button>
+            )}
           </div>
 
           <div style={styles.formGroup}>
@@ -78,8 +112,8 @@ export default function AdminOrgs() {
             </div>
           </div>
 
-          <button style={styles.button} onClick={createOrg} disabled={loading}>
-            {loading ? "Creating..." : "Create Organization"}
+          <button style={styles.button} onClick={handleSubmit} disabled={loading}>
+            {loading ? "Saving..." : (editingOrg ? "Update Organization" : "Create Organization")}
           </button>
         </div>
 
@@ -97,6 +131,7 @@ export default function AdminOrgs() {
                   <th style={styles.th}>Name</th>
                   <th style={styles.th}>Address</th>
                   <th style={styles.th}>Org ID (UUID)</th>
+                  <th style={styles.th}>Actions</th>
                 </tr>
               </thead>
               <tbody>
@@ -115,6 +150,16 @@ export default function AdminOrgs() {
                       </td>
                       <td style={styles.td}>
                         <code style={styles.code}>{o.id}</code>
+                      </td>
+                      <td style={styles.td}>
+                        <div style={{ display: 'flex', gap: '8px' }}>
+                          <button onClick={() => handleEdit(o)} style={styles.iconBtn} title="Edit">
+                            <FiEdit />
+                          </button>
+                          <button onClick={() => deleteOrg(o.id)} style={{ ...styles.iconBtn, color: '#ef4444', borderColor: '#fecaca', background: '#fef2f2' }} title="Delete">
+                            <FiTrash2 />
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   ))
@@ -273,6 +318,26 @@ const styles = {
   emptyState: {
     textAlign: 'center',
     padding: '24px',
+    color: '#94a3b8'
+  }
+  ,
+  iconBtn: {
+    padding: '6px',
+    borderRadius: '6px',
+    border: '1px solid #cbd5e1',
+    background: 'white',
+    cursor: 'pointer',
+    display: 'inline-flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    color: '#64748b'
+  },
+  closeBtn: {
+    marginLeft: 'auto',
+    background: 'transparent',
+    border: 'none',
+    cursor: 'pointer',
+    fontSize: '18px',
     color: '#94a3b8'
   }
 };

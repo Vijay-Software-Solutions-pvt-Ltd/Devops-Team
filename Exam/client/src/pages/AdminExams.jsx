@@ -47,6 +47,7 @@ export default function AdminExams() {
                     <thead>
                         <tr style={styles.theadRow}>
                             <th style={styles.th}>Title</th>
+                            <th style={styles.th}>Organization</th>
                             <th style={styles.th}>Start Date</th>
                             <th style={styles.th}>Duration</th>
                             <th style={styles.th}>Actions</th>
@@ -58,6 +59,10 @@ export default function AdminExams() {
                                 <td style={styles.td}>
                                     <div style={styles.examTitle}>{exam.title}</div>
                                     <div style={styles.examDesc}>{exam.description || 'No description'}</div>
+                                </td>
+                                <td style={styles.td}>
+                                    <div style={styles.orgNameText}>{exam.org_name || 'N/A'}</div>
+                                    <div style={styles.orgIdText}>{exam.assigned_org_id || ''}</div>
                                 </td>
                                 <td style={styles.td}>
                                     {exam.start_date ? new Date(exam.start_date).toLocaleString() : 'N/A'}
@@ -75,7 +80,7 @@ export default function AdminExams() {
                         ))}
                         {exams.length === 0 && (
                             <tr>
-                                <td colSpan="4" style={{ padding: 20, textAlign: 'center', color: '#888' }}>
+                                <td colSpan="5" style={{ padding: 20, textAlign: 'center', color: '#888' }}>
                                     No exams found.
                                 </td>
                             </tr>
@@ -162,6 +167,16 @@ const styles = {
         whiteSpace: 'nowrap',
         overflow: 'hidden',
         textOverflow: 'ellipsis'
+    },
+    orgNameText: {
+        fontSize: '13px',
+        fontWeight: '600',
+        color: '#334155'
+    },
+    orgIdText: {
+        fontSize: '11px',
+        fontFamily: 'monospace',
+        color: '#64748b'
     },
     actionBtn: {
         background: 'transparent',

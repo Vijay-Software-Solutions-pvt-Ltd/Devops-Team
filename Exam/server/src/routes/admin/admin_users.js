@@ -22,7 +22,7 @@ const transporter = nodemailer.createTransport({
 
 // Helper: random password
 function randomPassword() {
-  return Math.random().toString(36).slice(-10) + Math.floor(Math.random()*9000);
+  return Math.random().toString(36).slice(-10) + Math.floor(Math.random() * 9000);
 }
 
 // Create or bulk create users: JSON body { users: [{name, email, mobile}], org_id }
@@ -66,6 +66,37 @@ router.post('/:userId/activate', auth, requireRole('admin'), async (req, res) =>
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'update failed' });
+  }
+});
+
+// Update user details
+router.put('/:userId', auth, requireRole('admin'), async (req, res) => {
+  const { userId } = req.params;
+  const { name, email, role, org_id } = req.body;
+  try {
+    await db.query(
+      'UPDATE exam.users SET name=$1, email=$2, role=$3, org_id=$4 WHERE id=$5',
+      [name, email, role, org_id || null, userId]
+    );
+    res.json({ ok: true });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Failed to update user' });
+  }
+});
+
+// Hard delete
+router.delete('/:userId/hard-delete', auth, requireRole('admin'), async (req, res) => {
+  const { userId } = req.params;
+  try {
+    await db.query('DELETE FROM exam.users WHERE id=$1', [userId]);
+    res.json({ ok: true });
+  } catch (err) {
+    console.error(err);
+    if (err.code === '23503') {
+      return res.status(400).json({ error: 'User has related data (exam attempts/results) and cannot be hard deleted.' });
+    }
+    res.status(500).json({ error: 'Hard delete failed' });
   }
 });
 

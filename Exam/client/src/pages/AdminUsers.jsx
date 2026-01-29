@@ -1,7 +1,7 @@
 // client/src/pages/AdminUsers.jsx
 import React, { useEffect, useState } from 'react';
 import api from '../services/api';
-import { FiPlus, FiSearch, FiTrash2, FiCheckCircle, FiXCircle, FiUser } from "react-icons/fi";
+import { FiPlus, FiSearch, FiTrash2, FiCheckCircle, FiXCircle, FiUser, FiEdit, FiX } from "react-icons/fi";
 
 export default function AdminUsers() {
   const [users, setUsers] = useState([]);
@@ -17,6 +17,7 @@ export default function AdminUsers() {
     role: 'student', // default
     password: '' // optional, auto-generated if empty in backend, but good to have
   });
+  const [editingUser, setEditingUser] = useState(null);
 
   useEffect(() => {
     fetchUsers();
@@ -44,32 +45,56 @@ export default function AdminUsers() {
     }
   }
 
-  async function handleAddUser() {
+  async function handleSubmit() {
     if (!newUser.email) return alert("Email is required");
     try {
-      // Backend expects a "bulk" format { users: [...], org_id } usually, 
-      // but let's see if we can adapt or send a single list.
-      // Based on previous code: /admin/users/bulk-create expects { users: [], org_id }
-      // We will send one user in the array.
-
-      const payload = {
-        users: [{
+      if (editingUser) {
+        // Update
+        await api.put(`/admin/users/${editingUser.id}`, {
           name: newUser.name,
           email: newUser.email,
-          role: newUser.role
-        }],
-        org_id: newUser.org_id
-      };
-
-      await api.post('/admin/users/bulk-create', payload);
-      alert('User created successfully');
-      setShowAddForm(false);
-      setNewUser({ name: '', email: '', org_id: '', role: 'student', password: '' });
+          role: newUser.role,
+          org_id: newUser.org_id
+        });
+        alert('User updated successfully');
+      } else {
+        // Create
+        const payload = {
+          users: [{
+            name: newUser.name,
+            email: newUser.email,
+            role: newUser.role
+          }],
+          org_id: newUser.org_id
+        };
+        await api.post('/admin/users/bulk-create', payload);
+        alert('User created successfully');
+      }
+      resetForm();
       fetchUsers();
     } catch (err) {
-      alert('Failed to create user');
+      alert('Failed to save user');
       console.error(err);
     }
+  }
+
+  function handleEdit(user) {
+    setEditingUser(user);
+    setNewUser({
+      name: user.name || '',
+      email: user.email || '',
+      org_id: user.org_id || '',
+      role: user.role || 'student',
+      password: ''
+    });
+    setShowAddForm(true);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  function resetForm() {
+    setShowAddForm(false);
+    setEditingUser(null);
+    setNewUser({ name: '', email: '', org_id: '', role: 'student', password: '' });
   }
 
   async function toggleActive(userId, currentStatus) {
@@ -82,6 +107,16 @@ export default function AdminUsers() {
     }
   }
 
+  async function hardDelete(userId) {
+    if (!confirm("Are you sure you want to PERMANENTLY delete this user? This cannot be undone.")) return;
+    try {
+      await api.delete(`/admin/users/${userId}/hard-delete`);
+      setUsers(prev => prev.filter(u => u.id !== userId));
+    } catch (err) {
+      alert("Failed to delete user: " + (err.response?.data?.error || err.message));
+    }
+  }
+
   return (
     <div style={styles.container}>
 
@@ -91,7 +126,7 @@ export default function AdminUsers() {
           <h1 style={styles.title}>User Management</h1>
           <p style={styles.subtitle}>View, manage, and create platform users</p>
         </div>
-        <button style={styles.addButton} onClick={() => setShowAddForm(!showAddForm)}>
+        <button style={styles.addButton} onClick={() => { resetForm(); setShowAddForm(!showAddForm); }}>
           <FiPlus style={{ marginRight: 8 }} />
           Add User
         </button>
@@ -100,7 +135,10 @@ export default function AdminUsers() {
       {/* Add User Form (Collapsible) */}
       {showAddForm && (
         <div style={styles.formCard}>
-          <h3 style={styles.formTitle}>Add New User</h3>
+          <div style={styles.cardHeader}>
+            <h3 style={styles.formTitle}>{editingUser ? "Edit User" : "Add New User"}</h3>
+            <button onClick={resetForm} style={styles.closeBtn}><FiX /></button>
+          </div>
           <div style={styles.formGrid}>
             <div style={styles.inputGroup}>
               <label style={styles.label}>Name</label>
@@ -142,8 +180,8 @@ export default function AdminUsers() {
             </div>
           </div>
           <div style={styles.formActions}>
-            <button style={styles.cancelButton} onClick={() => setShowAddForm(false)}>Cancel</button>
-            <button style={styles.submitButton} onClick={handleAddUser}>Create User</button>
+            <button style={styles.cancelButton} onClick={resetForm}>Cancel</button>
+            <button style={styles.submitButton} onClick={handleSubmit}>{editingUser ? "Update User" : "Create User"}</button>
           </div>
         </div>
       )}
@@ -204,14 +242,30 @@ export default function AdminUsers() {
                   </span>
                 </td>
                 <td style={styles.td}>
-                  <button
-                    style={u.is_active ? styles.deactivateBtn : styles.activateBtn}
-                    onClick={() => toggleActive(u.id, u.is_active)}
-                    title={u.is_active ? "Deactivate User" : "Activate User"}
-                  >
-                    {u.is_active ? <FiXCircle /> : <FiCheckCircle />}
-                    <span style={{ marginLeft: 6 }}>{u.is_active ? 'Deactivate' : 'Activate'}</span>
-                  </button>
+                  <div style={{ display: 'flex', gap: '8px' }}>
+                    <button
+                      style={u.is_active ? styles.deactivateBtn : styles.activateBtn}
+                      onClick={() => toggleActive(u.id, u.is_active)}
+                      title={u.is_active ? "Deactivate User" : "Activate User"}
+                    >
+                      {u.is_active ? <FiXCircle /> : <FiCheckCircle />}
+                      <span style={{ marginLeft: 6 }}>{u.is_active ? 'Deactivate' : 'Activate'}</span>
+                    </button>
+                    <button
+                      style={styles.editBtn}
+                      onClick={() => handleEdit(u)}
+                      title="Edit User"
+                    >
+                      <FiEdit />
+                    </button>
+                    <button
+                      style={styles.deleteBtn}
+                      onClick={() => hardDelete(u.id)}
+                      title="Hard Delete (Permanent)"
+                    >
+                      <FiTrash2 />
+                    </button>
+                  </div>
                 </td>
               </tr>
             ))}
@@ -240,7 +294,14 @@ const styles = {
     display: 'flex',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: '32px'
+    marginBottom: '32px',
+    position: 'sticky',
+    top: '50px', // Adjusted to sit below the fixed global header
+    zIndex: 9, // Lower than global header (10)
+    background: '#f8fafc',
+    paddingTop: '20px',
+    paddingBottom: '20px',
+    marginTop: '-20px'
   },
   title: {
     fontSize: '28px',
@@ -469,5 +530,38 @@ const styles = {
     fontSize: '12px',
     display: 'flex',
     alignItems: 'center'
+  },
+  deleteBtn: {
+    background: '#fee2e2',
+    border: '1px solid #fecaca',
+    color: '#991b1b',
+    padding: '6px 10px',
+    borderRadius: '6px',
+    cursor: 'pointer',
+    fontSize: '12px',
+  },
+  editBtn: {
+    padding: '6px',
+    borderRadius: '6px',
+    border: '1px solid #cbd5e1',
+    background: 'white',
+    cursor: 'pointer',
+    display: 'inline-flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    color: '#64748b'
+  },
+  cardHeader: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: '16px'
+  },
+  closeBtn: {
+    background: 'transparent',
+    border: 'none',
+    cursor: 'pointer',
+    fontSize: '18px',
+    color: '#94a3b8'
   }
 };

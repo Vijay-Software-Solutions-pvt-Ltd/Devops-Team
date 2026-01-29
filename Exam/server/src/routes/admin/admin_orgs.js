@@ -30,4 +30,33 @@ router.get('/', auth, requireRole('admin'), async (req, res) => {
   }
 });
 
+// Update org
+router.put('/:id', auth, requireRole('admin'), async (req, res) => {
+  const { id } = req.params;
+  const { name, address } = req.body;
+  try {
+    await db.query('UPDATE exam.organizations SET name=$1, address=$2 WHERE id=$3', [name, address, id]);
+    res.json({ ok: true });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Failed to update org' });
+  }
+});
+
+// Delete org
+router.delete('/:id', auth, requireRole('admin'), async (req, res) => {
+  const { id } = req.params;
+  try {
+    await db.query('DELETE FROM exam.organizations WHERE id=$1', [id]);
+    res.json({ ok: true });
+  } catch (err) {
+    console.error(err);
+    // 23503 is foreign_key_violation
+    if (err.code === '23503') {
+      return res.status(400).json({ error: 'Cannot delete organization because it has associated users or exams.' });
+    }
+    res.status(500).json({ error: 'Failed to delete org' });
+  }
+});
+
 module.exports = router;

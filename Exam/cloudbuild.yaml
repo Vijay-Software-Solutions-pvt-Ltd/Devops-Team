@@ -1,20 +1,20 @@
 steps:
-  # STEP 1: Build Docker image
+  # STEP 1: Build backend Docker image
   - name: "gcr.io/cloud-builders/docker"
     dir: "Exam"
     args:
       - "build"
       - "-t"
-      - "asia-south1-docker.pkg.dev/$PROJECT_ID/cloud-run-source-deploy/exam-backend:manual"
+      - "asia-south1-docker.pkg.dev/$PROJECT_ID/online-exam-repo/online-exam:latest"
       - "-f"
-      - "Dockerfile"
+      - "server/Dockerfile"
       - "."
 
-  # STEP 2: Push Docker image to Artifact Registry
+  # STEP 2: Push image to Artifact Registry
   - name: "gcr.io/cloud-builders/docker"
     args:
       - "push"
-      - "asia-south1-docker.pkg.dev/$PROJECT_ID/cloud-run-source-deploy/exam-backend:manual"
+      - "asia-south1-docker.pkg.dev/$PROJECT_ID/online-exam-repo/online-exam:latest"
 
   # STEP 3: Deploy to Cloud Run
   - name: "gcr.io/google.com/cloudsdktool/cloud-sdk"
@@ -22,8 +22,8 @@ steps:
     args:
       - "run"
       - "deploy"
-      - "exam-backend"
-      - "--image=asia-south1-docker.pkg.dev/$PROJECT_ID/cloud-run-source-deploy/exam-backend:manual"
+      - "online-exam"
+      - "--image=asia-south1-docker.pkg.dev/$PROJECT_ID/online-exam-repo/online-exam:latest"
       - "--region=asia-south1"
       - "--platform=managed"
       - "--allow-unauthenticated"

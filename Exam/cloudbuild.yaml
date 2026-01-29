@@ -5,7 +5,7 @@ steps:
     args:
       - "build"
       - "-t"
-      - "asia-south1-docker.pkg.dev/$PROJECT_ID/online-exam-repo/online-exam:latest"
+      - "asia-south1-docker.pkg.dev/$PROJECT_ID/cloud-run-source-deploy/online-exam:latest"
       - "-f"
       - "server/Dockerfile"
       - "."
@@ -14,7 +14,7 @@ steps:
   - name: "gcr.io/cloud-builders/docker"
     args:
       - "push"
-      - "asia-south1-docker.pkg.dev/$PROJECT_ID/online-exam-repo/online-exam:latest"
+      - "asia-south1-docker.pkg.dev/$PROJECT_ID/cloud-run-source-deploy/online-exam:latest"
 
   # STEP 3: Deploy to Cloud Run
   - name: "gcr.io/google.com/cloudsdktool/cloud-sdk"
@@ -23,7 +23,7 @@ steps:
       - "run"
       - "deploy"
       - "online-exam"
-      - "--image=asia-south1-docker.pkg.dev/$PROJECT_ID/online-exam-repo/online-exam:latest"
+      - "--image=asia-south1-docker.pkg.dev/$PROJECT_ID/cloud-run-source-deploy/online-exam:latest"
       - "--region=asia-south1"
       - "--platform=managed"
       - "--allow-unauthenticated"

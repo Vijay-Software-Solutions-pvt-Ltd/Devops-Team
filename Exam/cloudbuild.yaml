@@ -3,38 +3,31 @@ steps:
   - name: "gcr.io/cloud-builders/docker"
     dir: "Exam"
     args:
-      [
-        "build",
-        "-t",
-        "asia-south1-docker.pkg.dev/HRM_PROJECT_ID/hrm-repo/online-exam-backend:latest",
-        "-f",
-        "Dockerfile",
-        "."
-      ]
+      - "build"
+      - "-t"
+      - "asia-south1-docker.pkg.dev/$PROJECT_ID/cloud-run-source-deploy/exam-backend:manual"
+      - "-f"
+      - "Dockerfile"
+      - "."
 
-  # STEP 2: Push image to Artifact Registry (HRM)
+  # STEP 2: Push Docker image to Artifact Registry
   - name: "gcr.io/cloud-builders/docker"
     args:
-      [
-        "push",
-        "asia-south1-docker.pkg.dev/HRM_PROJECT_ID/hrm-repo/online-exam-backend:latest"
-      ]
+      - "push"
+      - "asia-south1-docker.pkg.dev/$PROJECT_ID/cloud-run-source-deploy/exam-backend:manual"
 
-  # STEP 3: Deploy to Cloud Run (HRM)
+  # STEP 3: Deploy to Cloud Run
   - name: "gcr.io/google.com/cloudsdktool/cloud-sdk"
-    entrypoint: gcloud
+    entrypoint: "gcloud"
     args:
-      [
-        "run",
-        "deploy",
-        "online-exam-backend",
-        "--image=asia-south1-docker.pkg.dev/HRM_PROJECT_ID/hrm-repo/online-exam-backend:latest",
-        "--region=asia-south1",
-        "--platform=managed",
-        "--project=HRM_PROJECT_ID",
-        "--allow-unauthenticated",
-        "--port=8080"
-      ]
+      - "run"
+      - "deploy"
+      - "exam-backend"
+      - "--image=asia-south1-docker.pkg.dev/$PROJECT_ID/cloud-run-source-deploy/exam-backend:manual"
+      - "--region=asia-south1"
+      - "--platform=managed"
+      - "--allow-unauthenticated"
+      - "--port=8080"
 
 timeout: "1200s"
 

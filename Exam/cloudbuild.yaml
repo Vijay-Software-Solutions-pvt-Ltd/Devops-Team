@@ -28,6 +28,7 @@ steps:
       - "--platform=managed"
       - "--allow-unauthenticated"
       - "--port=8080"
+      - "--set-env-vars=DB_USER=postgres,DB_PASS=Postgres@123,DB_NAME=postgres,DB_HOST=34.100.163.82,DB_PORT=5432,INSTANCE_CONNECTION_NAME=hrm-project-485104:asia-south1:postgres,JWT_SECRET=MvrSecretKeyForExams,JWT_EXPIRES_IN=70m,FB_BUCKET=exam-96957713-e7f90.appspot.com"
 
 timeout: "1200s"
 

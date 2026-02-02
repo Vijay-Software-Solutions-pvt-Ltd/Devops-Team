@@ -1,7 +1,7 @@
 // client/src/pages/AdminCreateExam.jsx
 import React, { useState, useEffect } from 'react';
 import api from '../services/api';
-import { FiPlus, FiTrash2, FiClock, FiCalendar, FiLayers, FiType, FiCode } from 'react-icons/fi';
+import { FiPlus, FiTrash2, FiClock, FiCalendar, FiLayers, FiType, FiCode, FiUpload } from 'react-icons/fi';
 
 export default function AdminCreateExam() {
   const [exam, setExam] = useState({
@@ -55,6 +55,38 @@ export default function AdminCreateExam() {
     const arr = [...questions];
     arr[qIndex].choices[cIndex] = value;
     setQuestions(arr);
+  }
+
+  function handleJsonImport(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (evt) => {
+      try {
+        const json = JSON.parse(evt.target.result);
+        if (Array.isArray(json)) {
+          // Expecting basic format: [{ type, content: { prompt }, ... }]
+          // Ideally validate further. For now, trust nice JSON.
+          // We map to our internal structure just in case
+          const newQs = json.map(q => ({
+            type: q.type || 'mcq',
+            difficulty: q.difficulty || 'normal',
+            content: q.content || { prompt: '' },
+            choices: q.choices || (q.type === 'mcq' ? ['', '', '', ''] : null),
+            correct_answer: q.correct_answer || (q.type === 'mcq' ? { correct: 0 } : null),
+            points: q.points || 2
+          }));
+          setQuestions(prev => [...prev, ...newQs]);
+          alert(`Successfully imported ${newQs.length} questions!`);
+        } else {
+          alert("Invalid JSON format. Expected an array of questions.");
+        }
+      } catch (err) {
+        alert("Failed to parse JSON file.");
+        console.error(err);
+      }
+    };
+    reader.readAsText(file);
   }
 
   async function createExam() {
@@ -160,7 +192,24 @@ export default function AdminCreateExam() {
         {/* RIGHT COLUMN: QUESTIONS */}
         <div>
           <div style={styles.questionsHeader}>
-            <h3 style={{ ...styles.cardTitle, marginBottom: 0 }}>Questions ({questions.length})</h3>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+              <h3 style={{ ...styles.cardTitle, marginBottom: 0 }}>Questions ({questions.length})</h3>
+              {/* Hidden File Input */}
+              <input
+                type="file"
+                id="import-json"
+                style={{ display: 'none' }}
+                accept=".json"
+                onChange={handleJsonImport}
+              />
+              <button
+                style={styles.importBtn}
+                onClick={() => document.getElementById('import-json').click()}
+                title="Import Questions from JSON"
+              >
+                <FiUpload style={{ marginRight: 6 }} /> Import JSON
+              </button>
+            </div>
             <div style={styles.btnGroup}>
               <button style={styles.addBtn} onClick={() => addQuestion('mcq')}>+ MCQ</button>
               <button style={styles.addBtn} onClick={() => addQuestion('coding')}>+ Coding</button>
@@ -413,5 +462,18 @@ const styles = {
     border: '2px dashed #cbd5e1',
     textAlign: 'center',
     color: '#94a3b8'
+  },
+  importBtn: {
+    background: '#f1f5f9',
+    border: '1px solid #cbd5e1',
+    color: '#475569',
+    padding: '6px 12px',
+    borderRadius: '8px',
+    fontSize: '13px',
+    fontWeight: '600',
+    cursor: 'pointer',
+    display: 'flex',
+    alignItems: 'center',
+    transition: 'all 0.2s',
   }
 };

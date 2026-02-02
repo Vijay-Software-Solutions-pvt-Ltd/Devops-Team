@@ -1,7 +1,7 @@
 // client/src/pages/AdminUsers.jsx
 import React, { useEffect, useState } from 'react';
 import api from '../services/api';
-import { FiPlus, FiSearch, FiTrash2, FiCheckCircle, FiXCircle, FiUser, FiEdit, FiX } from "react-icons/fi";
+import { FiPlus, FiSearch, FiTrash2, FiCheckCircle, FiXCircle, FiUser, FiUsers, FiEdit, FiX } from "react-icons/fi";
 
 export default function AdminUsers() {
   const [users, setUsers] = useState([]);
@@ -121,12 +121,13 @@ export default function AdminUsers() {
     <div style={styles.container}>
 
       {/* Header */}
-      <div style={styles.header}>
+      {/* Header */}
+      <div style={commonStyles.header}>
         <div>
-          <h1 style={styles.title}>User Management</h1>
-          <p style={styles.subtitle}>View, manage, and create platform users</p>
+          <h1 style={commonStyles.title}><FiUsers style={{ marginRight: 10 }} /> User Management</h1>
+          <p style={commonStyles.subtitle}>View, manage, and create platform users</p>
         </div>
-        <button style={styles.addButton} onClick={() => { resetForm(); setShowAddForm(!showAddForm); }}>
+        <button style={commonStyles.primaryButton} onClick={() => { resetForm(); setShowAddForm(!showAddForm); }}>
           <FiPlus style={{ marginRight: 8 }} />
           Add User
         </button>
@@ -565,3 +566,46 @@ const styles = {
     color: '#94a3b8'
   }
 };
+const commonStyles = {
+  header: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: '32px',
+    background: '#fff',
+    padding: '24px 32px',
+    borderRadius: '16px',
+    boxShadow: '0 4px 20px rgba(0,0,0,0.05)',
+    border: '1px solid #e2e8f0'
+  },
+  title: {
+    fontSize: '24px',
+    fontWeight: '700',
+    color: '#0f172a',
+    display: 'flex',
+    alignItems: 'center',
+    margin: 0
+  },
+  subtitle: {
+    fontSize: '14px',
+    color: '#64748b',
+    marginTop: '4px',
+    margin: 0
+  },
+  primaryButton: {
+    background: '#2563eb',
+    color: '#fff',
+    border: 'none',
+    padding: '12px 24px',
+    borderRadius: '10px',
+    fontWeight: '600',
+    cursor: 'pointer',
+    display: 'flex',
+    alignItems: 'center',
+    boxShadow: '0 4px 12px rgba(37,99,235,0.2)',
+    transition: 'all 0.2s',
+    fontSize: '14px'
+  }
+};
+
+

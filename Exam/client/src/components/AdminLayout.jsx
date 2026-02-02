@@ -142,7 +142,9 @@ const logoutBtn = {
 
 const bodyWrapper = {
   display: 'flex',
-  flex: 1
+  flex: 1,
+  marginTop: '50px',
+  height: 'calc(100vh - 50px)'
 };
 
 const sidebar = {
@@ -150,7 +152,7 @@ const sidebar = {
   background: 'linear-gradient(180deg, #eaf2ff, #deeaff)',
   padding: '24px',
   boxShadow: '2px 0px 12px rgba(0,0,0,0.05)',
-  marginTop: '35px'
+  overflowY: 'auto'
 };
 
 const brand = {
@@ -180,5 +182,6 @@ const mainContent = {
   flex: 1,
   padding: '1px',
   background: '#f6f9fd',
-  overflowY: 'auto'
+  overflowY: 'auto',
+  position: 'relative'
 };

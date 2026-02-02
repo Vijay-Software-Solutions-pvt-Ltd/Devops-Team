@@ -35,9 +35,12 @@ export default function AdminExams() {
 
     return (
         <div style={styles.container}>
-            <div style={styles.header}>
-                <h1 style={styles.title}><FiList style={{ marginRight: 10 }} /> Manage Exams</h1>
-                <Link to="/admin/create-exam" style={styles.createBtn}>
+            <div style={commonStyles.header}>
+                <div>
+                    <h1 style={commonStyles.title}><FiList style={{ marginRight: 10 }} /> Manage Exams</h1>
+                    <p style={commonStyles.subtitle}>Create, edit, and assign exams to organizations</p>
+                </div>
+                <Link to="/admin/create-exam" style={commonStyles.primaryButton}>
                     <FiPlus style={{ marginRight: 6 }} /> Create New Exam
                 </Link>
             </div>
@@ -92,42 +95,58 @@ export default function AdminExams() {
     );
 }
 
-const styles = {
-    container: {
-        padding: '40px',
-        maxWidth: '1200px',
-        margin: '0 auto',
-        fontFamily: "'Inter', sans-serif"
-    },
+const commonStyles = {
     header: {
         display: 'flex',
         justifyContent: 'space-between',
         alignItems: 'center',
-        marginBottom: '32px'
+        marginBottom: '32px',
+        background: '#fff',
+        padding: '24px 32px',
+        borderRadius: '16px',
+        boxShadow: '0 4px 20px rgba(0,0,0,0.05)',
+        border: '1px solid #e2e8f0'
     },
     title: {
-        fontSize: '28px',
+        fontSize: '24px',
         fontWeight: '700',
-        color: '#1e293b',
+        color: '#0f172a',
         display: 'flex',
-        alignItems: 'center'
+        alignItems: 'center',
+        margin: 0
     },
-    createBtn: {
+    subtitle: {
+        fontSize: '14px',
+        color: '#64748b',
+        marginTop: '4px',
+        margin: 0
+    },
+    primaryButton: {
         background: '#2563eb',
         color: '#fff',
         padding: '12px 24px',
-        borderRadius: '8px',
+        borderRadius: '10px',
         textDecoration: 'none',
         fontWeight: '600',
         display: 'flex',
         alignItems: 'center',
-        boxShadow: '0 4px 6px rgba(37,99,235,0.2)'
+        boxShadow: '0 4px 12px rgba(37,99,235,0.2)',
+        fontSize: '14px'
+    }
+};
+
+const styles = {
+    container: {
+        padding: '32px',
+        maxWidth: '1400px',
+        margin: '0 auto',
+        fontFamily: "'Inter', sans-serif"
     },
     card: {
         background: '#fff',
-        borderRadius: '12px',
+        borderRadius: '16px',
         overflow: 'hidden',
-        boxShadow: '0 4px 12px rgba(0,0,0,0.05)',
+        boxShadow: '0 4px 20px rgba(0,0,0,0.03)',
         border: '1px solid #e2e8f0'
     },
     table: {
@@ -153,43 +172,51 @@ const styles = {
         padding: '16px 24px',
         borderBottom: '1px solid #f1f5f9',
         fontSize: '14px',
-        color: '#334155'
+        color: '#334155',
+        verticalAlign: 'middle'
     },
     examTitle: {
         fontWeight: '600',
         color: '#0f172a',
-        marginBottom: '4px'
+        marginBottom: '4px',
+        fontSize: '15px'
     },
     examDesc: {
-        fontSize: '12px',
+        fontSize: '13px',
         color: '#64748b',
-        maxWidth: '300px',
+        maxWidth: '350px',
         whiteSpace: 'nowrap',
         overflow: 'hidden',
         textOverflow: 'ellipsis'
     },
     orgNameText: {
-        fontSize: '13px',
+        fontSize: '14px',
         fontWeight: '600',
         color: '#334155'
     },
     orgIdText: {
         fontSize: '11px',
         fontFamily: 'monospace',
-        color: '#64748b'
+        color: '#94a3b8',
+        background: '#f1f5f9',
+        padding: '2px 6px',
+        borderRadius: '4px',
+        display: 'inline-block',
+        marginTop: '4px'
     },
     actionBtn: {
-        background: 'transparent',
+        background: '#fff',
         border: '1px solid #cbd5e1',
-        borderRadius: '6px',
-        padding: '6px 12px',
+        borderRadius: '8px',
+        padding: '8px 12px',
         cursor: 'pointer',
-        fontSize: '12px',
+        fontSize: '13px',
         fontWeight: '600',
         color: '#475569',
         display: 'inline-flex',
         alignItems: 'center',
         gap: '6px',
-        transition: 'all 0.2s'
+        transition: 'all 0.2s',
+        boxShadow: '0 1px 2px rgba(0,0,0,0.05)'
     }
 };

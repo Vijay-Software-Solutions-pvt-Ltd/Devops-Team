@@ -8,6 +8,7 @@ export default function AdminOrgs() {
   const [name, setName] = useState('');
   const [address, setAddress] = useState('');
   const [loading, setLoading] = useState(false);
+  const [showForm, setShowForm] = useState(false); // Toggle for create form
   const [editingOrg, setEditingOrg] = useState(null);
 
   useEffect(() => {
@@ -59,6 +60,8 @@ export default function AdminOrgs() {
     setEditingOrg(org);
     setName(org.name);
     setAddress(org.address);
+    setAddress(org.address);
+    setShowForm(true); // Open form when editing
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
@@ -70,52 +73,95 @@ export default function AdminOrgs() {
 
   return (
     <div style={styles.container}>
-      <h1 style={styles.title}>Organization Management</h1>
-      <p style={styles.subtitle}>Manage departments and organizational units</p>
+      {/* Unified Header */}
+      <div style={commonStyles.header}>
+        <div>
+          <h1 style={commonStyles.title}><FiBriefcase style={{ marginRight: 10 }} /> Organization Management</h1>
+          <p style={commonStyles.subtitle}>Manage departments and organizational units</p>
+        </div>
+        <button style={commonStyles.primaryButton} onClick={() => { resetForm(); setShowForm(!showForm); }}>
+          <FiPlus style={{ marginRight: 8 }} />
+          Add Organization
+        </button>
+      </div>
 
       {/* Grid Layout */}
-      <div style={styles.grid}>
+      <div style={styles.content}>
 
-        {/* Create Org Card */}
-        <div style={styles.card}>
-          <div style={styles.cardHeader}>
-            <span style={styles.iconCircle}>{editingOrg ? <FiEdit /> : <FiPlus />}</span>
-            <h3 style={styles.cardTitle}>{editingOrg ? "Edit Organization" : "Create New Organization"}</h3>
-            {editingOrg && (
-              <button onClick={resetForm} style={styles.closeBtn} title="Cancel Edit"><FiX /></button>
-            )}
-          </div>
+        {/* Create/Edit Org Form (Toggleable) */}
+        {showForm && (
+          <div style={styles.formCard}>
+            <div style={styles.cardHeader}>
+              <span style={styles.iconCircle}>{editingOrg ? <FiEdit /> : <FiPlus />}</span>
+              <h3 style={styles.cardTitle}>{editingOrg ? "Edit Organization" : "Create New Organization"}</h3>
+              <button onClick={() => { setShowForm(false); resetForm(); }} style={styles.closeBtn} title="Close"><FiX /></button>
+            </div>
 
-          <div style={styles.formGroup}>
-            <label style={styles.label}>Organization Name</label>
-            <div style={styles.inputWrapper}>
-              <span style={styles.inputIcon}><FiBriefcase /></span>
-              <input
-                style={styles.input}
-                placeholder="e.g. Engineering Dept"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-              />
+            <div style={styles.formGroup}>
+              <label style={styles.label}>Organization Name</label>
+              <div style={styles.inputWrapper}>
+                <span style={styles.inputIcon}><FiBriefcase /></span>
+                <input
+                  style={styles.input}
+                  placeholder="e.g. Engineering Dept"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                />
+              </div>
+            </div>
+
+            <div style={styles.formGroup}>
+              <label style={styles.label}>Location / Address</label>
+              <div style={styles.inputWrapper}>
+                <span style={styles.inputIcon}><FiMapPin /></span>
+                <input
+                  style={styles.input}
+                  placeholder="e.g. Building A, Floor 3"
+                  value={address}
+                  onChange={(e) => setAddress(e.target.value)}
+                />
+              </div>
+            </div>
+
+            <button style={styles.button} onClick={handleSubmit} disabled={loading}>
+              {loading ? "Saving..." : (editingOrg ? "Update Organization" : "Create Organization")}
+            </button>
+            <div style={styles.gridRow}>
+              <div style={styles.formGroup}>
+                <label style={styles.label}>Organization Name</label>
+                <div style={styles.inputWrapper}>
+                  <span style={styles.inputIcon}><FiBriefcase /></span>
+                  <input
+                    style={styles.input}
+                    placeholder="e.g. Engineering Dept"
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                  />
+                </div>
+              </div>
+
+              <div style={styles.formGroup}>
+                <label style={styles.label}>Location / Address</label>
+                <div style={styles.inputWrapper}>
+                  <span style={styles.inputIcon}><FiMapPin /></span>
+                  <input
+                    style={styles.input}
+                    placeholder="e.g. Building A, Floor 3"
+                    value={address}
+                    onChange={(e) => setAddress(e.target.value)}
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div style={styles.formActions}>
+              <button style={styles.cancelButton} onClick={() => setShowForm(false)}>Cancel</button>
+              <button style={styles.button} onClick={handleSubmit} disabled={loading}>
+                {loading ? "Saving..." : (editingOrg ? "Update Organization" : "Create Organization")}
+              </button>
             </div>
           </div>
-
-          <div style={styles.formGroup}>
-            <label style={styles.label}>Location / Address</label>
-            <div style={styles.inputWrapper}>
-              <span style={styles.inputIcon}><FiMapPin /></span>
-              <input
-                style={styles.input}
-                placeholder="e.g. Building A, Floor 3"
-                value={address}
-                onChange={(e) => setAddress(e.target.value)}
-              />
-            </div>
-          </div>
-
-          <button style={styles.button} onClick={handleSubmit} disabled={loading}>
-            {loading ? "Saving..." : (editingOrg ? "Update Organization" : "Create Organization")}
-          </button>
-        </div>
+        )}
 
         {/* List Orgs Card */}
         <div style={styles.card}>
@@ -175,43 +221,89 @@ export default function AdminOrgs() {
 }
 
 /* ================= STYLES ================= */
-const styles = {
-  container: {
-    padding: '32px',
-    maxWidth: '1200px',
-    margin: '0 auto',
-    fontFamily: "'Inter', sans-serif"
+/* ================= STYLES ================= */
+const commonStyles = {
+  header: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: '32px',
+    background: '#fff',
+    padding: '24px 32px',
+    borderRadius: '16px',
+    boxShadow: '0 4px 20px rgba(0,0,0,0.05)',
+    border: '1px solid #e2e8f0'
   },
   title: {
-    fontSize: '28px',
+    fontSize: '24px',
     fontWeight: '700',
-    color: '#1e293b',
-    marginBottom: '4px'
+    color: '#0f172a',
+    display: 'flex',
+    alignItems: 'center',
+    margin: 0
   },
   subtitle: {
     fontSize: '14px',
     color: '#64748b',
-    marginBottom: '32px'
+    marginTop: '4px',
+    margin: 0
   },
-  grid: {
+  primaryButton: {
+    background: '#2563eb',
+    color: '#fff',
+    border: 'none',
+    padding: '12px 24px',
+    borderRadius: '10px',
+    fontWeight: '600',
+    cursor: 'pointer',
+    display: 'flex',
+    alignItems: 'center',
+    boxShadow: '0 4px 12px rgba(37,99,235,0.2)',
+    transition: 'all 0.2s',
+    fontSize: '14px'
+  }
+};
+
+const styles = {
+  container: {
+    padding: '32px',
+    maxWidth: '1400px',
+    margin: '0 auto',
+    fontFamily: "'Inter', sans-serif"
+  },
+  content: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '32px'
+  },
+  formCard: {
+    background: '#fff',
+    borderRadius: '16px',
+    boxShadow: '0 4px 20px rgba(0,0,0,0.05)',
+    border: '1px solid #e2e8f0',
+    padding: '32px',
+    animation: 'slideDown 0.3s ease-out'
+  },
+  gridRow: {
     display: 'grid',
-    gridTemplateColumns: 'repeat(auto-fit, minmax(350px, 1fr))',
+    gridTemplateColumns: '1fr 1fr',
     gap: '24px',
-    alignItems: 'start'
+    marginBottom: '24px'
   },
   card: {
     background: '#fff',
     borderRadius: '16px',
     boxShadow: '0 4px 20px rgba(0,0,0,0.03)',
     border: '1px solid #e2e8f0',
-    padding: '24px',
+    padding: '0',
     overflow: 'hidden'
   },
   cardHeader: {
     display: 'flex',
     alignItems: 'center',
     marginBottom: '20px',
-    gap: '12px'
+    gap: '12px',
+    padding: '20px 24px 0'
   },
   iconCircle: {
     width: '36px',
@@ -257,19 +349,34 @@ const styles = {
     border: '1px solid #cbd5e1',
     fontSize: '14px',
     outline: 'none',
-    transition: 'border-color 0.2s'
+    transition: 'border-color 0.2s',
+    boxSizing: 'border-box'
   },
   button: {
-    width: '100%',
     background: '#2563eb',
     color: '#fff',
     border: 'none',
     borderRadius: '8px',
-    padding: '12px',
+    padding: '12px 24px',
     fontWeight: '600',
     cursor: 'pointer',
-    marginTop: '8px',
-    boxShadow: '0 4px 12px rgba(37, 99, 235, 0.2)'
+    boxShadow: '0 4px 12px rgba(37, 99, 235, 0.2)',
+    fontSize: '14px'
+  },
+  cancelButton: {
+    background: 'transparent',
+    color: '#64748b',
+    border: '1px solid #cbd5e1',
+    borderRadius: '8px',
+    padding: '12px 24px',
+    fontWeight: '600',
+    cursor: 'pointer',
+    marginRight: '12px'
+  },
+  formActions: {
+    display: 'flex',
+    justifyContent: 'flex-end',
+    marginTop: '16px'
   },
   tableWrapper: {
     overflowX: 'auto'
@@ -319,8 +426,7 @@ const styles = {
     textAlign: 'center',
     padding: '24px',
     color: '#94a3b8'
-  }
-  ,
+  },
   iconBtn: {
     padding: '6px',
     borderRadius: '6px',

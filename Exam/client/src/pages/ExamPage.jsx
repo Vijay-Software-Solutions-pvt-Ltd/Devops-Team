@@ -594,7 +594,7 @@ export default function ExamPage() {
 
 // ---------- STYLES (unchanged from your version) ----------
 
-const pageWrapper = { minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', padding: '40px' };
+const pageWrapper = { minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'linear-gradient(135deg, #1f4cac 20%, #e86819 100%)', padding: '40px' };
 const loadingContainer = { minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: '#f8fafc' };
 const spinner = { width: 48, height: 48, border: '4px solid #e2e8f0', borderTop: '4px solid #667eea', borderRadius: '50%', animation: 'spin 1s linear infinite' };
 const loadingText = { marginTop: 20, fontSize: 16, color: '#64748b' };
@@ -610,7 +610,7 @@ const candidateInfo = { background: '#f1f5f9', borderRadius: 12, padding: 16, ma
 const candidateLabel = { fontSize: 12, color: '#64748b', marginBottom: 4 };
 const candidateName = { fontSize: 18, fontWeight: 600, color: '#0f172a', marginBottom: 2 };
 const candidateEmail = { fontSize: 14, color: '#64748b' };
-const startButton = { width: '100%', padding: '16px 32px', background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', color: '#fff', border: 'none', borderRadius: 12, fontSize: 16, fontWeight: 600, cursor: 'pointer', boxShadow: '0 4px 15px rgba(102, 126, 234, 0.4)', transition: 'all 0.3s' };
+const startButton = { width: '100%', padding: '16px 32px', background: 'linear-gradient(155deg,rgba(248, 248, 248, 0.66) 10%,rgba(159, 158, 157, 0.99) 100%)', color: '#020914', border: 'line', borderRadius: 15, fontSize: 16, fontWeight: 600, cursor: 'pointer', boxShadow: '10px 10px 25px rgba(102, 126, 234, 0.4)', transition: 'all 0.1s' };
 const examContainer = { minHeight: '100vh', background: '#f8fafc', display: 'flex', flexDirection: 'column' };
 const examHeader = { background: '#ffffff', padding: '20px 40px', boxShadow: '0 2px 8px rgba(0,0,0,0.08)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', position: 'sticky', top: 0, zIndex: 100 };
 const examHeaderLeft = { display: 'flex', alignItems: 'center', gap: 24 };

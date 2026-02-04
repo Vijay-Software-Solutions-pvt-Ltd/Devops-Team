@@ -23,6 +23,9 @@ const poolConfig = isCloudRun
       database: process.env.DB_NAME,
       host: process.env.DB_HOST || "localhost",
       port: process.env.DB_PORT || 5432,
+      ssl: {
+        rejectUnauthorized: false
+      }
     };
 
 const pool = new Pool({

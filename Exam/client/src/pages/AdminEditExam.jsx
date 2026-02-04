@@ -21,11 +21,18 @@ export default function AdminEditExam() {
     const [orgs, setOrgs] = useState([]);
 
     useEffect(() => {
-        // Fetch Orgs & Exam Data
-        Promise.all([
-            api.get('/admin/orgs'),
-            api.get(`/admin/exams/${id}`)
-        ]).then(([orgRes, examRes]) => {
+        loadExamData();
+    }, [id, navigate]);
+
+    async function loadExamData() {
+        setLoading(true);
+        try {
+            // Fetch Orgs & Exam Data
+            const [orgRes, examRes] = await Promise.all([
+                api.get('/admin/orgs'),
+                api.get(`/admin/exams/${id}`)
+            ]);
+
             if (orgRes.data?.orgs) setOrgs(orgRes.data.orgs);
 
             const eData = examRes.data.exam;
@@ -57,12 +64,12 @@ export default function AdminEditExam() {
                 correct_answer: typeof q.correct_answer === 'string' ? JSON.parse(q.correct_answer) : (q.correct_answer || { correct: 0 })
             })));
             setLoading(false);
-        }).catch(err => {
+        } catch (err) {
             console.error(err);
             alert("Failed to load exam data");
             navigate('/admin/exams');
-        });
-    }, [id, navigate]);
+        }
+    }
 
     function addQuestion(type) {
         setQuestions(prev => [
@@ -146,7 +153,8 @@ export default function AdminEditExam() {
                 questions
             });
             alert('Exam updated successfully!');
-            navigate('/admin/exams');
+            // Reload exam data to show updated values
+            await loadExamData();
         } catch (err) {
             console.error(err);
             alert('Failed to update exam');
@@ -242,6 +250,9 @@ export default function AdminEditExam() {
                             </label>
                             <button style={styles.addBtn} onClick={() => addQuestion('mcq')}>+ MCQ</button>
                             <button style={styles.addBtn} onClick={() => addQuestion('coding')}>+ Coding</button>
+                            <button style={styles.publishBtn} onClick={saveExam}>
+                                <FiSave style={{ marginRight: 8 }} /> Save Changes
+                            </button>
                         </div>
                     </div>
 
@@ -292,10 +303,6 @@ export default function AdminEditExam() {
                             )}
                         </div>
                     ))}
-
-                    <button style={styles.publishBtn} onClick={saveExam}>
-                        <FiSave style={{ marginRight: 8 }} /> Save Changes
-                    </button>
 
                 </div>
             </div>

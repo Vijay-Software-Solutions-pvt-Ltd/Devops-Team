@@ -62,7 +62,13 @@ router.post('/:userId/activate', auth, requireRole('admin'), async (req, res) =>
   const { active } = req.body;
   try {
     await db.query('UPDATE exam.users SET is_active=$1 WHERE id=$2', [active ? true : false, userId]);
-    res.json({ ok: true });
+    const result = await db.query(`
+      SELECT u.id, u.name, u.email, u.role, u.org_id, u.is_active, u.created_at, o.name as org_name
+      FROM exam.users u
+      LEFT JOIN exam.organizations o ON o.id = u.org_id
+      WHERE u.id=$1
+    `, [userId]);
+    res.json({ ok: true, user: result.rows[0] });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'update failed' });
@@ -78,7 +84,13 @@ router.put('/:userId', auth, requireRole('admin'), async (req, res) => {
       'UPDATE exam.users SET name=$1, email=$2, role=$3, org_id=$4 WHERE id=$5',
       [name, email, role, org_id || null, userId]
     );
-    res.json({ ok: true });
+    const result = await db.query(`
+      SELECT u.id, u.name, u.email, u.role, u.org_id, u.is_active, u.created_at, o.name as org_name
+      FROM exam.users u
+      LEFT JOIN exam.organizations o ON o.id = u.org_id
+      WHERE u.id=$1
+    `, [userId]);
+    res.json({ ok: true, user: result.rows[0] });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'Failed to update user' });
@@ -103,7 +115,13 @@ router.delete('/:userId/hard-delete', auth, requireRole('admin'), async (req, re
 // List users (admin)
 router.get('/', auth, requireRole('admin'), async (req, res) => {
   try {
-    const q = await db.query('SELECT id, name, email, role, org_id, is_active, created_at FROM exam.users ORDER BY created_at DESC LIMIT 1000');
+    const q = await db.query(`
+      SELECT u.id, u.name, u.email, u.role, u.org_id, u.is_active, u.created_at, o.name as org_name
+      FROM exam.users u
+      LEFT JOIN exam.organizations o ON o.id = u.org_id
+      ORDER BY u.created_at DESC 
+      LIMIT 1000
+    `);
     res.json({ users: q.rows });
   } catch (err) {
     console.error(err);

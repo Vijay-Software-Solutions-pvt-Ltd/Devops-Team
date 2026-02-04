@@ -85,7 +85,12 @@ router.get('/:id', auth, async (req, res) => {
     const examQ = await db.query('SELECT id, title, description, start_date, end_date, duration_minutes FROM exam.exams WHERE id=$1', [id]);
     if (!examQ.rows[0]) return res.status(404).json({ error: 'not found' });
 
-    const questionsQ = await db.query('SELECT id, type, difficulty, content, choices, points FROM exam.questions WHERE exam_id=$1', [id]);
+    // Include correct_answer for admin users
+    let questionsQuery = 'SELECT id, type, difficulty, content, choices, points FROM exam.questions WHERE exam_id=$1';
+    if (req.user.role === 'admin') {
+      questionsQuery = 'SELECT id, type, difficulty, content, choices, correct_answer, points FROM exam.questions WHERE exam_id=$1';
+    }
+    const questionsQ = await db.query(questionsQuery, [id]);
     res.json({ exam: examQ.rows[0], questions: questionsQ.rows });
   } catch (err) {
     console.error(err);
@@ -98,9 +103,12 @@ router.put('/:id', auth, requireRole('admin'), async (req, res) => {
   const { id } = req.params;
   const { title, description, duration_minutes, start_date, end_date, org_id, questions } = req.body;
 
+  const client = await db.connect();
   try {
+    await client.query('BEGIN');
+
     // 1. Update Exam Meta
-    await db.query(
+    await client.query(
       `UPDATE exam.exams 
        SET title=$1, description=$2, duration_minutes=$3, start_date=$4, end_date=$5 
        WHERE id=$6`,
@@ -110,17 +118,36 @@ router.put('/:id', auth, requireRole('admin'), async (req, res) => {
     // 2. Update Org Assignment if needed
     if (org_id) {
       // delete old assignment
-      await db.query('DELETE FROM exam.exam_assignments WHERE exam_id=$1', [id]);
+      await client.query('DELETE FROM exam.exam_assignments WHERE exam_id=$1', [id]);
       // insert new
-      await db.query(`INSERT INTO exam.exam_assignments (id, exam_id, org_id) VALUES ($1,$2,$3)`, [uuidv4(), id, org_id]);
+      await client.query(`INSERT INTO exam.exam_assignments (id, exam_id, org_id) VALUES ($1,$2,$3)`, [uuidv4(), id, org_id]);
     }
 
-    // 3. Upsert Questions
+    // 3. Handle Questions: Delete removed ones, then upsert the rest
     if (Array.isArray(questions)) {
+      // Get all existing question IDs from the database
+      const existingQuestionsResult = await client.query(
+        'SELECT id FROM exam.questions WHERE exam_id=$1',
+        [id]
+      );
+      const existingQuestionIds = existingQuestionsResult.rows.map(row => row.id);
+      
+      // Get all question IDs from the request
+      const requestQuestionIds = questions.filter(q => q.id).map(q => q.id);
+      
+      // Find questions to delete (exist in DB but not in request)
+      const questionsToDelete = existingQuestionIds.filter(id => !requestQuestionIds.includes(id));
+      
+      // Delete removed questions
+      for (const qId of questionsToDelete) {
+        await client.query('DELETE FROM exam.questions WHERE id=$1', [qId]);
+      }
+
+      // Upsert questions
       for (const q of questions) {
         if (q.id) {
           // Update existing
-          await db.query(
+          await client.query(
             `UPDATE exam.questions 
              SET type=$1, difficulty=$2, content=$3, choices=$4, correct_answer=$5, points=$6 
              WHERE id=$7`,
@@ -136,7 +163,7 @@ router.put('/:id', auth, requireRole('admin'), async (req, res) => {
           );
         } else {
           // Insert new
-          await db.query(
+          await client.query(
             `INSERT INTO exam.questions (id, exam_id, type, difficulty, content, choices, correct_answer, points) 
              VALUES ($1,$2,$3,$4,$5,$6,$7,$8)`,
             [
@@ -154,10 +181,14 @@ router.put('/:id', auth, requireRole('admin'), async (req, res) => {
       }
     }
 
+    await client.query('COMMIT');
     res.json({ ok: true });
   } catch (err) {
+    await client.query('ROLLBACK');
     console.error("UPDATE EXAM ERROR:", err);
-    res.status(500).json({ error: 'Failed to update exam' });
+    res.status(500).json({ error: 'Failed to update exam', details: err.message });
+  } finally {
+    client.release();
   }
 });
 

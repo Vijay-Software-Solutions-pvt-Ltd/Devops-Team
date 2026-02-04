@@ -1,7 +1,6 @@
 steps:
   # STEP 1: Build backend Docker image
   - name: "gcr.io/cloud-builders/docker"
-    dir: "Exam"
     args:
       - "build"
       - "-t"

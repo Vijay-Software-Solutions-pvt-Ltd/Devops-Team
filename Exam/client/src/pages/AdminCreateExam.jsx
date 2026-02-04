@@ -213,6 +213,11 @@ export default function AdminCreateExam() {
             <div style={styles.btnGroup}>
               <button style={styles.addBtn} onClick={() => addQuestion('mcq')}>+ MCQ</button>
               <button style={styles.addBtn} onClick={() => addQuestion('coding')}>+ Coding</button>
+              {questions.length > 0 && (
+                <button style={styles.publishBtn} onClick={createExam}>
+                  <FiPlus style={{ marginRight: 6 }} /> Publish Exam
+                </button>
+              )}
             </div>
           </div>
 
@@ -293,12 +298,6 @@ export default function AdminCreateExam() {
               )}
             </div>
           ))}
-
-          {questions.length > 0 && (
-            <button style={styles.publishBtn} onClick={createExam}>
-              Publish Exam
-            </button>
-          )}
 
         </div>
       </div>

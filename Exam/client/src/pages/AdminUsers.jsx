@@ -1,7 +1,7 @@
 // client/src/pages/AdminUsers.jsx
 import React, { useEffect, useState } from 'react';
 import api from '../services/api';
-import { FiPlus, FiSearch, FiTrash2, FiCheckCircle, FiXCircle, FiUser, FiUsers, FiEdit, FiX } from "react-icons/fi";
+import { FiPlus, FiSearch, FiTrash2, FiCheckCircle, FiXCircle, FiUser, FiUsers, FiEdit, FiX, FiMoreVertical } from "react-icons/fi";
 
 export default function AdminUsers() {
   const [users, setUsers] = useState([]);
@@ -18,6 +18,7 @@ export default function AdminUsers() {
     password: '' // optional, auto-generated if empty in backend, but good to have
   });
   const [editingUser, setEditingUser] = useState(null);
+  const [openDropdownId, setOpenDropdownId] = useState(null); // Track which user's dropdown is open
 
   useEffect(() => {
     fetchUsers();
@@ -50,12 +51,16 @@ export default function AdminUsers() {
     try {
       if (editingUser) {
         // Update
-        await api.put(`/admin/users/${editingUser.id}`, {
+        const response = await api.put(`/admin/users/${editingUser.id}`, {
           name: newUser.name,
           email: newUser.email,
           role: newUser.role,
           org_id: newUser.org_id
         });
+        // Update with actual data from backend
+        if (response.data.user) {
+          setUsers(prev => prev.map(u => u.id === editingUser.id ? response.data.user : u));
+        }
         alert('User updated successfully');
       } else {
         // Create
@@ -69,9 +74,9 @@ export default function AdminUsers() {
         };
         await api.post('/admin/users/bulk-create', payload);
         alert('User created successfully');
+        fetchUsers();
       }
       resetForm();
-      fetchUsers();
     } catch (err) {
       alert('Failed to save user');
       console.error(err);
@@ -88,7 +93,6 @@ export default function AdminUsers() {
       password: ''
     });
     setShowAddForm(true);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
   function resetForm() {
@@ -99,11 +103,17 @@ export default function AdminUsers() {
 
   async function toggleActive(userId, currentStatus) {
     try {
-      await api.post(`/admin/users/${userId}/activate`, { active: !currentStatus });
-      // Optimistic update
-      setUsers(prev => prev.map(u => u.id === userId ? { ...u, is_active: !currentStatus } : u));
+      const response = await api.post(`/admin/users/${userId}/activate`, { active: !currentStatus });
+      // Update with actual data from backend
+      if (response.data.user) {
+        setUsers(prev => prev.map(u => u.id === userId ? response.data.user : u));
+      } else {
+        // Fallback to optimistic update if backend doesn't return user
+        setUsers(prev => prev.map(u => u.id === userId ? { ...u, is_active: !currentStatus } : u));
+      }
     } catch (err) {
       alert("Failed to update status");
+      console.error(err);
     }
   }
 
@@ -235,7 +245,12 @@ export default function AdminUsers() {
                   </span>
                 </td>
                 <td style={styles.td}>
-                  {u.org_id ? <code style={styles.code}>{u.org_id}</code> : <span style={{ color: '#cbd5e1' }}>-</span>}
+                  {u.org_id ? (
+                    <div>
+                      <div style={styles.orgName}>{u.org_name || 'Unknown Org'}</div>
+                      <code style={styles.code}>{u.org_id}</code>
+                    </div>
+                  ) : <span style={{ color: '#cbd5e1' }}>-</span>}
                 </td>
                 <td style={styles.td}>
                   <span style={u.is_active ? styles.statusActive : styles.statusInactive}>
@@ -243,29 +258,52 @@ export default function AdminUsers() {
                   </span>
                 </td>
                 <td style={styles.td}>
-                  <div style={{ display: 'flex', gap: '8px' }}>
+                  <div style={{ position: 'relative' }}>
                     <button
-                      style={u.is_active ? styles.deactivateBtn : styles.activateBtn}
-                      onClick={() => toggleActive(u.id, u.is_active)}
-                      title={u.is_active ? "Deactivate User" : "Activate User"}
+                      style={styles.actionBtn}
+                      onClick={() => setOpenDropdownId(openDropdownId === u.id ? null : u.id)}
                     >
-                      {u.is_active ? <FiXCircle /> : <FiCheckCircle />}
-                      <span style={{ marginLeft: 6 }}>{u.is_active ? 'Deactivate' : 'Activate'}</span>
+                      <FiMoreVertical />
                     </button>
-                    <button
-                      style={styles.editBtn}
-                      onClick={() => handleEdit(u)}
-                      title="Edit User"
-                    >
-                      <FiEdit />
-                    </button>
-                    <button
-                      style={styles.deleteBtn}
-                      onClick={() => hardDelete(u.id)}
-                      title="Hard Delete (Permanent)"
-                    >
-                      <FiTrash2 />
-                    </button>
+                    {openDropdownId === u.id && (
+                      <div style={styles.dropdownMenu}>
+                        <div
+                          style={styles.dropdownItem}
+                          onClick={() => {
+                            setOpenDropdownId(null);
+                            handleEdit(u);
+                          }}
+                        >
+                          <FiEdit style={{ marginRight: 8 }} /> Edit
+                        </div>
+                        <div
+                          style={styles.dropdownItem}
+                          onClick={() => {
+                            setOpenDropdownId(null);
+                            toggleActive(u.id, u.is_active);
+                          }}
+                        >
+                          {u.is_active ? <FiXCircle style={{ marginRight: 8, color: '#ef4444' }} /> : <FiCheckCircle style={{ marginRight: 8, color: '#16a34a' }} />}
+                          {u.is_active ? 'Deactivate' : 'Activate'}
+                        </div>
+                        <div
+                          style={{ ...styles.dropdownItem, color: '#ef4444' }}
+                          onClick={() => {
+                            setOpenDropdownId(null);
+                            hardDelete(u.id);
+                          }}
+                        >
+                          <FiTrash2 style={{ marginRight: 8 }} /> Delete
+                        </div>
+                      </div>
+                    )}
+                    {/* Overlay to close dropdown when clicking outside */}
+                    {openDropdownId === u.id && (
+                      <div
+                        style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', zIndex: 998 }}
+                        onClick={() => setOpenDropdownId(null)}
+                      />
+                    )}
                   </div>
                 </td>
               </tr>
@@ -480,6 +518,12 @@ const styles = {
     fontSize: '12px',
     color: '#475569'
   },
+  orgName: {
+    fontWeight: '600',
+    fontSize: '13px',
+    color: '#1e293b',
+    marginBottom: '4px'
+  },
   studentBadge: {
     background: '#f0f9ff',
     color: '#0369a1',
@@ -557,6 +601,46 @@ const styles = {
     justifyContent: 'space-between',
     alignItems: 'center',
     marginBottom: '16px'
+  },
+  actionBtn: {
+    background: 'transparent',
+    border: 'none',
+    cursor: 'pointer',
+    padding: '8px',
+    borderRadius: '50%',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    color: '#64748b',
+    transition: 'background 0.2s',
+    ':hover': {
+      background: '#f1f5f9'
+    }
+  },
+  dropdownMenu: {
+    position: 'absolute',
+    right: 0,
+    top: '100%',
+    marginTop: '4px',
+    background: '#fff',
+    border: '1px solid #e2e8f0',
+    borderRadius: '8px',
+    boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)',
+    zIndex: 999,
+    minWidth: '160px',
+    overflow: 'hidden'
+  },
+  dropdownItem: {
+    padding: '10px 16px',
+    fontSize: '14px',
+    color: '#334155',
+    cursor: 'pointer',
+    display: 'flex',
+    alignItems: 'center',
+    transition: 'background 0.1s',
+    ':hover': {
+      background: '#f8fafc'
+    }
   },
   closeBtn: {
     background: 'transparent',

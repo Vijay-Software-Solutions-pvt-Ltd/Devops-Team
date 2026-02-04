@@ -1,5 +1,5 @@
 steps:
-  # STEP 1: Build backend Docker image
+  # STEP 1: Build backend Docker image (Context: Exam directory)
   - name: "gcr.io/cloud-builders/docker"
     dir: "Exam"
     args:

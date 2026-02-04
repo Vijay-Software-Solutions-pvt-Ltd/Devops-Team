@@ -1,14 +1,14 @@
 steps:
-  # STEP 1: Build backend Docker image (Context: Exam directory)
+  # STEP 1: Build backend Docker image (Root-relative paths)
   - name: "gcr.io/cloud-builders/docker"
-    dir: "Exam"
+    # Running from workspace root
     args:
       - "build"
       - "-t"
       - "asia-south1-docker.pkg.dev/$PROJECT_ID/cloud-run-source-deploy/online-exam:latest"
       - "-f"
-      - "server/Dockerfile"
-      - "."
+      - "Exam/server/Dockerfile"
+      - "Exam"
 
   # STEP 2: Push image to Artifact Registry
   - name: "gcr.io/cloud-builders/docker"

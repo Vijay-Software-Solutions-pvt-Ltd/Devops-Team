@@ -73,12 +73,14 @@ router.get('/:examId', auth, async (req, res) => {
 
     let attempt = attemptQ.rows[0];
 
+    // If no active attempt, return just basic exam info (for exam details page)
     if (!attempt) {
-      return res.status(400).json({
-        error: "No active attempt found. Please start the exam first."
+      return res.json({
+        exam: examQ.rows[0]
       });
     }
 
+    // If active attempt exists, return exam with questions (for exam page)
     if (!attempt.question_ids || attempt.question_ids.length === 0) {
       return res.status(500).json({ error: 'Attempt has no stored questions' });
     }

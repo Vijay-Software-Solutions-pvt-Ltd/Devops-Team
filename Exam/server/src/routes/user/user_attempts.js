@@ -367,4 +367,30 @@ router.get('/my-active/:examId', auth, async (req, res) => {
   }
 });
 
+/**
+ * Check if user has completed this exam
+ */
+router.get('/check-completed/:examId', auth, async (req, res) => {
+  const { examId } = req.params;
+
+  try {
+    const q = await db.query(
+      `
+      SELECT id 
+      FROM exam.attempts 
+      WHERE exam_id=$1 
+        AND user_id=$2 
+        AND status='submitted'
+      LIMIT 1
+      `,
+      [examId, req.user.id]
+    );
+
+    return res.json({ completed: q.rows.length > 0 });
+  } catch (err) {
+    console.error('Check completed failed:', err);
+    res.status(500).json({ error: 'check failed', completed: false });
+  }
+});
+
 module.exports = router;

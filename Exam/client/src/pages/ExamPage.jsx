@@ -411,6 +411,23 @@ export default function ExamPage() {
 
   return (
     <>
+      <style>{`
+        /* Custom scrollbar for question navigator */
+        .question-navigator-grid::-webkit-scrollbar {
+          width: 6px;
+        }
+        .question-navigator-grid::-webkit-scrollbar-track {
+          background: #f1f5f9;
+          border-radius: 10px;
+        }
+        .question-navigator-grid::-webkit-scrollbar-thumb {
+          background: #cbd5e1;
+          border-radius: 10px;
+        }
+        .question-navigator-grid::-webkit-scrollbar-thumb:hover {
+          background: #94a3b8;
+        }
+      `}</style>
       <div style={examContainer}>
         <div style={examHeader}>
           <div style={examHeaderLeft}>
@@ -605,7 +622,7 @@ export default function ExamPage() {
             <div style={questionsGrid}>
               <h4 style={gridTitle}>Question Navigator</h4>
 
-              <div style={gridContainer}>
+              <div className="question-navigator-grid" style={gridContainer}>
                 {questions.map((q, idx) => (
                   <button
                     key={q.id}
@@ -675,14 +692,14 @@ const codeTextarea = { width: '100%', padding: 16, fontSize: 14, fontFamily: 'mo
 const navigationButtons = { display: 'flex', gap: 16, justifyContent: 'space-between' };
 const navButton = { flex: 1, padding: '14px 24px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, background: '#667eea', color: '#fff', border: 'none', borderRadius: 12, fontSize: 15, fontWeight: 600, cursor: 'pointer', transition: 'all 0.3s' };
 const navButtonDisabled = { flex: 1, padding: '14px 24px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, background: '#e2e8f0', color: '#94a3b8', border: 'none', borderRadius: 12, fontSize: 15, fontWeight: 600, cursor: 'not-allowed' };
-const sidebar = { width: 320, display: 'flex', flexDirection: 'column', gap: 24 };
-const cameraBox = { background: '#ffffff', borderRadius: 20, padding: 20, boxShadow: '0 4px 20px rgba(0,0,0,0.06)' };
+const sidebar = { width: 320, display: 'flex', flexDirection: 'column', gap: 24, position: 'sticky', top: 20, alignSelf: 'flex-start', maxHeight: 'calc(100vh - 40px)' };
+const cameraBox = { background: '#ffffff', borderRadius: 20, padding: 20, boxShadow: '0 4px 20px rgba(0,0,0,0.06)', flexShrink: 0 };
 const cameraHeader = { display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12, fontSize: 14, fontWeight: 600, color: '#0f172a' };
 const videoElement = { width: '100%', borderRadius: 12, background: '#1e293b', aspectRatio: '4/3', objectFit: 'cover' };
 const cameraNote = { fontSize: 11, color: '#94a3b8', textAlign: 'center', marginTop: 8 };
-const questionsGrid = { background: '#ffffff', borderRadius: 20, padding: 20, boxShadow: '0 4px 20px rgba(0,0,0,0.06)' };
-const gridTitle = { fontSize: 14, fontWeight: 600, color: '#0f172a', marginBottom: 16 };
-const gridContainer = { display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 8 };
+const questionsGrid = { background: '#ffffff', borderRadius: 20, padding: 20, boxShadow: '0 4px 20px rgba(0,0,0,0.06)', display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0 };
+const gridTitle = { fontSize: 14, fontWeight: 600, color: '#0f172a', marginBottom: 16, flexShrink: 0 };
+const gridContainer = { display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 8, overflowY: 'auto', paddingRight: 8, maxHeight: '400px' };
 const gridItem = { width: '100%', aspectRatio: '1', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#f8fafc', border: '2px solid #e2e8f0', borderRadius: 8, fontSize: 13, fontWeight: 600, color: '#64748b', cursor: 'pointer', transition: 'all 0.3s' };
 const gridItemActive = { background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', color: '#fff', borderColor: '#667eea' };
 const gridItemAnswered = { background: '#d1fae5', borderColor: '#10b981', color: '#15803d' };

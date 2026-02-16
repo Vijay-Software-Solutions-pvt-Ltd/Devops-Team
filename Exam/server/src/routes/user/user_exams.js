@@ -7,7 +7,7 @@ router.get('/assigned', auth, async (req, res) => {
   try {
     if (req.user.role === 'admin') {
       const q = await db.query(`
-        SELECT id, title, description, start_date, end_date, duration_minutes
+        SELECT id, title, description, start_date, end_date, duration_minutes, total_questions
         FROM exam.exams
         ORDER BY start_date DESC
       `);
@@ -27,7 +27,8 @@ router.get('/assigned', auth, async (req, res) => {
         e.description,
         e.start_date,
         e.end_date,
-        e.duration_minutes
+        e.duration_minutes,
+        e.total_questions
       FROM exam.exams e
       JOIN exam.exam_assignments ea ON ea.exam_id = e.id
       LEFT JOIN exam.attempts a 
@@ -52,7 +53,7 @@ router.get('/:examId', auth, async (req, res) => {
   try {
     const examQ = await db.query(`
       SELECT 
-        id, title, description, start_date, end_date, duration_minutes
+        id, title, description, start_date, end_date, duration_minutes, total_questions
       FROM exam.exams
       WHERE id = $1
     `, [examId]);

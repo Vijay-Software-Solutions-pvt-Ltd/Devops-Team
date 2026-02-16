@@ -28,7 +28,7 @@ router.post('/start/:examId', auth, async (req, res) => {
 
   try {
     const examQ = await db.query(
-      'SELECT id, duration_minutes FROM exam.exams WHERE id=$1',
+      'SELECT id, duration_minutes, total_questions FROM exam.exams WHERE id=$1',
       [examId]
     );
     if (!examQ.rows[0]) {
@@ -57,14 +57,15 @@ router.post('/start/:examId', auth, async (req, res) => {
     const id = uuidv4();
     const token = uuidv4();
     const allowedSeconds = (exam.duration_minutes || 45) * 60;
+    const questionLimit = exam.total_questions || 20;
 
     const questionsPick = await db.query(`
          SELECT id
          FROM exam.questions
          WHERE exam_id = $1
          ORDER BY RANDOM()
-         LIMIT 20
-         `, [examId]);
+         LIMIT $2
+         `, [examId, questionLimit]);
 
     const questionIds = questionsPick.rows.map(q => q.id);
 

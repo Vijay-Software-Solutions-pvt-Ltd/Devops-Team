@@ -5,6 +5,7 @@ const auth = require('../../middleware/authMiddleware');
 const { v4: uuidv4 } = require('uuid');
 const fetch = require('node-fetch');
 require('dotenv').config();
+
 async function ensureAttemptOwnership(attemptId, userId) {
   const q = await db.query(
     'SELECT id, user_id, exam_id, started_at_server, allowed_duration, status FROM exam.attempts WHERE id=$1',
@@ -21,6 +22,7 @@ async function ensureAttemptOwnership(attemptId, userId) {
 
   return attempt;
 }
+
 router.post('/start/:examId', auth, async (req, res) => {
   const { examId } = req.params;
 
@@ -33,18 +35,50 @@ router.post('/start/:examId', auth, async (req, res) => {
       return res.status(404).json({ error: 'Exam not found' });
     }
 
+    const activeAttempt = await db.query(`
+    SELECT id, attempt_token, allowed_duration
+    FROM exam.attempts
+    WHERE exam_id=$1 AND user_id=$2 AND status='in_progress'
+    ORDER BY started_at_server DESC
+    LIMIT 1
+    `, [examId, req.user.id]);
+
+    if (activeAttempt.rows[0]) {
+      return res.json({
+        attempt: {
+          id: activeAttempt.rows[0].id,
+          token: activeAttempt.rows[0].attempt_token,
+          allowedDuration: activeAttempt.rows[0].allowed_duration
+        }
+      });
+    }
+
     const exam = examQ.rows[0];
     const id = uuidv4();
     const token = uuidv4();
     const allowedSeconds = (exam.duration_minutes || 45) * 60;
 
+    const questionsPick = await db.query(`
+         SELECT id
+         FROM exam.questions
+         WHERE exam_id = $1
+         ORDER BY RANDOM()
+         LIMIT 20
+         `, [examId]);
+
+    const questionIds = questionsPick.rows.map(q => q.id);
+
+    if (questionIds.length === 0) {
+      return res.status(400).json({ error: 'No questions available for this exam' });
+    }
+
     await db.query(
       `
       INSERT INTO exam.attempts 
-      (id, user_id, exam_id, started_at_server, attempt_token, allowed_duration, status)
-      VALUES ($1,$2,$3,now(),$4,$5,'in_progress')
+      (id, user_id, exam_id, started_at_server, attempt_token, allowed_duration, status, question_ids)
+      VALUES ($1,$2,$3,now(),$4,$5,'in_progress',$6)
       `,
-      [id, req.user.id, examId, token, allowedSeconds]
+      [id, req.user.id, examId, token, allowedSeconds, questionIds]
     );
 
     return res.json({
@@ -55,6 +89,7 @@ router.post('/start/:examId', auth, async (req, res) => {
     return res.status(500).json({ error: 'failed to start attempt' });
   }
 });
+
 router.post('/:attemptId/answer', auth, async (req, res) => {
   const { attemptId } = req.params;
   const { questionId, answerPayload } = req.body;
@@ -125,20 +160,20 @@ router.post('/:attemptId/submit', auth, async (req, res) => {
     for (const row of answersQ.rows) {
       if (row.type === 'mcq') {
         let correct = null;
-if (typeof row.correct_answer === 'string') {
-  const parsed = JSON.parse(row.correct_answer);
-  correct = parsed.correct;
-} else {
-  correct = row.correct_answer?.correct;
-}
+        if (typeof row.correct_answer === 'string') {
+          const parsed = JSON.parse(row.correct_answer);
+          correct = parsed.correct;
+        } else {
+          correct = row.correct_answer?.correct;
+        }
 
         let chosen = null;
-if (typeof row.answer_payload === 'string') {
-  const parsed = JSON.parse(row.answer_payload);
-  chosen = parsed.choice;
-} else {
-  chosen = row.answer_payload?.choice;
-}
+        if (typeof row.answer_payload === 'string') {
+          const parsed = JSON.parse(row.answer_payload);
+          chosen = parsed.choice;
+        } else {
+          chosen = row.answer_payload?.choice;
+        }
 
         const isCorrect = chosen === correct;
         const score = isCorrect ? row.points || 1 : 0;

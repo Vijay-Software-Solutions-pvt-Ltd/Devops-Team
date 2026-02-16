@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const db = require('../../db');
 const auth = require('../../middleware/authMiddleware');
+
 router.get('/assigned', auth, async (req, res) => {
   try {
     if (req.user.role === 'admin') {
@@ -44,6 +45,7 @@ router.get('/assigned', auth, async (req, res) => {
     res.status(500).json({ error: 'failed to fetch exams' });
   }
 });
+
 router.get('/:examId', auth, async (req, res) => {
   const { examId } = req.params;
 
@@ -59,16 +61,37 @@ router.get('/:examId', auth, async (req, res) => {
       return res.status(404).json({ error: 'Exam not found' });
     }
 
+    const attemptQ = await db.query(`
+      SELECT id, question_ids, status
+      FROM exam.attempts
+      WHERE exam_id = $1
+        AND user_id = $2
+        AND status = 'in_progress'
+      ORDER BY started_at_server DESC
+      LIMIT 1
+    `, [examId, req.user.id]);
+
+    if (!attemptQ.rows[0]) {
+      return res.status(400).json({ error: 'No active attempt found. Start exam first.' });
+    }
+
+    const attempt = attemptQ.rows[0];
+
+    if (!attempt.question_ids || attempt.question_ids.length === 0) {
+      return res.status(500).json({ error: 'Attempt has no stored questions' });
+    }
+
     const questionsQ = await db.query(`
       SELECT 
         id, type, difficulty, content, choices, points
       FROM exam.questions
-      WHERE exam_id = $1
-      ORDER BY id ASC
-    `, [examId]);
+      WHERE id = ANY($1)
+      ORDER BY array_position($1, id)
+    `, [attempt.question_ids]);
 
     res.json({
       exam: examQ.rows[0],
+      attemptId: attempt.id,
       questions: questionsQ.rows
     });
   } catch (err) {

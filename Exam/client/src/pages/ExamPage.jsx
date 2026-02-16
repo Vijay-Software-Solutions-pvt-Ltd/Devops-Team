@@ -134,26 +134,27 @@ export default function ExamPage() {
         return;
       }
 
-      const examRes = await api.get(`/user/exams/${id}`);
-      setExam(examRes.data.exam);
-
+      // ✅ ONLY check if attempt exists
       const resume = await api.get(`/user/attempts/my-active/${id}`);
+
       if (resume.data.attempt) {
         const att = resume.data.attempt;
         setAttempt(att);
         setStarted(true);
 
+        // ✅ NOW backend allows this call
+        const qRes = await api.get(`/user/exams/${id}`);
+        setExam(qRes.data.exam);
+        setQuestions(qRes.data.questions);
+
         const startedAt = new Date(att.started_at_server);
         const elapsed = Math.floor((Date.now() - startedAt) / 1000);
         const remaining = Math.max(att.allowed_duration - elapsed, 0);
+
         setRemainingTime(remaining);
-
-        const qRes = await api.get(`/user/exams/${id}`);
-        setQuestions(qRes.data.questions);
-
         startTimer(remaining);
-        // ✅ Camera will be started by separate effect below
       }
+
     } catch (err) {
       console.error("Init failed:", err);
       nav("/login");
@@ -172,13 +173,13 @@ export default function ExamPage() {
       setStarted(true);
 
       const qRes = await api.get(`/user/exams/${id}`);
+      setExam(qRes.data.exam);          // ✅ ADD THIS
       setQuestions(qRes.data.questions);
 
-      const duration = att.allowedDuration || exam.duration_minutes * 60;
+      const duration = att.allowedDuration || qRes.data.exam.duration_minutes * 60;
       setRemainingTime(duration);
       startTimer(duration);
 
-      // ✅ Camera + snapshots will start from the effect below
     } catch (err) {
       console.error(err);
       alert("Failed to start exam: " + (err.message || "Unknown error"));
@@ -196,27 +197,27 @@ export default function ExamPage() {
   }, [started, attempt]);
 
   function startTimer(duration) {
-  if (timerRef.current) clearInterval(timerRef.current);
+    if (timerRef.current) clearInterval(timerRef.current);
 
-  let remaining = Math.max(duration, 0);
-
-  setRemainingTime(remaining);
-
-  timerRef.current = setInterval(() => {
-    remaining = remaining - 1;
-
-    if (remaining <= 0) {
-      clearInterval(timerRef.current);   
-      remaining = 0;                     
-      setRemainingTime(0);
-
-      submitAttempt(true);              
-      return;
-    }
+    let remaining = Math.max(duration, 0);
 
     setRemainingTime(remaining);
-  }, 1000);
-}
+
+    timerRef.current = setInterval(() => {
+      remaining = remaining - 1;
+
+      if (remaining <= 0) {
+        clearInterval(timerRef.current);
+        remaining = 0;
+        setRemainingTime(0);
+
+        submitAttempt(true);
+        return;
+      }
+
+      setRemainingTime(remaining);
+    }, 1000);
+  }
 
   function startSnapshots(attemptId) {
     snapshotRef.current = setInterval(async () => {
@@ -316,7 +317,7 @@ export default function ExamPage() {
     if (!attempt) return;
 
     try {
-     const entries = Object.entries(answers);
+      const entries = Object.entries(answers);
       for (const [qid, payload] of entries) {
         await api
           .post(`/user/attempts/${attempt.id}/answer`, {
@@ -350,7 +351,18 @@ export default function ExamPage() {
     }));
   }
 
-  if (!exam) return <div>Loading...</div>;
+  if (!started && !exam) {
+    return (
+      <div style={pageWrapper}>
+        <div style={startCard}>
+          <h1>Exam</h1>
+          <button onClick={startAttempt} style={startButton}>
+            Begin Exam
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   // ✅ START SCREEN
   if (!started) {

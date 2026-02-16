@@ -71,11 +71,13 @@ router.get('/:examId', auth, async (req, res) => {
       LIMIT 1
     `, [examId, req.user.id]);
 
-    if (!attemptQ.rows[0]) {
-      return res.status(400).json({ error: 'No active attempt found. Start exam first.' });
-    }
+    let attempt = attemptQ.rows[0];
 
-    const attempt = attemptQ.rows[0];
+    if (!attempt) {
+      return res.status(400).json({
+        error: "No active attempt found. Please start the exam first."
+      });
+    }
 
     if (!attempt.question_ids || attempt.question_ids.length === 0) {
       return res.status(500).json({ error: 'Attempt has no stored questions' });

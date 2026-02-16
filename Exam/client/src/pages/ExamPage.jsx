@@ -166,17 +166,41 @@ export default function ExamPage() {
     try {
       await forceFullscreen();
 
+      // Step 1: Start attempt
       const res = await api.post(`/user/attempts/start/${id}`);
-      const att = res.data.attempt;
 
-      setAttempt(att);
+      let attemptOk = null;
+
+      // Step 2: Wait until DB reflects the attempt (Cloud Run delay fix)
+      for (let i = 0; i < 5; i++) {
+        const resume = await api.get(`/user/attempts/my-active/${id}`);
+
+        if (resume.data.attempt) {
+          attemptOk = resume.data.attempt;
+          break;
+        }
+
+        await new Promise((r) => setTimeout(r, 300));
+      }
+
+      if (!attemptOk) {
+        alert("Attempt not created properly. Try again.");
+        return;
+      }
+
+      setAttempt(attemptOk);
       setStarted(true);
 
+      // Step 3: Fetch exam + randomized questions
       const qRes = await api.get(`/user/exams/${id}`);
-      setExam(qRes.data.exam);          // ✅ ADD THIS
+
+      setExam(qRes.data.exam);
       setQuestions(qRes.data.questions);
 
-      const duration = att.allowedDuration || qRes.data.exam.duration_minutes * 60;
+      // Step 4: Timer setup
+      const duration =
+        attemptOk.allowed_duration || qRes.data.exam.duration_minutes * 60;
+
       setRemainingTime(duration);
       startTimer(duration);
 

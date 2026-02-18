@@ -4,7 +4,7 @@ import { Link, useLocation } from 'react-router-dom';
 import {
   FiHome, FiUsers, FiBookOpen, FiLayers, FiLogOut, FiPieChart, FiSettings
 } from "react-icons/fi";
-import img1 from "../resources/img2.jpg";
+import img1 from "../assets/images/img2.jpg";
 
 export default function AdminLayout({ children }) {
   const location = useLocation();

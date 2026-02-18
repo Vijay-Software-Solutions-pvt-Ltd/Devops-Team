@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import api from '../services/api';
+import api from '../../services/api';
 import { FiDownload, FiSearch, FiEye, FiFilter } from 'react-icons/fi';
 
 export default function AdminResults() {

@@ -1,34 +1,39 @@
 // client/src/App.jsx
-import React from "react";
-import { Routes, Route, Link, Navigate, Outlet } from "react-router-dom";
+import React, { Suspense, lazy } from "react";
+import { Routes, Route, Navigate, Outlet } from "react-router-dom";
 
-import Signup from "./pages/Signup";
-import Login from "./pages/Login";
-import LandingPage from "./pages/LandingPage/LandingPage";
-import ExamPage from "./pages/ExamPage";
-import ExamDetails from "./pages/ExamDetails";
-import StudentDashboard from "./pages/StudentDashboard";
-
-import AdminDashboard from "./pages/AdminDashboard";
-import AdminUsers from "./pages/AdminUsers";
-import AdminOrgs from "./pages/AdminOrgs";
-import AdminCreateExam from "./pages/AdminCreateExam";
-import AdminExams from "./pages/AdminExams";
-import AdminEditExam from "./pages/AdminEditExam";
-import AttemptView from "./pages/AttemptView";
-import AdminAttemptDetails from "./pages/AdminAttemptDetails";
-import AdminResults from "./pages/AdminResults";
-import AdminResultDetails from "./pages/AdminResultDetails";
-
-import RequireAdmin from "./components/RequireAdmin";
+// layouts
 import AdminLayout from "./components/AdminLayout";
+import RequireAdmin from "./components/RequireAdmin";
+
+// suspense fallback
+import Loader from "./components/Loader";
+
+// LAZY LOADED COMPONENTS
+const LandingPage = lazy(() => import("./pages/LandingPage/LandingPage"));
+const Signup = lazy(() => import("./pages/auth/Signup"));
+const Login = lazy(() => import("./pages/auth/Login"));
+const ExamPage = lazy(() => import("./pages/student/ExamPage"));
+const ExamDetails = lazy(() => import("./pages/student/ExamDetails"));
+const StudentDashboard = lazy(() => import("./pages/student/StudentDashboard"));
+const AdminDashboard = lazy(() => import("./pages/admin/AdminDashboard"));
+const AdminUsers = lazy(() => import("./pages/admin/AdminUsers"));
+const AdminOrgs = lazy(() => import("./pages/admin/AdminOrgs"));
+const AdminCreateExam = lazy(() => import("./pages/admin/AdminCreateExam"));
+const AdminExams = lazy(() => import("./pages/admin/AdminExams"));
+const AdminEditExam = lazy(() => import("./pages/admin/AdminEditExam"));
+const AttemptView = lazy(() => import("./pages/student/AttemptView"));
+const AdminAttemptDetails = lazy(() => import("./pages/admin/AdminAttemptDetails"));
+const AdminResults = lazy(() => import("./pages/admin/AdminResults"));
+const AdminResultDetails = lazy(() => import("./pages/admin/AdminResultDetails"));
+
 
 // 🔹 Wrapper to apply AdminLayout ONCE for all admin routes
 function AdminWrapper() {
   return (
     <RequireAdmin>
       <AdminLayout>
-        <Outlet />   {/* Child routes render here */}
+        <Outlet /> {/* Child routes render here */}
       </AdminLayout>
     </RequireAdmin>
   );
@@ -36,38 +41,38 @@ function AdminWrapper() {
 
 export default function App() {
   const token = localStorage.getItem("token");
-  const user = JSON.parse(localStorage.getItem("user") || "{}");
 
   return (
     <div className="app">
-
       <main>
-        <Routes>
-          {/* ================= PUBLIC ================= */}
-          <Route path="/" element={<LandingPage />} />
-          <Route path="/login" element={<Login />} />
-          <Route path="/signup" element={<Signup />} />
+        <Suspense fallback={<Loader />}>
+          <Routes>
+            {/* ================= PUBLIC ================= */}
+            <Route path="/" element={<LandingPage />} />
+            <Route path="/login" element={<Login />} />
+            <Route path="/signup" element={<Signup />} />
 
-          {/* ================= STUDENT ROUTES ================= */}
-          <Route path="/student" element={token ? <StudentDashboard /> : <Navigate to="/login" />} />
-          <Route path="/exams/:id" element={<ExamPage />} />
-          <Route path="/exams/:id/details" element={<ExamDetails />} />
+            {/* ================= STUDENT ROUTES ================= */}
+            <Route path="/student" element={token ? <StudentDashboard /> : <Navigate to="/login" />} />
+            <Route path="/exams/:id" element={<ExamPage />} />
+            <Route path="/exams/:id/details" element={<ExamDetails />} />
 
-          {/* ================= ADMIN ROUTES (ONE LAYOUT) ================= */}
-          <Route path="/admin" element={<AdminWrapper />}>
-            <Route index element={<AdminDashboard />} />
-            <Route path="users" element={<AdminUsers />} />
-            <Route path="orgs" element={<AdminOrgs />} />
-            <Route path="exams" element={<AdminExams />} />
-            <Route path="create-exam" element={<AdminCreateExam />} />
-            <Route path="edit-exam/:id" element={<AdminEditExam />} />
-            <Route path="results" element={<AdminResults />} />
-            <Route path="results/:id" element={<AdminResultDetails />} />
-            <Route path="attempt/:id" element={<AttemptView />} />
-            <Route path="/admin/attempt/:attemptId" element={<AdminAttemptDetails />} />
-          </Route>
+            {/* ================= ADMIN ROUTES (ONE LAYOUT) ================= */}
+            <Route path="/admin" element={<AdminWrapper />}>
+              <Route index element={<AdminDashboard />} />
+              <Route path="users" element={<AdminUsers />} />
+              <Route path="orgs" element={<AdminOrgs />} />
+              <Route path="exams" element={<AdminExams />} />
+              <Route path="create-exam" element={<AdminCreateExam />} />
+              <Route path="edit-exam/:id" element={<AdminEditExam />} />
+              <Route path="results" element={<AdminResults />} />
+              <Route path="results/:id" element={<AdminResultDetails />} />
+              <Route path="attempt/:id" element={<AttemptView />} />
+              <Route path="/admin/attempt/:attemptId" element={<AdminAttemptDetails />} />
+            </Route>
 
-        </Routes>
+          </Routes>
+        </Suspense>
       </main>
     </div>
   );

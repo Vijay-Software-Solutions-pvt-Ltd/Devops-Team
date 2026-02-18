@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
-import GeometricScene from './3DScene';
+import GeometricScene from './3DScene.jsx';
 
 export default function HeroSection() {
     const [user, setUser] = useState(null);

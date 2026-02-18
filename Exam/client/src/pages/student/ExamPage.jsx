@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef } from "react";
-import api from "../services/api";
+import api from "../../services/api";
 import { useParams, useNavigate } from "react-router-dom";
 import {
   FiClock,
@@ -10,7 +10,7 @@ import {
   FiSend,
   FiCamera,
 } from "react-icons/fi";
-import { storage, ref, uploadString, getDownloadURL } from "../firebaseClient";
+import { storage, ref, uploadString, getDownloadURL } from "../../firebaseClient";
 
 export default function ExamPage() {
   const { id } = useParams();

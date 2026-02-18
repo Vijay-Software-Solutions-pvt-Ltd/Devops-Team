@@ -1,6 +1,6 @@
 // client/src/pages/AdminOrgs.jsx
 import React, { useEffect, useState } from 'react';
-import api from '../services/api';
+import api from '../../services/api';
 import { FiLayers, FiMapPin, FiPlus, FiBriefcase, FiHash, FiEdit, FiTrash2, FiX } from "react-icons/fi";
 
 export default function AdminOrgs() {
@@ -126,33 +126,6 @@ export default function AdminOrgs() {
             <button style={styles.button} onClick={handleSubmit} disabled={loading}>
               {loading ? "Saving..." : (editingOrg ? "Update Organization" : "Create Organization")}
             </button>
-            <div style={styles.gridRow}>
-              <div style={styles.formGroup}>
-                <label style={styles.label}>Organization Name</label>
-                <div style={styles.inputWrapper}>
-                  <span style={styles.inputIcon}><FiBriefcase /></span>
-                  <input
-                    style={styles.input}
-                    placeholder="e.g. Engineering Dept"
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                  />
-                </div>
-              </div>
-
-              <div style={styles.formGroup}>
-                <label style={styles.label}>Location / Address</label>
-                <div style={styles.inputWrapper}>
-                  <span style={styles.inputIcon}><FiMapPin /></span>
-                  <input
-                    style={styles.input}
-                    placeholder="e.g. Building A, Floor 3"
-                    value={address}
-                    onChange={(e) => setAddress(e.target.value)}
-                  />
-                </div>
-              </div>
-            </div>
 
             <div style={styles.formActions}>
               <button style={styles.cancelButton} onClick={() => setShowForm(false)}>Cancel</button>

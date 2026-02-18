@@ -1,6 +1,6 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
-  import logoImg from "../resources/logo.jpg";
+  import logoImg from "../assets/images/logo.jpg";
 
 export default function StudentHeader() {
   const nav = useNavigate();

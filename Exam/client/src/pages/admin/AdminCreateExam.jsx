@@ -1,6 +1,5 @@
-// client/src/pages/AdminCreateExam.jsx
 import React, { useState, useEffect } from 'react';
-import api from '../services/api';
+import api from '../../services/api';
 import { FiPlus, FiTrash2, FiClock, FiCalendar, FiLayers, FiType, FiCode, FiUpload } from 'react-icons/fi';
 
 export default function AdminCreateExam() {

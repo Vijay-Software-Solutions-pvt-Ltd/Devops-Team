@@ -5,6 +5,8 @@ const auth = require('../../middleware/authMiddleware');
 const { v4: uuidv4 } = require('uuid');
 const fetch = require('node-fetch');
 require('dotenv').config();
+const initFirebase = require('../../firebase');
+initFirebase();
 
 async function ensureAttemptOwnership(attemptId, userId) {
   const q = await db.query(
@@ -300,9 +302,6 @@ router.post('/:attemptId/violation', auth, async (req, res) => {
     res.status(500).json({ error: 'failed to log violation' });
   }
 });
-
-// If you still use server-side snapshot upload (base64 -> bucket)
-const bucket = require('../../firebase');
 
 /**
  * Snapshot URL: used by your CURRENT frontend

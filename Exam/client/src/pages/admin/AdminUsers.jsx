@@ -1,6 +1,6 @@
 // client/src/pages/AdminUsers.jsx
 import React, { useEffect, useState } from 'react';
-import api from '../services/api';
+import api from '../../services/api';
 import { FiPlus, FiSearch, FiTrash2, FiCheckCircle, FiXCircle, FiUser, FiUsers, FiEdit, FiX, FiMoreVertical } from "react-icons/fi";
 
 export default function AdminUsers() {
@@ -130,7 +130,6 @@ export default function AdminUsers() {
   return (
     <div style={styles.container}>
 
-      {/* Header */}
       {/* Header */}
       <div style={commonStyles.header}>
         <div>

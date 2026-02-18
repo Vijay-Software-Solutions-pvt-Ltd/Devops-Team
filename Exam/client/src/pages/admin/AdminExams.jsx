@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import api from '../services/api';
+import api from '../../services/api';
 import { Link, useNavigate } from 'react-router-dom';
 import { FiTrash2, FiEdit, FiPlus, FiList } from 'react-icons/fi';
 

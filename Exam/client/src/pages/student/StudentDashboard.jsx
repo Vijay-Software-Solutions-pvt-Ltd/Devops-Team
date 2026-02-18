@@ -1,8 +1,8 @@
 // client/src/pages/StudentDashboard.jsx
 import React, { useEffect, useState } from "react";
-import api from "../services/api";
+import api from "../../services/api";
 import { Link } from "react-router-dom";
-import StudentHeader from "../components/StudentHeader";
+import StudentHeader from "../../components/StudentHeader";
 import { FiClock, FiCalendar, FiBookOpen, FiUser } from "react-icons/fi";
 import styles from "./StudentDashboard.module.css"; // Import the CSS module
 

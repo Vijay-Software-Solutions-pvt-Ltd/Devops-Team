@@ -1,8 +1,8 @@
 // client/src/pages/AttemptView.jsx
 import React, { useEffect, useState } from 'react';
-import api from '../services/api';
+import api from '../../services/api';
 import { useParams } from 'react-router-dom';
-import StudentHeader from "../components/StudentHeader";
+import StudentHeader from "../../components/StudentHeader";
 import { FiUser, FiCode, FiActivity, FiCamera, FiBarChart2 } from "react-icons/fi";
 
 export default function AttemptView() {

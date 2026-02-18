@@ -1,8 +1,8 @@
 // client/src/pages/ExamDetails.jsx
 import React, { useEffect, useState } from 'react';
-import api from '../services/api';
+import api from '../../services/api';
 import { useParams, useNavigate } from 'react-router-dom';
-import StudentHeader from "../components/StudentHeader";
+import StudentHeader from "../../components/StudentHeader";
 
 export default function ExamDetails() {
   const { id } = useParams();

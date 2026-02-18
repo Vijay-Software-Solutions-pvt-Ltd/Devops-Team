@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import api from '../services/api';
+import api from '../../services/api';
 import { FiArrowLeft, FiCheck, FiX, FiClock, FiUser, FiAward, FiDownload } from 'react-icons/fi';
 import { toPng } from 'html-to-image';
 import { jsPDF } from 'jspdf';

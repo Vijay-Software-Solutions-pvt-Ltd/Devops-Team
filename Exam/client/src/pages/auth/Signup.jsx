@@ -1,8 +1,8 @@
 import React, { useState } from "react";
-import api from "../services/api";
+import api from "../../services/api";
 import { Link, useNavigate } from "react-router-dom";
-import "../pages/signup.css"; // reuse same CSS for consistency
-import img2 from "../resources/logo.png";
+import "../../assets/css/signup.css"; // reuse same CSS for consistency
+import img2 from "../../assets/images/logo.png";
 
 export default function Signup() {
   const nav = useNavigate();

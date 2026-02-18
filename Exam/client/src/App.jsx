@@ -4,6 +4,7 @@ import { Routes, Route, Link, Navigate, Outlet } from "react-router-dom";
 
 import Signup from "./pages/Signup";
 import Login from "./pages/Login";
+import LandingPage from "./pages/LandingPage/LandingPage";
 import ExamPage from "./pages/ExamPage";
 import ExamDetails from "./pages/ExamDetails";
 import StudentDashboard from "./pages/StudentDashboard";
@@ -16,6 +17,8 @@ import AdminExams from "./pages/AdminExams";
 import AdminEditExam from "./pages/AdminEditExam";
 import AttemptView from "./pages/AttemptView";
 import AdminAttemptDetails from "./pages/AdminAttemptDetails";
+import AdminResults from "./pages/AdminResults";
+import AdminResultDetails from "./pages/AdminResultDetails";
 
 import RequireAdmin from "./components/RequireAdmin";
 import AdminLayout from "./components/AdminLayout";
@@ -41,23 +44,12 @@ export default function App() {
       <main>
         <Routes>
           {/* ================= PUBLIC ================= */}
+          <Route path="/" element={<LandingPage />} />
           <Route path="/login" element={<Login />} />
           <Route path="/signup" element={<Signup />} />
 
-          {/* ================= ROOT REDIRECT ================= */}
-          <Route
-            path="/"
-            element={
-              !token
-                ? <Navigate to="/login" />
-                : user.role === "admin"
-                  ? <Navigate to="/admin" />
-                  : <Navigate to="/student" />
-            }
-          />
-
           {/* ================= STUDENT ROUTES ================= */}
-          <Route path="/student" element={<StudentDashboard />} />
+          <Route path="/student" element={token ? <StudentDashboard /> : <Navigate to="/login" />} />
           <Route path="/exams/:id" element={<ExamPage />} />
           <Route path="/exams/:id/details" element={<ExamDetails />} />
 
@@ -69,6 +61,8 @@ export default function App() {
             <Route path="exams" element={<AdminExams />} />
             <Route path="create-exam" element={<AdminCreateExam />} />
             <Route path="edit-exam/:id" element={<AdminEditExam />} />
+            <Route path="results" element={<AdminResults />} />
+            <Route path="results/:id" element={<AdminResultDetails />} />
             <Route path="attempt/:id" element={<AttemptView />} />
             <Route path="/admin/attempt/:attemptId" element={<AdminAttemptDetails />} />
           </Route>

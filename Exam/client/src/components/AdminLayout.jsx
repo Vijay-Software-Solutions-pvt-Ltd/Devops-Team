@@ -2,7 +2,7 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import {
-  FiHome, FiUsers, FiBookOpen, FiLayers, FiLogOut
+  FiHome, FiUsers, FiBookOpen, FiLayers, FiLogOut, FiPieChart, FiSettings
 } from "react-icons/fi";
 import img1 from "../resources/img2.jpg";
 
@@ -16,172 +16,94 @@ export default function AdminLayout({ children }) {
     window.location.reload();
   }
 
+  const menuItems = [
+    { to: "/admin", label: "Dashboard", icon: <FiHome /> },
+    { to: "/admin/orgs", label: "Organizations", icon: <FiLayers /> },
+    { to: "/admin/users", label: "Users", icon: <FiUsers /> },
+    { to: "/admin/exams", label: "Exams", icon: <FiBookOpen /> },
+    { to: "/admin/create-exam", label: "Create Exam", icon: <FiBookOpen /> },
+    { to: "/admin/results", label: "Results", icon: <FiPieChart /> },
+  ];
+
   return (
-    <div style={container}>
+    <div className="min-h-screen bg-slate-50 flex flex-col">
 
       {/* ===== TOP HEADER ===== */}
-      <header style={header}>
-        <img
-          src={img1}
-          alt="Logo"
-          className="login-logo"
-          style={{ height: "40px", width: "30%", marginLeft: "1px", marginTop: '12px' }} />
-        <button style={logoutBtn} onClick={handleLogout}>
-          <FiLogOut style={{ marginRight: 6 }} />
-          Logout
+      <header className="h-16 bg-white border-b border-slate-200 fixed w-full top-0 z-30 flex items-center justify-between px-6 shadow-sm">
+        <div className="flex items-center">
+          {/* Logo area - adjusting to look better */}
+          <div className="flex items-center gap-3">
+            <img
+              src={img1}
+              alt="Logo"
+              className="h-10 w-auto object-contain"
+            />
+            <span className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-700 to-indigo-700 hidden md:block">
+              VIJAY SOFTWARE SOLUTION
+            </span>
+          </div>
+        </div>
+
+        <button
+          onClick={handleLogout}
+          className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium transition-colors shadow-sm"
+        >
+          <FiLogOut className="w-4 h-4" />
+          <span>Logout</span>
         </button>
       </header>
 
       {/* ===== BODY AREA (Sidebar + Content) ===== */}
-      <div style={bodyWrapper}>
+      <div className="flex pt-16 h-screen overflow-hidden">
 
         {/* === SIDEBAR === */}
-        <aside style={sidebar}>
-          <div style={brand}>Admin Menu</div>
+        <aside className="w-64 bg-white border-r border-slate-200 hidden md:flex flex-col flex-shrink-0 z-20">
+          <div className="p-6">
+            <h2 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-4">
+              Admin Menu
+            </h2>
+            <nav className="space-y-1">
+              {menuItems.map((item) => {
+                const isActive = location.pathname === item.to;
+                return (
+                  <Link
+                    key={item.to}
+                    to={item.to}
+                    className={`flex items-center px-4 py-3 text-sm font-medium rounded-xl transition-all duration-200 group ${isActive
+                        ? 'bg-blue-50 text-blue-700 shadow-sm'
+                        : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
+                      }`}
+                  >
+                    <span className={`mr-3 text-lg ${isActive ? 'text-blue-600' : 'text-slate-400 group-hover:text-slate-600'}`}>
+                      {item.icon}
+                    </span>
+                    {item.label}
+                  </Link>
+                )
+              })}
+            </nav>
+          </div>
 
-          <nav style={nav}>
-            <MenuItem
-              to="/admin"
-              label="Dashboard"
-              icon={<FiHome />}
-              active={location.pathname === "/admin"}
-            />
-
-            <MenuItem
-              to="/admin/orgs"
-              label="Organizations"
-              icon={<FiLayers />}
-              active={location.pathname === "/admin/orgs"}
-            />
-
-            <MenuItem
-              to="/admin/users"
-              label="Users"
-              icon={<FiUsers />}
-              active={location.pathname === "/admin/users"}
-            />
-
-            <MenuItem
-              to="/admin/exams"
-              label="Exams"
-              icon={<FiBookOpen />}
-              active={location.pathname === "/admin/exams"}
-            />
-
-            <MenuItem
-              to="/admin/create-exam"
-              label="Create Exam"
-              icon={<FiBookOpen />}
-              active={location.pathname === "/admin/create-exam"}
-            />
-          </nav>
+          <div className="mt-auto p-6 border-t border-slate-100">
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-bold">
+                A
+              </div>
+              <div>
+                <p className="text-sm font-medium text-slate-900">Admin User</p>
+                <p className="text-xs text-slate-500">master admin</p>
+              </div>
+            </div>
+          </div>
         </aside>
 
         {/* === MAIN CONTENT === */}
-        <main style={mainContent}>
-          {children}
+        <main className="flex-1 overflow-y-auto bg-slate-50 relative scroll-smooth">
+          <div className="w-full">
+            {children}
+          </div>
         </main>
       </div>
     </div>
   );
 }
-
-/* ===== MENU ITEM COMPONENT ===== */
-function MenuItem({ to, label, icon, active }) {
-  return (
-    <Link
-      to={to}
-      style={{
-        ...menuItem,
-        background: active ? '#2563eb' : 'transparent',
-        color: active ? '#ffffff' : '#1e293b'
-      }}
-    >
-      <span style={{ marginRight: 12 }}>{icon}</span>
-      {label}
-    </Link>
-  );
-}
-
-/* ===== STYLES ===== */
-
-const container = {
-  height: '100vh',
-  width: '100%',
-  display: 'flex',
-  flexDirection: 'column',
-  background: '#f1f5f9',
-};
-
-const header = {
-  height: '50px',
-  width: '100%',
-  background: '#ffffff',
-  display: 'flex',
-  alignItems: 'center',
-  justifyContent: 'space-between',
-  padding: '0 24px',
-  borderBottom: '1px solid #e5e7eb',
-  boxShadow: '0 2px 6px rgba(0,0,0,0.05)',
-  zIndex: 10,
-  position: 'fixed',
-};
-
-const logoutBtn = {
-  display: 'flex',
-  alignItems: 'center',
-  background: '#2563eb',
-  color: '#ffffff',
-  border: 'none',
-  borderRadius: '10px',
-  padding: '8px 16px',
-  fontWeight: '600',
-  cursor: 'pointer',
-  marginRight: '50px'
-};
-
-const bodyWrapper = {
-  display: 'flex',
-  flex: 1,
-  marginTop: '50px',
-  height: 'calc(100vh - 50px)'
-};
-
-const sidebar = {
-  width: '180px',
-  background: 'linear-gradient(180deg, #eaf2ff, #deeaff)',
-  padding: '24px',
-  boxShadow: '2px 0px 12px rgba(0,0,0,0.05)',
-  overflowY: 'auto'
-};
-
-const brand = {
-  fontSize: '20px',
-  fontWeight: '800',
-  color: '#1e3a8a',
-  marginBottom: '10px'
-};
-
-const nav = {
-  display: 'flex',
-  flexDirection: 'column',
-  gap: '8px'
-};
-
-const menuItem = {
-  display: 'flex',
-  alignItems: 'center',
-  padding: '12px 14px',
-  borderRadius: '12px',
-  fontWeight: 500,
-  textDecoration: 'none',
-  transition: 'all 0.2s ease'
-};
-
-const mainContent = {
-  flex: 1,
-  padding: '1px',
-  background: '#f6f9fd',
-  overflowY: 'auto',
-  position: 'relative'
-};

@@ -12,6 +12,7 @@ const adminExamsRoutes = require("./routes/admin/admin_exams");
 const adminUsersRoutes = require("./routes/admin/admin_users");
 const adminReportsRoutes = require("./routes/admin/admin_reports");
 const orgRoutes = require("./routes/admin/admin_orgs");
+const adminResultsRoutes = require("./routes/admin/admin_results");
 
 const app = express();
 const PORT = process.env.PORT || 8080;
@@ -69,6 +70,7 @@ app.use("/admin/exams", adminExamsRoutes);
 app.use("/admin/users", adminUsersRoutes);
 app.use("/admin/reports", adminReportsRoutes);
 app.use("/admin/orgs", orgRoutes);
+app.use("/admin/results", adminResultsRoutes);
 app.use("/public/orgs", require("./routes/public_orgs"));
 
 // START

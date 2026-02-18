@@ -1,33 +1,28 @@
-html, body {
+@import "tailwindcss";
+
+html,
+body {
   margin: 0;
   padding: 0;
   height: 100%;
 }
 
-/* Sidebar Hover Effects */
-a {
+/* Card hover utility */
+.card-hover {
   transition: all 0.2s ease;
 }
 
-a:hover {
-  background-color: rgba(37,99,235,0.85) !important;
-  color: #fff !important;
-  transform: translateX(4px);
-}
-
-/* Logout hover */
-button:hover {
-  opacity: 0.9;
-  transform: translateY(-1px);
-}
-
-/* Card hover */
-.card, 
-div[style*="boxShadow"] {
-  transition: all 0.2s ease;
-}
-.card:hover,
-div[style*="boxShadow"]:hover {
+.card-hover:hover {
   transform: translateY(-2px);
-  box-shadow: 0 16px 30px rgba(0,0,0,.06);
+  box-shadow: 0 16px 30px rgba(0, 0, 0, .06);
+}
+
+/* Retaining previous card style if used directly by class="card" */
+.card {
+  transition: all 0.2s ease;
+}
+
+.card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 16px 30px rgba(0, 0, 0, .06);
 }

@@ -9,7 +9,7 @@
              rgba(82, 137, 239, 0.799),
              rgba(30, 77, 158, 0.865),
              rgba(242, 65, 42, 0.849)),
-         url("../resources/onlineexambackground.jpeg");
+         url("../images/onlineexambackground.jpeg");
 
      background-size: cover;
      background-position: center;
@@ -36,7 +36,7 @@
  /* Left Panel */
  .login-left {
      flex: 1;
-     background: url("../resources/img1.png") center/cover no-repeat;
+     background: url("../images/img1.png") center/cover no-repeat;
      position: relative;
  }
 
@@ -112,14 +112,15 @@
 
  /* Inputs */
  .form-group {
-     margin-bottom: 1px;
+     margin-bottom: 15px;
      text-align: left;
  }
 
  .form-group label {
-     font-size: 15px bold;
+     font-size: 15px;
+     font-weight: bold;
      color: #000000;
-     margin-bottom: 5px;
+     margin-bottom: 8px;
      display: block;
  }
 
@@ -127,13 +128,13 @@
      width: 100%;
      padding: 10px 12px;
      border-radius: 10px;
-     border: 1px solid #cbd5f5;
+     border: 2px solid #ccc;
      outline: none;
      font-size: 14px;
  }
 
  .form-group input:focus {
-     border-color: #2563eb;
+     border-color: #0f275c;
  }
 
  /* Button */
@@ -153,3 +154,8 @@
  .login-btn:hover {
      background: #1d4ed8;
  }
+
+ .signup-link:hover {
+  text-decoration: underline;
+  color: #1d4ed8;
+}

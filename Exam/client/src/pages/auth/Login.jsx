@@ -44,7 +44,7 @@ export default function Login() {
         {/* Right Side */}
         <div className="login-right">
           <div className="login-card">
-            <h2 className="logo-text">LOGIN</h2>
+            <h2 className="logo-text" style={{ color: '#1E90FF', textShadow: '2px 2px 4px #000000' }}>LOGIN</h2>
 
             <form onSubmit={handleLogin}>
               <div className="form-group">

@@ -61,7 +61,7 @@ export default function Signup() {
         {/* Right Side */}
         <div className="login-right">
           <div className="login-card">
-            <h2 className="logo-text">SIGN UP</h2>
+            <h2 className="logo-text" style={{ color: '#1E90FF', textShadow: '2px 2px 4px #000000' }}>SIGN UP</h2>
 
             <form onSubmit={handleSignup}>
 

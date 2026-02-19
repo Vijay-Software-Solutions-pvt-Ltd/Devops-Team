@@ -1,7 +1,8 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, Suspense, lazy } from 'react';
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
-import GeometricScene from './3DScene.jsx';
+
+const GeometricScene = lazy(() => import('./3DScene.jsx'));
 
 export default function HeroSection() {
     const [user, setUser] = useState(null);
@@ -13,7 +14,9 @@ export default function HeroSection() {
 
     return (
         <div className="relative h-screen min-h-[600px] w-full bg-gradient-to-br from-slate-900 via-indigo-950 to-black overflow-hidden flex items-center justify-center">
-            <GeometricScene />
+            <Suspense fallback={null}>
+                <GeometricScene />
+            </Suspense>
 
             <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
                 <motion.div

@@ -1,11 +1,13 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, Suspense, lazy } from 'react';
 import Navbar from '../../components/landing/Navbar';
 import HeroSection from '../../components/landing/HeroSection';
-import VideoSection from '../../components/landing/VideoSection';
-import FeaturesSection from '../../components/landing/FeaturesSection';
-import PricingSection from '../../components/landing/PricingSection';
-import ProposalDetails from '../../components/landing/ProposalDetails';
 import Footer from '../../components/landing/Footer';
+import Loader from '../../components/Loader';
+
+const VideoSection = lazy(() => import('../../components/landing/VideoSection'));
+const FeaturesSection = lazy(() => import('../../components/landing/FeaturesSection'));
+const PricingSection = lazy(() => import('../../components/landing/PricingSection'));
+const ProposalDetails = lazy(() => import('../../components/landing/ProposalDetails'));
 
 export default function LandingPage() {
 
@@ -42,10 +44,12 @@ export default function LandingPage() {
             <Navbar />
             <main>
                 <HeroSection />
-                <VideoSection />
-                <FeaturesSection />
-                <PricingSection />
-                <ProposalDetails />
+                <Suspense fallback={<Loader />}>
+                    <VideoSection />
+                    <FeaturesSection />
+                    <PricingSection />
+                    <ProposalDetails />
+                </Suspense>
             </main>
             <Footer />
         </div>

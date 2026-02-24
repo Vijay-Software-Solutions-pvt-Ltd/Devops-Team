@@ -1,0 +1,27 @@
+import{j as e}from"./index-DyprfCce.js";import{c as o,m as i}from"./LandingPage-B6UUFjV5.js";import{S as a,Z as n}from"./zap-DzkVyqPg.js";import{L as l}from"./lock-CpJYbk0h.js";/**
+ * @license lucide-react v0.562.0 - ISC
+ *
+ * This source code is licensed under the ISC license.
+ * See the LICENSE file in the root directory of this source tree.
+ */const r=[["path",{d:"M5 21v-6",key:"1hz6c0"}],["path",{d:"M12 21V3",key:"1lcnhd"}],["path",{d:"M19 21V9",key:"unv183"}]],c=o("chart-no-axes-column",r);/**
+ * @license lucide-react v0.562.0 - ISC
+ *
+ * This source code is licensed under the ISC license.
+ * See the LICENSE file in the root directory of this source tree.
+ */const d=[["path",{d:"m16 18 6-6-6-6",key:"eg8j8"}],["path",{d:"m8 6-6 6 6 6",key:"ppft3o"}]],m=o("code",d);/**
+ * @license lucide-react v0.562.0 - ISC
+ *
+ * This source code is licensed under the ISC license.
+ * See the LICENSE file in the root directory of this source tree.
+ */const p=[["circle",{cx:"12",cy:"12",r:"10",key:"1mglay"}],["path",{d:"M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20",key:"13o1zl"}],["path",{d:"M2 12h20",key:"9i4pu4"}]],h=o("globe",p);/**
+ * @license lucide-react v0.562.0 - ISC
+ *
+ * This source code is licensed under the ISC license.
+ * See the LICENSE file in the root directory of this source tree.
+ */const x=[["rect",{width:"20",height:"14",x:"2",y:"3",rx:"2",key:"48i651"}],["line",{x1:"8",x2:"16",y1:"21",y2:"21",key:"1svkeh"}],["line",{x1:"12",x2:"12",y1:"17",y2:"21",key:"vw1qmm"}]],g=o("monitor",x);/**
+ * @license lucide-react v0.562.0 - ISC
+ *
+ * This source code is licensed under the ISC license.
+ * See the LICENSE file in the root directory of this source tree.
+ */const u=[["rect",{width:"14",height:"20",x:"5",y:"2",rx:"2",ry:"2",key:"1yt0o3"}],["path",{d:"M12 18h.01",key:"mhygvu"}]],y=o("smartphone",u),b=[{title:"AI Proctoring",description:"Advanced AI monitors behavior, detecting suspicious activities like tab switching, multiple faces, or absence.",icon:a,color:"text-rose-500",bg:"bg-rose-500/10"},{title:"Advanced Analytics",description:"Deep dive into student performance with topic-wise heatmaps, time analysis, and growth tracking.",icon:c,color:"text-blue-500",bg:"bg-blue-500/10"},{title:"Mobile Accessibility",description:"Optimized for all devices. Students can take exams on smartphones, tablets, or laptops seamlessly.",icon:y,color:"text-amber-500",bg:"bg-amber-500/10"},{title:"White Labeling",description:"Your brand, your portal. Custom domains, logos, and color themes to match your institution's identity.",icon:g,color:"text-purple-500",bg:"bg-purple-500/10"},{title:"Coding Assessments",description:"Integrated compiler supporting multiple languages for technical assessments and automated grading.",icon:m,color:"text-emerald-500",bg:"bg-emerald-500/10"},{title:"Scalable Infrastructure",description:"cloud-native architecture ensures stability even with thousands of concurrent test-takers.",icon:n,color:"text-yellow-500",bg:"bg-yellow-500/10"},{title:"Global Reach",description:"Low-latency connections through CDNs ensure students anywhere in the world have a smooth experience.",icon:h,color:"text-cyan-500",bg:"bg-cyan-500/10"},{title:"Enterprise Security",description:"Data encryption at rest and in transit, GDPR compliance, and role-based access control.",icon:l,color:"text-slate-500",bg:"bg-slate-500/10"}];function N(){return e.jsxs("section",{id:"features",className:"py-24 bg-slate-50 relative overflow-hidden",children:[e.jsx("div",{className:"absolute top-0 right-0 -mr-20 -mt-20 w-96 h-96 bg-blue-100 rounded-full blur-3xl opacity-50"}),e.jsx("div",{className:"absolute bottom-0 left-0 -ml-20 -mb-20 w-96 h-96 bg-purple-100 rounded-full blur-3xl opacity-50"}),e.jsxs("div",{className:"max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10",children:[e.jsxs("div",{className:"text-center mb-20",children:[e.jsx(i.h2,{initial:{opacity:0,y:20},whileInView:{opacity:1,y:0},transition:{duration:.5},className:"text-base font-bold text-blue-600 tracking-widest uppercase",children:"Why Choose Us"}),e.jsxs(i.p,{initial:{opacity:0,y:20},whileInView:{opacity:1,y:0},transition:{duration:.5,delay:.1},className:"mt-3 text-4xl leading-tight font-extrabold tracking-tight text-slate-900 sm:text-5xl",children:["A Complete Ecosystem for ",e.jsx("span",{className:"text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-600",children:"Digital Assessments"})]}),e.jsx("p",{className:"mt-4 max-w-2xl text-xl text-slate-500 mx-auto",children:"Powerful tools designed to simplify the examination lifecycle, from creation to certification."})]}),e.jsx("div",{className:"grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8",children:b.map((t,s)=>e.jsxs(i.div,{initial:{opacity:0,y:30},whileInView:{opacity:1,y:0},transition:{duration:.5,delay:s*.1},whileHover:{y:-5,transition:{duration:.2}},className:"bg-white p-8 rounded-3xl shadow-sm hover:shadow-xl transition-all border border-slate-100 group",children:[e.jsx("div",{className:`w-14 h-14 rounded-2xl flex items-center justify-center mb-6 ${t.bg} ${t.color} group-hover:scale-110 transition-transform duration-300`,children:e.jsx(t.icon,{className:"w-7 h-7"})}),e.jsx("h3",{className:"text-xl font-bold text-slate-900 mb-3 group-hover:text-blue-600 transition-colors",children:t.title}),e.jsx("p",{className:"text-slate-600 text-sm leading-relaxed",children:t.description})]},t.title))})]})]})}export{N as default};
+//# sourceMappingURL=FeaturesSection-BlNzPzDw.js.map

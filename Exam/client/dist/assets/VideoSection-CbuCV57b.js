@@ -1,0 +1,22 @@
+import{r as l,j as e}from"./index-DyprfCce.js";import{c as s,m as d}from"./LandingPage-B6UUFjV5.js";/**
+ * @license lucide-react v0.562.0 - ISC
+ *
+ * This source code is licensed under the ISC license.
+ * See the LICENSE file in the root directory of this source tree.
+ */const u=[["rect",{x:"14",y:"3",width:"5",height:"18",rx:"1",key:"kaeet6"}],["rect",{x:"5",y:"3",width:"5",height:"18",rx:"1",key:"1wsw3u"}]],x=s("pause",u);/**
+ * @license lucide-react v0.562.0 - ISC
+ *
+ * This source code is licensed under the ISC license.
+ * See the LICENSE file in the root directory of this source tree.
+ */const m=[["path",{d:"M5 5a2 2 0 0 1 3.008-1.728l11.997 6.998a2 2 0 0 1 .003 3.458l-12 7A2 2 0 0 1 5 19z",key:"10ikf1"}]],p=s("play",m);/**
+ * @license lucide-react v0.562.0 - ISC
+ *
+ * This source code is licensed under the ISC license.
+ * See the LICENSE file in the root directory of this source tree.
+ */const h=[["path",{d:"M11 4.702a.705.705 0 0 0-1.203-.498L6.413 7.587A1.4 1.4 0 0 1 5.416 8H3a1 1 0 0 0-1 1v6a1 1 0 0 0 1 1h2.416a1.4 1.4 0 0 1 .997.413l3.383 3.384A.705.705 0 0 0 11 19.298z",key:"uqj9uw"}],["path",{d:"M16 9a5 5 0 0 1 0 6",key:"1q6k2b"}],["path",{d:"M19.364 18.364a9 9 0 0 0 0-12.728",key:"ijwkga"}]],y=s("volume-2",h);/**
+ * @license lucide-react v0.562.0 - ISC
+ *
+ * This source code is licensed under the ISC license.
+ * See the LICENSE file in the root directory of this source tree.
+ */const b=[["path",{d:"M11 4.702a.705.705 0 0 0-1.203-.498L6.413 7.587A1.4 1.4 0 0 1 5.416 8H3a1 1 0 0 0-1 1v6a1 1 0 0 0 1 1h2.416a1.4 1.4 0 0 1 .997.413l3.383 3.384A.705.705 0 0 0 11 19.298z",key:"uqj9uw"}],["line",{x1:"22",x2:"16",y1:"9",y2:"15",key:"1ewh16"}],["line",{x1:"16",x2:"22",y1:"9",y2:"15",key:"5ykzw1"}]],g=s("volume-x",b);function v(){const t=l.useRef(null),[a,r]=l.useState(!0),[o,i]=l.useState(!0),c=()=>{t.current&&(a?t.current.pause():t.current.play(),r(!a))},n=()=>{t.current&&(t.current.muted=!o,i(!o))};return e.jsx("section",{className:"py-24 bg-slate-50 overflow-hidden",children:e.jsx("div",{className:"max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center",children:e.jsxs(d.div,{initial:{opacity:0,y:30},whileInView:{opacity:1,y:0},transition:{duration:.8},className:"relative z-10",children:[e.jsx("h2",{className:"text-base text-blue-600 font-semibold tracking-wide uppercase mb-2",children:"Exam Process Walkthrough"}),e.jsx("h3",{className:"text-3xl md:text-5xl font-extrabold text-slate-900 mb-8",children:"Experience the Seamless Exam Interface"}),e.jsxs("div",{className:"relative w-full max-w-5xl mx-auto aspect-video rounded-2xl overflow-hidden shadow-2xl border border-slate-200 bg-slate-900 group",children:[e.jsxs("div",{className:"absolute top-0 left-0 right-0 h-8 bg-slate-800 flex items-center px-4 space-x-2 z-20",children:[e.jsx("div",{className:"w-3 h-3 rounded-full bg-red-500/80"}),e.jsx("div",{className:"w-3 h-3 rounded-full bg-yellow-500/80"}),e.jsx("div",{className:"w-3 h-3 rounded-full bg-green-500/80"}),e.jsx("div",{className:"flex-1 text-center",children:e.jsx("span",{className:"text-xs text-slate-400 font-mono",children:"exam.gmakup.com/attempt/123"})})]}),e.jsxs("video",{ref:t,className:"w-full h-full object-cover pt-8 bg-slate-900",autoPlay:!0,loop:!0,muted:!0,playsInline:!0,poster:"/videos/poster.jpg",children:[e.jsx("source",{src:"/videos/exam-process.mp4",type:"video/mp4"}),e.jsx("source",{src:"https://cdn.coverr.co/videos/coverr-typing-on-computer-keyboard-5169/1080p.mp4",type:"video/mp4"}),"Your browser does not support the video tag."]}),e.jsxs("div",{className:"absolute bottom-0 left-0 right-0 p-6 bg-gradient-to-t from-black/80 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-between",children:[e.jsx("button",{onClick:c,className:"p-3 rounded-full bg-white/20 hover:bg-white/30 backdrop-blur-sm text-white transition-all",children:a?e.jsx(x,{className:"w-6 h-6"}):e.jsx(p,{className:"w-6 h-6 fill-current"})}),e.jsx("button",{onClick:n,className:"p-3 rounded-full bg-white/20 hover:bg-white/30 backdrop-blur-sm text-white transition-all",children:o?e.jsx(g,{className:"w-6 h-6"}):e.jsx(y,{className:"w-6 h-6"})})]})]}),e.jsx("div",{className:"absolute -inset-4 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-2xl blur-2xl opacity-20 -z-10 transform scale-95 translate-y-4"})]})})})}export{v as default};
+//# sourceMappingURL=VideoSection-CbuCV57b.js.map

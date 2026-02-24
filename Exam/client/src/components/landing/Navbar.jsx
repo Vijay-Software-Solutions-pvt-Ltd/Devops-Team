@@ -30,8 +30,8 @@ export default function Navbar() {
                                     key={item}
                                     href={`#${item.toLowerCase()}`}
                                     className={`px-3 py-2 rounded-md text-sm font-semibold transition-colors duration-300 ${scrolled
-                                            ? 'text-slate-600 hover:text-blue-600'
-                                            : 'text-slate-300 hover:text-white'
+                                        ? 'text-slate-600 hover:text-blue-600'
+                                        : 'text-slate-300 hover:text-white'
                                         }`}
                                 >
                                     {item}
@@ -40,8 +40,8 @@ export default function Navbar() {
                             <Link
                                 to="/login"
                                 className={`px-3 py-2 rounded-md text-sm font-semibold transition-colors duration-300 ${scrolled
-                                        ? 'text-blue-600 hover:text-blue-700'
-                                        : 'text-white hover:text-blue-200'
+                                    ? 'text-blue-600 hover:text-blue-700'
+                                    : 'text-white hover:text-blue-200'
                                     }`}
                             >
                                 Login
@@ -49,8 +49,8 @@ export default function Navbar() {
                             <Link
                                 to="/signup"
                                 className={`px-5 py-2.5 rounded-full text-sm font-bold transition-all shadow-lg transform hover:-translate-y-0.5 ${scrolled
-                                        ? 'bg-blue-600 text-white hover:bg-blue-700 hover:shadow-blue-600/30'
-                                        : 'bg-white text-blue-600 hover:bg-blue-50 hover:shadow-white/20'
+                                    ? 'bg-blue-600 text-white hover:bg-blue-700 hover:shadow-blue-600/30'
+                                    : 'bg-white text-blue-600 hover:bg-blue-50 hover:shadow-white/20'
                                     }`}
                             >
                                 Sign Up

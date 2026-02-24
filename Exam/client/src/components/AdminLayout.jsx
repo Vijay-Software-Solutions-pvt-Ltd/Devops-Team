@@ -16,7 +16,11 @@ export default function AdminLayout({ children }) {
     window.location.reload();
   }
 
-  const menuItems = [
+  const userRaw = localStorage.getItem("user");
+  const user = userRaw ? JSON.parse(userRaw) : null;
+  const isSuperadmin = user?.role === 'superadmin';
+
+  let menuItems = [
     { to: "/admin", label: "Dashboard", icon: <FiHome /> },
     { to: "/admin/orgs", label: "Organizations", icon: <FiLayers /> },
     { to: "/admin/users", label: "Users", icon: <FiUsers /> },
@@ -24,6 +28,10 @@ export default function AdminLayout({ children }) {
     { to: "/admin/create-exam", label: "Create Exam", icon: <FiBookOpen /> },
     { to: "/admin/results", label: "Results", icon: <FiPieChart /> },
   ];
+
+  if (!isSuperadmin) {
+    menuItems = menuItems.filter(item => item.to !== '/admin/orgs');
+  }
 
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col">
@@ -33,14 +41,14 @@ export default function AdminLayout({ children }) {
         <div className="flex items-center">
           {/* Logo area - adjusting to look better */}
           <div className="flex items-center gap-3">
-            <img
-              src={img1}
-              alt="Logo"
-              className="h-10 w-auto object-contain"
-            />
-            <span className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-700 to-indigo-700 hidden md:block">
-              VIJAY SOFTWARE SOLUTION
-            </span>
+            <div className="flex flex-col hidden md:flex">
+              <span className="text-xl font-bold text-slate-800 tracking-tight leading-tight">
+                ExamPortal
+              </span>
+              <span className="text-[10px] text-slate-500 font-semibold tracking-wider uppercase leading-tight">
+                Powered by Vijay Software
+              </span>
+            </div>
           </div>
         </div>
 
@@ -70,8 +78,8 @@ export default function AdminLayout({ children }) {
                     key={item.to}
                     to={item.to}
                     className={`flex items-center px-4 py-3 text-sm font-medium rounded-xl transition-all duration-200 group ${isActive
-                        ? 'bg-blue-50 text-blue-700 shadow-sm'
-                        : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
+                      ? 'bg-blue-50 text-blue-700 shadow-sm'
+                      : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
                       }`}
                   >
                     <span className={`mr-3 text-lg ${isActive ? 'text-blue-600' : 'text-slate-400 group-hover:text-slate-600'}`}>
@@ -86,12 +94,14 @@ export default function AdminLayout({ children }) {
 
           <div className="mt-auto p-6 border-t border-slate-100">
             <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-bold">
-                A
+              <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-bold uppercase">
+                {user?.name ? user.name.charAt(0) : 'A'}
               </div>
-              <div>
-                <p className="text-sm font-medium text-slate-900">Admin User</p>
-                <p className="text-xs text-slate-500">master admin</p>
+              <div className="flex-1 overflow-hidden">
+                <p className="text-sm font-bold text-slate-900 truncate">{user?.name || 'Administrator'}</p>
+                <p className="text-xs text-slate-500 font-medium truncate uppercase tracking-wider mt-0.5">
+                  {isSuperadmin ? 'Superadmin Global' : 'Org Admin'}
+                </p>
               </div>
             </div>
           </div>

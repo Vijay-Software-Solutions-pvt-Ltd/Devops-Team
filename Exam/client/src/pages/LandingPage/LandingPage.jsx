@@ -44,10 +44,16 @@ export default function LandingPage() {
             <Navbar />
             <main>
                 <HeroSection />
-                <Suspense fallback={<Loader />}>
+                <Suspense fallback={<div className="min-h-[200px] flex items-center justify-center text-gray-400">Loading...</div>}>
                     <VideoSection />
+                </Suspense>
+                <Suspense fallback={<div className="min-h-[200px] flex items-center justify-center text-gray-400">Loading...</div>}>
                     <FeaturesSection />
+                </Suspense>
+                <Suspense fallback={<div className="min-h-[200px] flex items-center justify-center text-gray-400">Loading...</div>}>
                     <PricingSection />
+                </Suspense>
+                <Suspense fallback={<div className="min-h-[200px] flex items-center justify-center text-gray-400">Loading...</div>}>
                     <ProposalDetails />
                 </Suspense>
             </main>

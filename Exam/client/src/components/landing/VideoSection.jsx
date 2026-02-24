@@ -35,10 +35,10 @@ export default function VideoSection() {
                     className="relative z-10"
                 >
                     <h2 className="text-base text-blue-600 font-semibold tracking-wide uppercase mb-2">
-                        Product Walkthrough
+                        Exam Process Walkthrough
                     </h2>
                     <h3 className="text-3xl md:text-5xl font-extrabold text-slate-900 mb-8">
-                        See ExamPortal in Action
+                        Experience the Seamless Exam Interface
                     </h3>
 
                     {/* Video Container - Browser Window Style */}
@@ -50,7 +50,7 @@ export default function VideoSection() {
                             <div className="w-3 h-3 rounded-full bg-yellow-500/80"></div>
                             <div className="w-3 h-3 rounded-full bg-green-500/80"></div>
                             <div className="flex-1 text-center">
-                                <span className="text-xs text-slate-400 font-mono">dashboard.examportal.com</span>
+                                <span className="text-xs text-slate-400 font-mono">exam.gmakup.com/attempt/123</span>
                             </div>
                         </div>
 
@@ -62,9 +62,11 @@ export default function VideoSection() {
                             loop
                             muted
                             playsInline
-                            poster="https://images.unsplash.com/photo-1498050108023-c5249f4df085?ixlib=rb-4.0.3&auto=format&fit=crop&w=2072&q=80"
+                            poster="/videos/poster.jpg"
                         >
-                            {/* Using a reliable tech-related stock video */}
+                            {/* Local video file - User needs to place 'exam-process.mp4' in public/videos/ folder */}
+                            <source src="/videos/exam-process.mp4" type="video/mp4" />
+                            {/* Fallback to online stock video if local is missing */}
                             <source src="https://cdn.coverr.co/videos/coverr-typing-on-computer-keyboard-5169/1080p.mp4" type="video/mp4" />
                             Your browser does not support the video tag.
                         </video>

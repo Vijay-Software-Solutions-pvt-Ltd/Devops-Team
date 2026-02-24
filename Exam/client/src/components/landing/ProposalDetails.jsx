@@ -1,8 +1,11 @@
-import React from 'react';
+import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { FileText, CheckCircle, AlertCircle, Clock, Shield, Lock } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 export default function ProposalDetails() {
+    const navigate = useNavigate();
+    const [signature, setSignature] = useState('');
     const terms = [
         {
             title: 'Payment Terms',
@@ -78,7 +81,13 @@ export default function ProposalDetails() {
                         <h4 className="text-sm font-bold text-slate-400 uppercase tracking-widest mb-6">Authorization</h4>
                         <div className="flex flex-col md:flex-row justify-between gap-12">
                             <div className="border-b-2 border-slate-300 pb-2 w-full md:w-1/2">
-                                <div className="h-10"></div> {/* Signature Space */}
+                                <input
+                                    type="text"
+                                    value={signature}
+                                    onChange={(e) => setSignature(e.target.value)}
+                                    placeholder="Type your name to sign..."
+                                    className="w-full h-10 bg-transparent border-none outline-none font-handwriting text-2xl text-slate-800 placeholder:font-sans placeholder:text-sm placeholder:text-slate-300"
+                                />
                                 <p className="text-xs text-slate-400 font-mono">AUTHORIZED SIGNATURE</p>
                             </div>
                             <div className="border-b-2 border-slate-300 pb-2 w-full md:w-1/2">
@@ -88,10 +97,26 @@ export default function ProposalDetails() {
                                 <p className="text-xs text-slate-400 font-mono">SERVICE PROVIDER</p>
                             </div>
                         </div>
-                        <div className="mt-8 text-center">
-                            <button className="bg-slate-900 text-white px-8 py-3 rounded-lg font-medium hover:bg-slate-800 transition-colors shadow-lg">
+                        <div className="mt-8 text-center flex flex-col items-center">
+                            <button
+                                onClick={() => navigate('/checkout?plan=institutional')}
+                                disabled={!signature.trim()}
+                                className={`px-10 py-3.5 rounded-xl font-bold transition-all ${signature.trim()
+                                        ? 'bg-gradient-to-r from-slate-800 to-slate-900 text-white hover:shadow-xl hover:-translate-y-0.5 shadow-lg'
+                                        : 'bg-slate-200 text-slate-400 cursor-not-allowed border border-slate-300'
+                                    }`}
+                            >
                                 Accept Proposal & Proceed
                             </button>
+                            {!signature.trim() && (
+                                <motion.p
+                                    initial={{ opacity: 0 }}
+                                    animate={{ opacity: 1 }}
+                                    className="text-sm font-medium text-amber-600 mt-3"
+                                >
+                                    Please type your signature above to authorize.
+                                </motion.p>
+                            )}
                         </div>
                     </div>
                 </motion.div>

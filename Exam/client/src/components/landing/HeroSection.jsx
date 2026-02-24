@@ -24,9 +24,7 @@ export default function HeroSection() {
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.8 }}
                 >
-                    <h2 className="text-blue-400 font-semibold tracking-wide uppercase text-sm md:text-base mb-4">
-                        Vijay Software Solutions
-                    </h2>
+
                     <h1 className="text-5xl md:text-7xl font-extrabold text-white tracking-tight leading-tight mb-6 drop-shadow-2xl">
                         Digital Assessment <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-indigo-400 to-purple-500">Solution</span>
                     </h1>
@@ -37,7 +35,7 @@ export default function HeroSection() {
                     <div className="mt-10 flex flex-col sm:flex-row justify-center gap-4">
                         {user ? (
                             <Link
-                                to={user.role === 'admin' ? '/admin' : '/student'}
+                                to={(user.role === 'admin' || user.role === 'superadmin') ? '/admin' : '/student'}
                                 className="px-8 py-3 rounded-full bg-blue-600 text-white font-semibold hover:bg-blue-700 transition-all shadow-[0_0_20px_rgba(37,99,235,0.5)] hover:shadow-[0_0_30px_rgba(37,99,235,0.7)]"
                             >
                                 Go to Dashboard

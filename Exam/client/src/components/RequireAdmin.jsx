@@ -7,7 +7,7 @@ export default function RequireAdmin({ children }) {
 
   if (!token) return <Navigate to="/login" />;
 
-  if (user.role !== "admin") {
+  if (user.role !== "admin" && user.role !== "superadmin") {
     return <Navigate to="/student" />;
   }
 

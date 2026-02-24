@@ -26,8 +26,9 @@ function randomPassword() {
 }
 
 // Create or bulk create users: JSON body { users: [{name, email, mobile}], org_id }
-router.post('/bulk-create', auth, requireRole('admin'), async (req, res) => {
-  const { users, org_id } = req.body;
+router.post('/bulk-create', auth, requireRole('admin', 'superadmin'), async (req, res) => {
+  let { users, org_id } = req.body;
+  if (req.user.role === 'admin') org_id = req.user.org_id; // admins can only create users in their org
   if (!Array.isArray(users) || users.length === 0) return res.status(400).json({ error: 'users array required' });
 
   const created = [];
@@ -57,10 +58,14 @@ router.post('/bulk-create', auth, requireRole('admin'), async (req, res) => {
 });
 
 // Activate/deactivate
-router.post('/:userId/activate', auth, requireRole('admin'), async (req, res) => {
+router.post('/:userId/activate', auth, requireRole('admin', 'superadmin'), async (req, res) => {
   const { userId } = req.params;
   const { active } = req.body;
   try {
+    if (req.user.role === 'admin') {
+      const u = await db.query('SELECT org_id FROM exam.users WHERE id=$1', [userId]);
+      if (!u.rows[0] || u.rows[0].org_id !== req.user.org_id) return res.status(403).json({ error: 'Forbidden' });
+    }
     await db.query('UPDATE exam.users SET is_active=$1 WHERE id=$2', [active ? true : false, userId]);
     const result = await db.query(`
       SELECT u.id, u.name, u.email, u.role, u.org_id, u.is_active, u.created_at, o.name as org_name
@@ -76,9 +81,14 @@ router.post('/:userId/activate', auth, requireRole('admin'), async (req, res) =>
 });
 
 // Update user details
-router.put('/:userId', auth, requireRole('admin'), async (req, res) => {
+router.put('/:userId', auth, requireRole('admin', 'superadmin'), async (req, res) => {
   const { userId } = req.params;
-  const { name, email, role, org_id } = req.body;
+  let { name, email, role, org_id } = req.body;
+  if (req.user.role === 'admin') {
+    org_id = req.user.org_id; // prevent admin from moving users to another org
+    const u = await db.query('SELECT org_id FROM exam.users WHERE id=$1', [userId]);
+    if (!u.rows[0] || u.rows[0].org_id !== req.user.org_id) return res.status(403).json({ error: 'Forbidden' });
+  }
   try {
     await db.query(
       'UPDATE exam.users SET name=$1, email=$2, role=$3, org_id=$4 WHERE id=$5',
@@ -98,9 +108,14 @@ router.put('/:userId', auth, requireRole('admin'), async (req, res) => {
 });
 
 // Hard delete
-router.delete('/:userId/hard-delete', auth, requireRole('admin'), async (req, res) => {
+// Hard delete
+router.delete('/:userId/hard-delete', auth, requireRole('admin', 'superadmin'), async (req, res) => {
   const { userId } = req.params;
   try {
+    if (req.user.role === 'admin') {
+      const u = await db.query('SELECT org_id FROM exam.users WHERE id=$1', [userId]);
+      if (!u.rows[0] || u.rows[0].org_id !== req.user.org_id) return res.status(403).json({ error: 'Forbidden' });
+    }
     await db.query('DELETE FROM exam.users WHERE id=$1', [userId]);
     res.json({ ok: true });
   } catch (err) {
@@ -113,15 +128,28 @@ router.delete('/:userId/hard-delete', auth, requireRole('admin'), async (req, re
 });
 
 // List users (admin)
-router.get('/', auth, requireRole('admin'), async (req, res) => {
+// List users (admin and superadmin)
+router.get('/', auth, requireRole('admin', 'superadmin'), async (req, res) => {
   try {
-    const q = await db.query(`
-      SELECT u.id, u.name, u.email, u.role, u.org_id, u.is_active, u.created_at, o.name as org_name
-      FROM exam.users u
-      LEFT JOIN exam.organizations o ON o.id = u.org_id
-      ORDER BY u.created_at DESC 
-      LIMIT 1000
-    `);
+    let q;
+    if (req.user.role === 'superadmin') {
+      q = await db.query(`
+        SELECT u.id, u.name, u.email, u.role, u.org_id, u.is_active, u.created_at, o.name as org_name
+        FROM exam.users u
+        LEFT JOIN exam.organizations o ON o.id = u.org_id
+        ORDER BY u.created_at DESC 
+        LIMIT 1000
+      `);
+    } else {
+      q = await db.query(`
+        SELECT u.id, u.name, u.email, u.role, u.org_id, u.is_active, u.created_at, o.name as org_name
+        FROM exam.users u
+        LEFT JOIN exam.organizations o ON o.id = u.org_id
+        WHERE u.org_id = $1
+        ORDER BY u.created_at DESC 
+        LIMIT 1000
+      `, [req.user.org_id]);
+    }
     res.json({ users: q.rows });
   } catch (err) {
     console.error(err);

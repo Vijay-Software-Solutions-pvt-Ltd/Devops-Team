@@ -1,28 +1,32 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
-  import logoImg from "../assets/images/logo.jpg";
+import logoImg from "../assets/images/logo.jpg";
 
 export default function StudentHeader() {
   const nav = useNavigate();
   function logout() {
-  if (window.stream) {
-    window.stream.getTracks().forEach(track => track.stop());
-    window.stream = null;
+    if (window.stream) {
+      window.stream.getTracks().forEach(track => track.stop());
+      window.stream = null;
+    }
+
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
+
+    nav("/#/login");
   }
-
-  localStorage.removeItem("token");
-  localStorage.removeItem("user");
-
-  nav("/#/login");
-}
 
 
 
   return (
     <header style={headerStyle}>
       <div style={left}>
-        <img src={logoImg} alt="logo" style={logo} />
-        <h3 style={{ marginLeft: 10 }}>VIJAY SOFTWARE SOLUTIONS</h3>
+        <div style={{ marginLeft: 15, display: 'flex', flexDirection: 'column' }}>
+          <h3 style={{ margin: 0, color: '#1e293b', fontSize: '1.25rem' }}>ExamPortal</h3>
+          <span style={{ fontSize: '0.65rem', color: '#64748b', textTransform: 'uppercase', fontWeight: 600, letterSpacing: '0.05em' }}>
+            Powered by Vijay Software
+          </span>
+        </div>
       </div>
 
       <button onClick={logout} style={logoutBtn}>Logout</button>

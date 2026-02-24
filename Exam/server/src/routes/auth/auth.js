@@ -101,6 +101,72 @@ router.post('/register', async (req, res) => {
 });
 
 
+// Subscribe (Creates Organization + Admin User)
+router.post('/subscribe', async (req, res) => {
+  const { orgName, address, firstName, lastName, email, password, phone, plan } = req.body;
+  if (!orgName || !email || !password) {
+    return res.status(400).json({ error: 'Missing required fields' });
+  }
+
+  const client = await db.connect();
+  try {
+    await client.query('BEGIN');
+
+    // Determine limits
+    let users_limit = 0;
+    let exams_limit = 0;
+    if (plan === 'institutional') {
+      users_limit = 1000;
+      exams_limit = 48;
+    } else if (plan === 'flexi') {
+      users_limit = 250;
+      exams_limit = 12; // Example limits
+    } else {
+      users_limit = 500;
+      exams_limit = 24;
+    }
+
+    const orgId = uuidv4();
+    await client.query(
+      'INSERT INTO exam.organizations (id, name, address, subscription_plan, users_limit, exams_limit) VALUES ($1, $2, $3, $4, $5, $6)',
+      [orgId, orgName, address || null, plan, users_limit, exams_limit]
+    );
+
+    const userId = uuidv4();
+    const hashed = await hashPassword(password);
+    const fullName = `${firstName || ''} ${lastName || ''}`.trim();
+
+    await client.query(
+      `INSERT INTO exam.users (id, name, email, password_hash, role, org_id, is_active, created_at)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, now())`,
+      [userId, fullName || 'Admin User', email, hashed, 'admin', orgId, true]
+    );
+
+    await client.query(
+      `INSERT INTO exam.user_details (user_id, email, mobile) VALUES ($1, $2, $3)`,
+      [userId, email, phone || null]
+    );
+
+    await client.query('COMMIT');
+
+    res.json({
+      success: true,
+      message: 'Subscription created successfully. Organization and Admin user created.',
+      org_id: orgId,
+      user_id: userId
+    });
+  } catch (err) {
+    await client.query('ROLLBACK');
+    console.error("SUBSCRIBE ERROR 👉", err.message);
+    if (err.code === '23505') {
+      return res.status(400).json({ error: 'Email or Mobile already registered' });
+    }
+    res.status(500).json({ error: 'Failed to process subscription setup' });
+  } finally {
+    client.release();
+  }
+});
+
 // Login
 router.post('/login', async (req, res) => {
   const { email, password } = req.body;

@@ -52,8 +52,8 @@ export default function Signup() {
         <div className="login-left">
           <div className="login-overlay">
             <img src={img2} className="v-logo" alt="Logo" />
-            <h2>Vijay Software Solutions Pvt Ltd</h2>
-            <p>Online Examination Portal</p>
+            <h2>ExamPortal</h2>
+            <p className="font-semibold text-sm uppercase tracking-wider text-blue-200 mt-1 mb-3">Powered by Vijay Software</p>
             <p>Create your account to get started.</p>
           </div>
         </div>

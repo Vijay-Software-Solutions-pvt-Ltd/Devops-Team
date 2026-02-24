@@ -2,21 +2,10 @@ import React, { useEffect, useState } from "react";
 import api from "../../services/api";
 import { Link } from "react-router-dom";
 import {
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  Tooltip,
-  ResponsiveContainer,
-  Cell,
-  PieChart,
-  Pie,
-  LineChart,
-  Line,
-  CartesianGrid,
-  Legend
+  BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell,
+  PieChart, Pie, CartesianGrid
 } from "recharts";
-import { FiUsers, FiFileText, FiActivity, FiTrendingUp, FiAward, FiBarChart2 } from "react-icons/fi";
+import { FiUsers, FiFileText, FiActivity, FiTrendingUp, FiAward, FiBarChart2, FiShield, FiAlertOctagon } from "react-icons/fi";
 
 export default function AdminDashboard() {
   const [attempts, setAttempts] = useState([]);
@@ -28,8 +17,10 @@ export default function AdminDashboard() {
     totalAttempts: 0,
     avgScore: 0
   });
+  const [userRole, setUserRole] = useState("admin");
+  const [orgData, setOrgData] = useState(null);
 
-  const COLORS = ["#667eea", "#764ba2", "#f093fb", "#4facfe", "#43e97b"];
+  const COLORS = ["#6366f1", "#8b5cf6", "#ec4899", "#0ea5e9", "#10b981"];
 
   useEffect(() => {
     loadAllData();
@@ -37,15 +28,21 @@ export default function AdminDashboard() {
 
   async function loadAllData() {
     try {
-      const [attemptsRes, usersRes, examsRes] = await Promise.all([
+      const userRaw = localStorage.getItem("user");
+      const user = userRaw ? JSON.parse(userRaw) : { role: "admin" };
+      setUserRole(user.role);
+
+      const [attemptsRes, usersRes, examsRes, orgRes] = await Promise.all([
         api.get("/admin/reports/attempts"),
         api.get("/admin/users"),
-        api.get("/admin/reports/exams")
+        api.get("/admin/reports/exams"),
+        user.role === 'admin' ? api.get("/admin/orgs/my-org") : Promise.resolve({ data: { org: null } })
       ]);
 
       const attemptsData = attemptsRes.data.attempts || [];
       const usersData = usersRes.data.users || [];
       const examsData = examsRes.data.exams || [];
+      if (orgRes.data.org) setOrgData(orgRes.data.org);
 
       setAttempts(attemptsData);
       setUsers(usersData);
@@ -82,314 +79,254 @@ export default function AdminDashboard() {
     value: scoreDistMap[k]
   }));
 
+  const isSuperadmin = userRole === 'superadmin';
+
   return (
-    <div style={layoutStyle}>
-      {/* Header Section */}
-      <div style={headerSection}>
-        <div>
-          <div style={headerBadge}>
-            <FiBarChart2 size={18} />
-            <span style={{ marginLeft: 8 }}>Admin Dashboard</span>
+    <div className="min-h-screen bg-slate-50 p-6 md:p-8 lg:p-10 font-sans mt-12 md:mt-4">
+
+      {/* HEADER SECTION */}
+      <div className="relative bg-gradient-to-br from-indigo-600 via-purple-600 to-indigo-800 rounded-3xl p-8 md:p-12 mb-10 overflow-hidden shadow-2xl">
+        {/* Decorative elements */}
+        <div className="absolute top-0 right-0 -mr-20 -mt-20 w-64 h-64 rounded-full bg-white opacity-10 blur-3xl"></div>
+        <div className="absolute bottom-0 left-0 -ml-20 -mb-20 w-80 h-80 rounded-full bg-blue-400 opacity-20 blur-3xl"></div>
+
+        <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
+          <div>
+            <div className="inline-flex items-center gap-2 bg-white/20 backdrop-blur-md px-4 py-1.5 rounded-full text-white/90 text-sm font-semibold mb-4 border border-white/20 shadow-inner">
+              {isSuperadmin ? <FiShield size={16} /> : <FiBarChart2 size={16} />}
+              <span>{isSuperadmin ? 'Superadmin Global View' : 'Organization Dashboard'}</span>
+              {!isSuperadmin && orgData && (
+                <span className="ml-2 pl-2 border-l border-white/30 text-white font-bold">{orgData.name}</span>
+              )}
+            </div>
+            <h1 className="text-4xl md:text-5xl font-extrabold text-white tracking-tight leading-tight mb-2">
+              Overview & Analytics
+            </h1>
+            <p className="text-lg text-indigo-100 max-w-2xl font-medium">
+              Monitor your {isSuperadmin ? 'platform\'s' : 'organization\'s'} performance, user activity, and examination metrics in real-time.
+            </p>
           </div>
-          <h1 style={pageTitle}>Overview & Analytics</h1>
-          <p style={pageSubtitle}>Monitor your platform's performance and user activity</p>
-        </div>
-        <div style={quickActions}>
-          <Link to="/admin/create-exam" style={actionButton}>+ Create Exam</Link>
-          <Link to="/admin/users" style={actionButton}>Manage Users</Link>
+
+          <div className="flex flex-col sm:flex-row gap-4 mt-4 md:mt-0">
+            <Link to="/admin/create-exam" className="inline-flex items-center justify-center px-6 py-3.5 bg-white text-indigo-600 rounded-xl font-bold shadow-[0_8px_16px_rgba(0,0,0,0.1)] hover:shadow-[0_12px_24px_rgba(0,0,0,0.15)] hover:-translate-y-1 transition-all duration-300">
+              <span className="mr-2 text-xl leading-none">+</span> Create Exam
+            </Link>
+            {isSuperadmin && (
+              <Link to="/admin/orgs" className="inline-flex items-center justify-center px-6 py-3.5 bg-indigo-900/50 text-white border border-indigo-400/30 rounded-xl font-bold hover:bg-indigo-800/60 backdrop-blur-sm transition-all duration-300 hover:-translate-y-1">
+                Manage Organizations
+              </Link>
+            )}
+            <Link to="/admin/users" className="inline-flex items-center justify-center px-6 py-3.5 bg-indigo-900/50 text-white border border-indigo-400/30 rounded-xl font-bold hover:bg-indigo-800/60 backdrop-blur-sm transition-all duration-300 hover:-translate-y-1">
+              Manage Users
+            </Link>
+          </div>
         </div>
       </div>
 
-      {/* Summary Cards */}
-      <div style={cardGrid}>
+      {/* SUMMARY CARDS */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
         {[
-          { title: "Total Users", value: summary.totalUsers, icon: FiUsers, color: "#667eea", bg: "#667eea15" },
-          { title: "Total Exams", value: summary.totalExams, icon: FiFileText, color: "#f093fb", bg: "#f093fb15" },
-          { title: "Total Attempts", value: summary.totalAttempts, icon: FiActivity, color: "#4facfe", bg: "#4facfe15" },
-          { title: "Average Score", value: `${summary.avgScore}%`, icon: FiAward, color: "#43e97b", bg: "#43e97b15" }
+          {
+            title: "Total Users",
+            value: !isSuperadmin && orgData ? summary.totalUsers : summary.totalUsers,
+            limit: !isSuperadmin && orgData ? orgData.users_limit : null,
+            icon: FiUsers, color: "text-indigo-600", bg: "bg-indigo-50", ring: "ring-indigo-100"
+          },
+          {
+            title: "Total Exams",
+            value: !isSuperadmin && orgData ? summary.totalExams : summary.totalExams,
+            limit: !isSuperadmin && orgData ? orgData.exams_limit : null,
+            icon: FiFileText, color: "text-purple-600", bg: "bg-purple-50", ring: "ring-purple-100"
+          },
+          {
+            title: "Total Attempts",
+            value: summary.totalAttempts,
+            icon: FiActivity, color: "text-blue-500", bg: "bg-blue-50", ring: "ring-blue-100"
+          },
+          {
+            title: "Average Score",
+            value: `${summary.avgScore}%`,
+            icon: FiAward, color: "text-emerald-500", bg: "bg-emerald-50", ring: "ring-emerald-100"
+          }
         ].map((card, i) => {
           const Icon = card.icon;
+          const progress = card.limit ? Math.min((card.value / card.limit) * 100, 100) : null;
+
           return (
-            <div key={i} style={cardStyle}>
-              <div style={{ ...iconBox, background: card.bg }}>
-                <Icon size={28} color={card.color} />
-              </div>
-              <div style={cardContent}>
-                <div style={cardTitle}>{card.title}</div>
-                <div style={cardValue}>{card.value}</div>
-                <div style={cardTrend}>
-                  <FiTrendingUp size={14} color="#10b981" />
-                  <span style={{ color: "#10b981", fontSize: "13px", marginLeft: "4px" }}>+12% from last month</span>
+            <div key={i} className="bg-white rounded-2xl p-6 shadow-sm border border-slate-100 hover:shadow-xl hover:border-slate-200 transition-all duration-300 group">
+              <div className="flex items-center gap-5 mb-4">
+                <div className={`w-14 h-14 rounded-2xl flex items-center justify-center ${card.bg} ${card.color} ring-4 ${card.ring} group-hover:scale-110 transition-transform duration-300`}>
+                  <Icon size={26} strokeWidth={2.5} />
+                </div>
+                <div>
+                  <h3 className="text-sm font-semibold text-slate-500 uppercase tracking-wider">{card.title}</h3>
+                  <div className="flex items-baseline gap-2">
+                    <span className="text-3xl font-extrabold text-slate-800">{card.value}</span>
+                    {card.limit && (
+                      <span className="text-sm font-medium text-slate-400">/ {card.limit}</span>
+                    )}
+                  </div>
                 </div>
               </div>
+
+              {card.limit ? (
+                <div className="mt-4">
+                  <div className="flex justify-between text-xs font-semibold mb-1.5">
+                    <span className="text-slate-500">Usage Limit</span>
+                    <span className={progress >= 90 ? "text-red-500" : "text-indigo-600"}>{Math.round(progress)}%</span>
+                  </div>
+                  <div className="w-full h-2 bg-slate-100 rounded-full overflow-hidden">
+                    <div
+                      className={`h-full rounded-full transition-all duration-1000 ease-out ${progress >= 90 ? 'bg-red-500' : 'bg-indigo-500'}`}
+                      style={{ width: `${progress}%` }}
+                    ></div>
+                  </div>
+                </div>
+              ) : (
+                <div className="flex items-center text-sm font-medium text-emerald-600 bg-emerald-50 inline-flex px-2.5 py-1 rounded-md mt-2">
+                  <FiTrendingUp className="mr-1.5" size={14} />
+                  Looking solid
+                </div>
+              )}
             </div>
           );
         })}
       </div>
 
-      {/* Charts */}
-      <div style={chartRow}>
-        <div style={chartBox}>
-          <div style={chartHeader}>
-            <h3 style={chartTitle}>Student Performance</h3>
-            <p style={chartSubtitle}>Score breakdown by student</p>
+      {/* CHARTS SECTION */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-10">
+        {/* Bar Chart */}
+        <div className="bg-white rounded-3xl p-8 shadow-sm border border-slate-100 lg:col-span-2">
+          <div className="mb-8">
+            <h3 className="text-xl font-extrabold text-slate-800 mb-1">Student Performance Map</h3>
+            <p className="text-sm font-medium text-slate-500">Aggregate score breakdown across recent attempts</p>
           </div>
-          <ResponsiveContainer width="100%" height={300}>
-            <BarChart data={scoreAgg}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
-              <XAxis dataKey="email" stroke="#64748b" />
-              <YAxis stroke="#64748b" />
-              <Tooltip
-                contentStyle={{ background: "#fff", border: "none", borderRadius: "12px", boxShadow: "0 4px 12px rgba(0,0,0,0.1)" }}
-              />
-              <Bar dataKey="score" radius={[8, 8, 0, 0]}>
-                {scoreAgg.map((_, index) => (
-                  <Cell key={index} fill={COLORS[index % COLORS.length]} />
-                ))}
-              </Bar>
-            </BarChart>
-          </ResponsiveContainer>
+          <div className="h-[320px] w-full">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={scoreAgg.slice(0, 15)} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+                <XAxis dataKey="email" axisLine={false} tickLine={false} tick={{ fill: '#64748b', fontSize: 12 }} dy={10} />
+                <YAxis axisLine={false} tickLine={false} tick={{ fill: '#64748b', fontSize: 12 }} />
+                <Tooltip
+                  cursor={{ fill: '#f8fafc' }}
+                  contentStyle={{ background: "#fff", border: "1px solid #e2e8f0", borderRadius: "16px", boxShadow: "0 10px 25px -5px rgba(0,0,0,0.1)", fontWeight: '600', padding: '12px' }}
+                />
+                <Bar dataKey="score" radius={[6, 6, 6, 6]} barSize={32}>
+                  {scoreAgg.map((_, index) => (
+                    <Cell key={index} fill={COLORS[index % COLORS.length]} />
+                  ))}
+                </Bar>
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
         </div>
 
-        <div style={chartBox}>
-          <div style={chartHeader}>
-            <h3 style={chartTitle}>Score Distribution</h3>
-            <p style={chartSubtitle}>Performance overview</p>
+        {/* Pie Chart */}
+        <div className="bg-white rounded-3xl p-8 shadow-sm border border-slate-100 flex flex-col">
+          <div className="mb-4">
+            <h3 className="text-xl font-extrabold text-slate-800 mb-1">Score Distribution</h3>
+            <p className="text-sm font-medium text-slate-500">Global performance bands</p>
           </div>
-          <ResponsiveContainer width="100%" height={300}>
-            <PieChart>
-              <Pie
-                data={scoreDist}
-                dataKey="value"
-                nameKey="name"
-                cx="50%"
-                cy="50%"
-                outerRadius={100}
-                label
-              >
-                {scoreDist.map((_, index) => (
-                  <Cell key={index} fill={COLORS[index % COLORS.length]} />
-                ))}
-              </Pie>
-              <Tooltip
-                contentStyle={{ background: "#fff", border: "none", borderRadius: "12px", boxShadow: "0 4px 12px rgba(0,0,0,0.1)" }}
-              />
-            </PieChart>
-          </ResponsiveContainer>
+          <div className="flex-1 flex items-center justify-center min-h-[300px]">
+            <ResponsiveContainer width="100%" height="100%">
+              <PieChart>
+                <Pie
+                  data={scoreDist}
+                  dataKey="value"
+                  nameKey="name"
+                  cx="50%"
+                  cy="50%"
+                  innerRadius={80}
+                  outerRadius={110}
+                  paddingAngle={3}
+                >
+                  {scoreDist.map((_, index) => (
+                    <Cell key={index} fill={COLORS[index % COLORS.length]} stroke="rgba(255,255,255,0.5)" strokeWidth={2} />
+                  ))}
+                </Pie>
+                <Tooltip
+                  contentStyle={{ background: "#fff", border: "1px solid #e2e8f0", borderRadius: "12px", boxShadow: "0 10px 25px -5px rgba(0,0,0,0.1)", fontWeight: '600' }}
+                />
+              </PieChart>
+            </ResponsiveContainer>
+          </div>
         </div>
       </div>
 
-      {/* Table */}
-      <div style={tableBox}>
-        <h3>Recent Attempts</h3>
-        <table style={tableStyle}>
-          <thead style={{ background: "#e2e8f0" }}>
-            <tr>
-              <th style={th}>Attempt ID</th>
-              <th style={th}>User</th>
-              <th style={th}>Score</th>
-              <th style={th}>Violations</th>
-              <th style={th}>Action</th>
-            </tr>
-          </thead>
-          <tbody>
-            {attempts.map((a, idx) => (
-              <tr key={a.id || idx} style={idx % 2 ? rowAlt : {}}>
-                <td style={td}>{a.id}</td>
-                <td style={td}>{a.email}</td>
-                <td style={td}>{a.total_score}</td>
-                <td style={td}>{a.violation_count}</td>
-                <td style={td}>
-                  <Link style={link} to={`/admin/attempt/${a.id}`}>
-                    View
-                  </Link>
-                </td>
+      {/* TABLE SECTION */}
+      <div className="bg-white rounded-3xl shadow-sm border border-slate-100 overflow-hidden">
+        <div className="p-8 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
+          <div>
+            <h3 className="text-xl font-extrabold text-slate-800 mb-1">Recent Exam Attempts</h3>
+            <p className="text-sm font-medium text-slate-500">Live feed of student submissions and security flags</p>
+          </div>
+        </div>
+
+        <div className="overflow-x-auto">
+          <table className="w-full text-left whitespace-nowrap">
+            <thead>
+              <tr className="bg-slate-50 text-slate-500 text-xs uppercase tracking-wider font-bold">
+                <th className="px-8 py-5">Attempt Details</th>
+                <th className="px-8 py-5">Student / User</th>
+                <th className="px-8 py-5 text-center">Score</th>
+                <th className="px-8 py-5 text-center">Security Violations</th>
+                <th className="px-8 py-5 text-right">Action</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody className="divide-y divide-slate-100">
+              {attempts.length === 0 ? (
+                <tr>
+                  <td colSpan="5" className="px-8 py-12 text-center text-slate-400 font-medium">
+                    No highly recent attempts found. Wait for students to submit exams.
+                  </td>
+                </tr>
+              ) : attempts.slice(0, 10).map((a, idx) => {
+                const isHighViolation = a.violation_count > 3;
+
+                return (
+                  <tr key={a.id || idx} className="hover:bg-slate-50/80 transition-colors">
+                    <td className="px-8 py-4">
+                      <div className="text-sm font-bold text-slate-800">{a.id.substring(0, 8)}...</div>
+                      <div className="text-xs font-semibold text-slate-400 uppercase tracking-widest">{new Date(a.started_at_server).toLocaleDateString()}</div>
+                    </td>
+                    <td className="px-8 py-4">
+                      <div className="flex items-center gap-3">
+                        <div className="w-9 h-9 rounded-full bg-gradient-to-br from-blue-100 to-indigo-100 text-indigo-700 flex items-center justify-center font-bold text-sm">
+                          {a.email?.charAt(0).toUpperCase() || 'U'}
+                        </div>
+                        <span className="text-sm font-semibold text-slate-700">{a.email}</span>
+                      </div>
+                    </td>
+                    <td className="px-8 py-4 text-center">
+                      <span className="inline-flex items-center justify-center px-3 py-1 rounded-full text-sm font-bold bg-slate-100 text-slate-700">
+                        {a.total_score}
+                      </span>
+                    </td>
+                    <td className="px-8 py-4 text-center">
+                      {a.violation_count > 0 ? (
+                        <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold ${isHighViolation ? 'bg-red-100 text-red-700 border border-red-200' : 'bg-amber-100 text-amber-700 border border-amber-200'}`}>
+                          {isHighViolation ? <FiAlertOctagon size={12} /> : <FiShield size={12} />}
+                          {a.violation_count} Flags
+                        </span>
+                      ) : (
+                        <span className="text-sm font-medium text-emerald-500">Secure</span>
+                      )}
+                    </td>
+                    <td className="px-8 py-4 text-right">
+                      <Link
+                        to={`/admin/attempt/${a.id}`}
+                        className="inline-flex items-center justify-center px-4 py-2 bg-white border border-slate-200 rounded-lg text-sm font-bold text-indigo-600 hover:bg-indigo-50 hover:border-indigo-200 hover:text-indigo-700 shadow-sm transition-all"
+                      >
+                        Deep View
+                      </Link>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
   );
 }
-
-/* ---------- MODERN STYLES ---------- */
-
-const layoutStyle = {
-  background: "linear-gradient(135deg, #425ac3 0%, #d23c3cd4 100%)",
-  minHeight: "100vh",
-  padding: "20px",
-  fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
-  marginTop:'50px'
-};
-
-const headerSection = {
-  background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
-  borderRadius: "24px",
-  padding: "30px",
-  marginBottom: "32px",
-  display: "flex",
-  justifyContent: "space-between",
-  alignItems: "center",
-  boxShadow: "0 20px 60px rgba(0,0,0,0.3)"
-};
-
-const headerBadge = {
-  display: "inline-flex",
-  alignItems: "center",
-  background: "rgba(255,255,255,0.2)",
-  padding: "8px 16px",
-  borderRadius: "50px",
-  color: "#fff",
-  fontSize: "14px",
-  fontWeight: "600",
-  marginBottom: "12px",
-  backdropFilter: "blur(10px)"
-};
-
-const pageTitle = {
-  fontSize: "42px",
-  fontWeight: "800",
-  color: "#fff",
-  margin: "8px 0",
-  lineHeight: "1.2"
-};
-
-const pageSubtitle = {
-  fontSize: "16px",
-  color: "rgba(255,255,255,0.9)",
-  fontWeight: "400"
-};
-
-const quickActions = {
-  display: "flex",
-  gap: "12px"
-};
-
-const actionButton = {
-  background: "#fff",
-  color: "#667eea",
-  padding: "12px 24px",
-  borderRadius: "12px",
-  fontSize: "14px",
-  fontWeight: "600",
-  textDecoration: "none",
-  boxShadow: "0 4px 14px rgba(0,0,0,0.1)",
-  transition: "all 0.3s ease"
-};
-
-const cardGrid = {
-  display: "grid",
-  gridTemplateColumns: "repeat(auto-fit, minmax(100px, 1fr))",
-  gap: "24px",
-  marginBottom: "32px"
-};
-
-const cardStyle = {
-  background: "#fff",
-  padding: "28px",
-  borderRadius: "20px",
-  boxShadow: "0 10px 40px rgba(0,0,0,0.08)",
-  display: "flex",
-  alignItems: "center",
-  gap: "20px",
-  transition: "all 0.3s ease"
-};
-
-const iconBox = {
-  width: "64px",
-  height: "64px",
-  borderRadius: "16px",
-  display: "flex",
-  alignItems: "center",
-  justifyContent: "center",
-  flexShrink: 0
-};
-
-const cardContent = {
-  flex: 1
-};
-
-const cardTitle = {
-  fontSize: "14px",
-  color: "#64748b",
-  fontWeight: "500",
-  marginBottom: "8px"
-};
-
-const cardValue = {
-  fontSize: "32px",
-  fontWeight: "700",
-  color: "#0f172a",
-  marginBottom: "4px"
-};
-
-const cardTrend = {
-  display: "flex",
-  alignItems: "center",
-  marginTop: "8px"
-};
-
-const chartRow = {
-  display: "grid",
-  gridTemplateColumns: "1.5fr 1fr",
-  gap: "24px",
-  marginBottom: "32px"
-};
-
-const chartBox = {
-  background: "#fff",
-  borderRadius: "20px",
-  padding: "28px",
-  boxShadow: "0 10px 40px rgba(0,0,0,0.08)"
-};
-
-const chartHeader = {
-  marginBottom: "24px"
-};
-
-const chartTitle = {
-  fontSize: "20px",
-  fontWeight: "700",
-  color: "#0f172a",
-  marginBottom: "4px"
-};
-
-const chartSubtitle = {
-  fontSize: "14px",
-  color: "#64748b"
-};
-
-const tableBox = {
-  background: "#fff",
-  padding: "28px",
-  borderRadius: "20px",
-  boxShadow: "0 10px 40px rgba(0,0,0,0.08)"
-};
-
-const tableStyle = {
-  width: "100%",
-  borderCollapse: "collapse"
-};
-
-const th = {
-  padding: "12px",
-  fontSize: "13px",
-  textAlign: "left"
-};
-
-const td = {
-  padding: "12px",
-  fontSize: "13px",
-  borderBottom: "1px solid #e2e8f0"
-};
-
-const rowAlt = {
-  background: "#f9fafb"
-};
-
-const link = {
-  color: "#2563eb",
-  fontWeight: 600,
-  textDecoration: "none"
-};

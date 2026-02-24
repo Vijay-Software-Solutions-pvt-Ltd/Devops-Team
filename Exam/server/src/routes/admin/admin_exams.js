@@ -4,9 +4,10 @@ const db = require('../../db');
 const { v4: uuidv4 } = require('uuid');
 const auth = require('../../middleware/authMiddleware');
 const requireRole = require('../../middleware/roleCheck');
-router.post('/create', auth, requireRole('admin'), async (req, res) => {
+router.post('/create', auth, requireRole('admin', 'superadmin'), async (req, res) => {
   // payload: { title, description, duration_minutes, start_date, end_date, org_id, questions: [{type,difficulty,content,choices,correct_answer,points}] }
-  const { title, description, duration_minutes, start_date, end_date, org_id, questions } = req.body;
+  let { title, description, duration_minutes, start_date, end_date, org_id, questions } = req.body;
+  if (req.user.role === 'admin') org_id = req.user.org_id;
   try {
     const examId = uuidv4();
     await db.query(`INSERT INTO exam.exams (id, title, description, duration_minutes, start_date, end_date) VALUES ($1,$2,$3,$4,$5,$6)`, [examId, title, description || null, duration_minutes, start_date || null, end_date || null]);
@@ -47,10 +48,10 @@ router.post('/create', auth, requireRole('admin'), async (req, res) => {
   }
 });
 
-// List exams for the logged-in user's org (or all for admin)
+// List exams for the logged-in user's org (or all for superadmin)
 router.get('/assigned', auth, async (req, res) => {
   try {
-    if (req.user.role === 'admin') {
+    if (req.user.role === 'superadmin') {
       const q = await db.query(`
         SELECT e.*, o.name as org_name, o.id as assigned_org_id 
         FROM exam.exams e
@@ -58,6 +59,18 @@ router.get('/assigned', auth, async (req, res) => {
         LEFT JOIN exam.organizations o ON o.id = ea.org_id
         ORDER BY e.created_at DESC
       `);
+      return res.json({ exams: q.rows });
+    }
+
+    if (req.user.role === 'admin') {
+      const q = await db.query(`
+        SELECT e.*, o.name as org_name, o.id as assigned_org_id 
+        FROM exam.exams e
+        LEFT JOIN exam.exam_assignments ea ON ea.exam_id = e.id
+        LEFT JOIN exam.organizations o ON o.id = ea.org_id
+        WHERE ea.org_id = $1
+        ORDER BY e.created_at DESC
+      `, [req.user.org_id]);
       return res.json({ exams: q.rows });
     }
 
@@ -87,7 +100,7 @@ router.get('/:id', auth, async (req, res) => {
 
     // Include correct_answer for admin users
     let questionsQuery = 'SELECT id, type, difficulty, content, choices, points FROM exam.questions WHERE exam_id=$1';
-    if (req.user.role === 'admin') {
+    if (req.user.role === 'superadmin' || req.user.role === 'admin') {
       questionsQuery = 'SELECT id, type, difficulty, content, choices, correct_answer, points FROM exam.questions WHERE exam_id=$1';
     }
     const questionsQ = await db.query(questionsQuery, [id]);
@@ -99,9 +112,10 @@ router.get('/:id', auth, async (req, res) => {
 });
 
 // Update exam and upsert questions
-router.put('/:id', auth, requireRole('admin'), async (req, res) => {
+router.put('/:id', auth, requireRole('admin', 'superadmin'), async (req, res) => {
   const { id } = req.params;
-  const { title, description, duration_minutes, start_date, end_date, org_id, questions } = req.body;
+  let { title, description, duration_minutes, start_date, end_date, org_id, questions } = req.body;
+  if (req.user.role === 'admin') org_id = req.user.org_id;
 
   const client = await db.connect();
   try {
@@ -131,13 +145,13 @@ router.put('/:id', auth, requireRole('admin'), async (req, res) => {
         [id]
       );
       const existingQuestionIds = existingQuestionsResult.rows.map(row => row.id);
-      
+
       // Get all question IDs from the request
       const requestQuestionIds = questions.filter(q => q.id).map(q => q.id);
-      
+
       // Find questions to delete (exist in DB but not in request)
       const questionsToDelete = existingQuestionIds.filter(id => !requestQuestionIds.includes(id));
-      
+
       // Delete removed questions
       for (const qId of questionsToDelete) {
         await client.query('DELETE FROM exam.questions WHERE id=$1', [qId]);
@@ -192,7 +206,7 @@ router.put('/:id', auth, requireRole('admin'), async (req, res) => {
   }
 });
 
-router.delete('/:id', auth, requireRole('admin'), async (req, res) => {
+router.delete('/:id', auth, requireRole('admin', 'superadmin'), async (req, res) => {
   const { id } = req.params;
   try {
     // Rely on CASCADE or delete manually. 

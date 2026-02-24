@@ -26,6 +26,7 @@ const AttemptView = lazy(() => import("./pages/student/AttemptView"));
 const AdminAttemptDetails = lazy(() => import("./pages/admin/AdminAttemptDetails"));
 const AdminResults = lazy(() => import("./pages/admin/AdminResults"));
 const AdminResultDetails = lazy(() => import("./pages/admin/AdminResultDetails"));
+const Checkout = lazy(() => import("./pages/payment/Checkout"));
 
 
 // 🔹 Wrapper to apply AdminLayout ONCE for all admin routes
@@ -51,6 +52,7 @@ export default function App() {
             <Route path="/" element={<LandingPage />} />
             <Route path="/login" element={<Login />} />
             <Route path="/signup" element={<Signup />} />
+            <Route path="/checkout" element={<Checkout />} />
 
             {/* ================= STUDENT ROUTES ================= */}
             <Route path="/student" element={token ? <StudentDashboard /> : <Navigate to="/login" />} />

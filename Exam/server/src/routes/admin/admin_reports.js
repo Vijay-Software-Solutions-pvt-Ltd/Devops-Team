@@ -6,7 +6,7 @@ const auth = require('../../middleware/authMiddleware');
 const requireRole = require('../../middleware/roleCheck');
 const { v4: uuidv4 } = require('uuid');
 
-router.get('/users', auth, requireRole('admin'), async (req, res) => {
+router.get('/users', auth, requireRole('admin', 'superadmin'), async (req, res) => {
   const q = await db.query(`
     SELECT id, email, name, role, org_id
     FROM exam.users
@@ -16,7 +16,7 @@ router.get('/users', auth, requireRole('admin'), async (req, res) => {
   res.json({ users: q.rows });
 });
 
-router.get('/exams', auth, requireRole('admin'), async (req, res) => {
+router.get('/exams', auth, requireRole('admin', 'superadmin'), async (req, res) => {
   const q = await db.query(`
     SELECT id, title, description, duration_minutes, start_date, end_date 
     FROM exam.exams
@@ -25,12 +25,12 @@ router.get('/exams', auth, requireRole('admin'), async (req, res) => {
   res.json({ exams: q.rows });
 });
 
-router.get('/attempts', auth, requireRole('admin'), async (req, res) => {
+router.get('/attempts', auth, requireRole('admin', 'superadmin'), async (req, res) => {
   const q = await db.query(`SELECT a.id,a.user_id,u.email,a.exam_id,a.status,a.started_at_server,a.finished_at,a.total_score,a.violation_count FROM exam.attempts a JOIN exam.users u ON a.user_id=u.id ORDER BY a.started_at_server DESC LIMIT 500`);
   res.json({ attempts: q.rows });
 });
 
-router.get('/attempt/:id', auth, requireRole('admin'), async (req, res) => {
+router.get('/attempt/:id', auth, requireRole('admin', 'superadmin'), async (req, res) => {
   const id = req.params.id;
   const attemptQ = await db.query('SELECT * FROM exam.attempts WHERE id=$1', [id]);
   if (!attemptQ.rows[0]) return res.status(404).json({ error: 'not found' });
@@ -40,13 +40,13 @@ router.get('/attempt/:id', auth, requireRole('admin'), async (req, res) => {
   res.json({ attempt: attemptQ.rows[0], answers: answersQ.rows, logs: logsQ.rows, snapshots: snapsQ.rows });
 });
 
-router.get('/report/exam/:examId', auth, requireRole('admin'), async (req, res) => {
+router.get('/report/exam/:examId', auth, requireRole('admin', 'superadmin'), async (req, res) => {
   const examId = req.params.examId;
   const q = await db.query(`SELECT a.id as attempt_id, u.email, a.total_score, a.violation_count, a.status FROM exam.attempts a JOIN exam.users u ON a.user_id=u.id WHERE a.exam_id=$1 ORDER BY a.total_score DESC`, [examId]);
   res.json({ rows: q.rows });
 });
 
-router.post('/create', auth, requireRole('admin'), async (req,res)=>{
+router.post('/create', auth, requireRole('admin', 'superadmin'), async (req,res)=>{
   const {title, description, duration_minutes, start_date, end_date, org_id, questions} = req.body;
 
   const exam_id = uuidv4();
@@ -82,7 +82,7 @@ for (const q of questions) {
 });
 
 // ✅ Get snapshots for an attempt
-router.get('/attempt/:attemptId/snapshots', auth, requireRole('admin'), async (req, res) => {
+router.get('/attempt/:attemptId/snapshots', auth, requireRole('admin', 'superadmin'), async (req, res) => {
   const { attemptId } = req.params;
   try {
     const q = await db.query(`
@@ -101,7 +101,7 @@ router.get('/attempt/:attemptId/snapshots', auth, requireRole('admin'), async (r
 
 
 const { Parser } = require('json2csv');
-router.get('/download/exam/:examId', auth, requireRole('admin'), async (req,res) => {
+router.get('/download/exam/:examId', auth, requireRole('admin', 'superadmin'), async (req,res) => {
   const examId = req.params.examId;
   const q = await db.query(`SELECT a.id as attempt_id, u.email, a.total_score, a.violation_count, a.status FROM exam.attempts a JOIN exam.users u ON a.user_id=u.id WHERE a.exam_id=$1 ORDER BY a.total_score DESC`, [examId]);
   const fields = ['attempt_id','email','total_score','violation_count','status'];

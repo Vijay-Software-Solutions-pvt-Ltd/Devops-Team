@@ -7,6 +7,17 @@ export default function AdminOrgs() {
   const [orgs, setOrgs] = useState([]);
   const [name, setName] = useState('');
   const [address, setAddress] = useState('');
+
+  // Subscription & Admin fields
+  const [plan, setPlan] = useState('flexi');
+  const [usersLimit, setUsersLimit] = useState(250);
+  const [examsLimit, setExamsLimit] = useState(12);
+  const [adminFirstName, setAdminFirstName] = useState('');
+  const [adminLastName, setAdminLastName] = useState('');
+  const [adminEmail, setAdminEmail] = useState('');
+  const [adminPassword, setAdminPassword] = useState('');
+  const [adminPhone, setAdminPhone] = useState('');
+
   const [loading, setLoading] = useState(false);
   const [showForm, setShowForm] = useState(false); // Toggle for create form
   const [editingOrg, setEditingOrg] = useState(null);
@@ -34,13 +45,24 @@ export default function AdminOrgs() {
         alert('✅ Organization updated successfully!');
       } else {
         // Create
-        await api.post('/admin/orgs/', { name, address });
-        alert('✅ Organization created successfully!');
+        await api.post('/admin/orgs/', {
+          name,
+          address,
+          plan,
+          users_limit: usersLimit,
+          exams_limit: examsLimit,
+          adminFirstName,
+          adminLastName,
+          adminEmail,
+          adminPassword,
+          adminPhone
+        });
+        alert('✅ Organization and Admin created successfully!');
       }
       resetForm();
       fetchOrgs();
     } catch (err) {
-      alert('Failed to save org');
+      alert(err?.response?.data?.error || 'Failed to save org');
       console.error(err);
     }
     setLoading(false);
@@ -69,6 +91,14 @@ export default function AdminOrgs() {
     setEditingOrg(null);
     setName('');
     setAddress('');
+    setPlan('flexi');
+    setUsersLimit(250);
+    setExamsLimit(12);
+    setAdminFirstName('');
+    setAdminLastName('');
+    setAdminEmail('');
+    setAdminPassword('');
+    setAdminPhone('');
   }
 
   return (
@@ -123,9 +153,61 @@ export default function AdminOrgs() {
               </div>
             </div>
 
-            <button style={styles.button} onClick={handleSubmit} disabled={loading}>
-              {loading ? "Saving..." : (editingOrg ? "Update Organization" : "Create Organization")}
-            </button>
+            {!editingOrg && (
+              <>
+                <h4 style={{ margin: '20px 0 10px 0', fontSize: '16px', color: '#1e293b' }}>Subscription Setup</h4>
+                <div style={{ display: 'flex', gap: '16px', marginBottom: '16px' }}>
+                  <div style={{ flex: 1 }}>
+                    <label style={styles.label}>Plan</label>
+                    <select style={styles.input} value={plan} onChange={e => {
+                      const val = e.target.value;
+                      setPlan(val);
+                      if (val === 'institutional') { setUsersLimit(1000); setExamsLimit(48); }
+                      else if (val === 'flexi') { setUsersLimit(250); setExamsLimit(12); }
+                      else { setUsersLimit(500); setExamsLimit(24); }
+                    }}>
+                      <option value="flexi">Flexi Plan</option>
+                      <option value="institutional">Institutional Plan</option>
+                      <option value="custom">Custom Plan</option>
+                    </select>
+                  </div>
+                  <div style={{ flex: 1 }}>
+                    <label style={styles.label}>Users Limit</label>
+                    <input style={styles.input} type="number" value={usersLimit} onChange={e => setUsersLimit(Number(e.target.value))} />
+                  </div>
+                  <div style={{ flex: 1 }}>
+                    <label style={styles.label}>Exams Limit</label>
+                    <input style={styles.input} type="number" value={examsLimit} onChange={e => setExamsLimit(Number(e.target.value))} />
+                  </div>
+                </div>
+
+                <h4 style={{ margin: '20px 0 10px 0', fontSize: '16px', color: '#1e293b' }}>Primary Admin Credentials</h4>
+                <div style={{ display: 'flex', gap: '16px', marginBottom: '16px' }}>
+                  <div style={{ flex: 1 }}>
+                    <label style={styles.label}>First Name</label>
+                    <input style={styles.input} placeholder="First Name" value={adminFirstName} onChange={e => setAdminFirstName(e.target.value)} />
+                  </div>
+                  <div style={{ flex: 1 }}>
+                    <label style={styles.label}>Last Name</label>
+                    <input style={styles.input} placeholder="Last Name" value={adminLastName} onChange={e => setAdminLastName(e.target.value)} />
+                  </div>
+                </div>
+                <div style={{ display: 'flex', gap: '16px', marginBottom: '16px' }}>
+                  <div style={{ flex: 1 }}>
+                    <label style={styles.label}>Admin Email</label>
+                    <input style={styles.input} type="email" placeholder="admin@org.com" value={adminEmail} onChange={e => setAdminEmail(e.target.value)} />
+                  </div>
+                  <div style={{ flex: 1 }}>
+                    <label style={styles.label}>Admin Password</label>
+                    <input style={styles.input} type="password" placeholder="Min 6 characters" value={adminPassword} onChange={e => setAdminPassword(e.target.value)} />
+                  </div>
+                  <div style={{ flex: 1 }}>
+                    <label style={styles.label}>Phone Number</label>
+                    <input style={styles.input} placeholder="Phone" value={adminPhone} onChange={e => setAdminPhone(e.target.value)} />
+                  </div>
+                </div>
+              </>
+            )}
 
             <div style={styles.formActions}>
               <button style={styles.cancelButton} onClick={() => setShowForm(false)}>Cancel</button>

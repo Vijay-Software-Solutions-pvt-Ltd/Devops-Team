@@ -18,7 +18,7 @@ export default function Login() {
       localStorage.setItem("token", res.data.token);
       localStorage.setItem("user", JSON.stringify(res.data.user));
 
-      if (res.data.user.role === "admin") {
+      if (res.data.user.role === "admin" || res.data.user.role === "superadmin") {
         nav("/admin");
       } else {
         nav("/student");
@@ -36,8 +36,8 @@ export default function Login() {
         <div className="login-left">
           <div className="login-overlay">
             <img src={img2} className="v-logo" />
-            <h2>Vijay Software Solutions Pvt Ltd</h2>
-            <p>Online Examination Portal</p>
+            <h2>ExamPortal</h2>
+            <p className="font-semibold text-sm uppercase tracking-wider text-blue-200 mt-1 mb-3">Powered by Vijay Software</p>
             <p>Start your exam with confidence.</p>
           </div>
         </div>

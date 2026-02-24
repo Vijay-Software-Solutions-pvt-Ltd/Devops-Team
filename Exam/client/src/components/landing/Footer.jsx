@@ -8,9 +8,12 @@ export default function Footer() {
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
                     <div className="col-span-1 md:col-span-2">
-                        <h2 className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-indigo-400 mb-4">
-                            Vijay Software Solutions
+                        <h2 className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-indigo-400 mb-2">
+                            ExamPortal
                         </h2>
+                        <h3 className="text-sm uppercase tracking-widest text-slate-500 font-semibold mb-4">
+                            Powered by Vijay Software
+                        </h3>
                         <p className="text-slate-400 max-w-sm mb-6">
                             Empowering institutions with secure, scalable, and intelligent assessment solutions.
                             Transforming the way exams are conducted globally.
